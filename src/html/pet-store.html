@@ -22,84 +22,108 @@
         <div class="pet-grid">
             <!-- 鼠 -->
             <div class="pet-card">
-                <img src="../../assets/pets/mouse/1.JPG" alt="老鼠" class="pet-image">
+                <div class="pet-placeholder" onclick="loadPetImage('mouse', this)">
+                    <div class="placeholder-text">点一下看看我长什么样吧</div>
+                </div>
                 <div class="pet-name">鼠</div>
                 <button class="adopt-btn" onclick="openAdoptModal('mouse')">领养 (50积分)</button>
             </div>
             
             <!-- 牛 -->
             <div class="pet-card">
-                <img src="../../assets/pets/cow/1.JPG" alt="牛" class="pet-image">
+                <div class="pet-placeholder" onclick="loadPetImage('cow', this)">
+                    <div class="placeholder-text">点一下看看我长什么样吧</div>
+                </div>
                 <div class="pet-name">牛</div>
                 <button class="adopt-btn" onclick="openAdoptModal('cow')">领养 (50积分)</button>
             </div>
             
             <!-- 虎 -->
             <div class="pet-card">
-                <img src="../../assets/pets/tiger/1.JPG" alt="老虎" class="pet-image">
+                <div class="pet-placeholder" onclick="loadPetImage('tiger', this)">
+                    <div class="placeholder-text">点一下看看我长什么样吧</div>
+                </div>
                 <div class="pet-name">虎</div>
                 <button class="adopt-btn" onclick="openAdoptModal('tiger')">领养 (50积分)</button>
             </div>
             
             <!-- 兔 -->
             <div class="pet-card">
-                <img src="../../assets/pets/rabbit/1.JPG" alt="兔子" class="pet-image">
+                <div class="pet-placeholder" onclick="loadPetImage('rabbit', this)">
+                    <div class="placeholder-text">点一下看看我长什么样吧</div>
+                </div>
                 <div class="pet-name">兔</div>
                 <button class="adopt-btn" onclick="openAdoptModal('rabbit')">领养 (50积分)</button>
             </div>
             
             <!-- 龙 -->
             <div class="pet-card">
-                <img src="../../assets/pets/dragon/1.JPG" alt="龙" class="pet-image">
+                <div class="pet-placeholder" onclick="loadPetImage('dragon', this)">
+                    <div class="placeholder-text">点一下看看我长什么样吧</div>
+                </div>
                 <div class="pet-name">龙</div>
                 <button class="adopt-btn" onclick="openAdoptModal('dragon')">领养 (50积分)</button>
             </div>
             
             <!-- 蛇 -->
             <div class="pet-card">
-                <img src="../../assets/pets/snake/1.JPG" alt="蛇" class="pet-image">
+                <div class="pet-placeholder" onclick="loadPetImage('snake', this)">
+                    <div class="placeholder-text">点一下看看我长什么样吧</div>
+                </div>
                 <div class="pet-name">蛇</div>
                 <button class="adopt-btn" onclick="openAdoptModal('snake')">领养 (50积分)</button>
             </div>
             
             <!-- 马 -->
             <div class="pet-card">
-                <img src="../../assets/pets/horse/1.JPG" alt="马" class="pet-image">
+                <div class="pet-placeholder" onclick="loadPetImage('horse', this)">
+                    <div class="placeholder-text">点一下看看我长什么样吧</div>
+                </div>
                 <div class="pet-name">马</div>
                 <button class="adopt-btn" onclick="openAdoptModal('horse')">领养 (50积分)</button>
             </div>
             
             <!-- 羊 -->
             <div class="pet-card">
-                <img src="../../assets/pets/sheep/1.JPG" alt="羊" class="pet-image">
+                <div class="pet-placeholder" onclick="loadPetImage('sheep', this)">
+                    <div class="placeholder-text">点一下看看我长什么样吧</div>
+                </div>
                 <div class="pet-name">羊</div>
                 <button class="adopt-btn" onclick="openAdoptModal('sheep')">领养 (50积分)</button>
             </div>
             
             <!-- 猴 -->
             <div class="pet-card">
-                <img src="../../assets/pets/monkey/1.JPG" alt="猴子" class="pet-image">
+                <div class="pet-placeholder" onclick="loadPetImage('monkey', this)">
+                    <div class="placeholder-text">点一下看看我长什么样吧</div>
+                </div>
                 <div class="pet-name">猴</div>
                 <button class="adopt-btn" onclick="openAdoptModal('monkey')">领养 (50积分)</button>
             </div>
             
             <!-- 鸡 -->
             <div class="pet-card">
-                <img src="../../assets/pets/chicken/1.JPG" alt="鸡" class="pet-image">
+                <div class="pet-placeholder" onclick="loadPetImage('chicken', this)">
+                    <div class="placeholder-text">点一下看看我长什么样吧</div>
+                </div>
                 <div class="pet-name">鸡</div>
                 <button class="adopt-btn" onclick="openAdoptModal('chicken')">领养 (50积分)</button>
             </div>
             
             <!-- 狗 -->
             <div class="pet-card">
-                <img src="../../assets/pets/dog/1.JPG" alt="狗" class="pet-image">
+                <div class="pet-placeholder" onclick="loadPetImage('dog', this)">
+                    <div class="placeholder-text">点一下看看我长什么样吧</div>
+                </div>
                 <div class="pet-name">狗</div>
                 <button class="adopt-btn" onclick="openAdoptModal('dog')">领养 (50积分)</button>
             </div>
             
             <!-- 猪 -->
             <div class="pet-card">
-                <img src="../../assets/pets/pig/1.JPG" alt="猪" class="pet-image">
+                <div class="pet-placeholder" onclick="loadPetImage('pig', this)">
+                    <div class="placeholder-text">点一下看看我长什么样吧</div>
+                </div>
                 <div class="pet-name">猪</div>
                 <button class="adopt-btn" onclick="openAdoptModal('pig')">领养 (50积分)</button>
             </div>
@@ -184,6 +208,18 @@
             } else {
                 alert('数据管理器未加载，请刷新页面重试');
             }
+        }
+        
+        // 加载宠物图片
+        function loadPetImage(petType, element) {
+            // 创建img元素
+            const img = document.createElement('img');
+            img.src = `../../assets/pets/${petType}/1.JPG`;
+            img.alt = petType;
+            img.className = 'pet-image';
+            
+            // 替换占位符
+            element.parentNode.replaceChild(img, element);
         }
         
         // 点击模态框外部关闭

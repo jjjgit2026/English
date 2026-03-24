@@ -293,14 +293,19 @@ body {
 .book-cover {
     width: 140px;
     height: 180px;
-    background: linear-gradient(135deg, #4CAF50 0%, #2E7D32 100%);
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
     border-radius: 12px;
     display: flex;
     flex-direction: column;
     align-items: center;
     justify-content: center;
     color: white;
-    box-shadow: 0 4px 12px rgba(76, 175, 80, 0.3);
+    box-shadow: 0 4px 16px rgba(102, 126, 234, 0.3);
+    transition: transform 0.3s;
+}
+
+.book-cover:hover {
+    transform: translateY(-2px);
 }
 
 .book-cover .subject {
@@ -319,7 +324,7 @@ body {
     right: 0;
     top: 50%;
     transform: translateY(-50%);
-    background: #4CAF50;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
     color: white;
     border: none;
     padding: 8px 12px;
@@ -329,6 +334,12 @@ body {
     display: flex;
     align-items: center;
     gap: 4px;
+    box-shadow: 0 2px 8px rgba(102, 126, 234, 0.3);
+    transition: transform 0.2s;
+}
+
+.change-book-btn:active {
+    transform: translateY(-50%) scale(0.98);
 }
 
 .stats-row {
@@ -346,7 +357,7 @@ body {
 .stat-value {
     font-size: 36px;
     font-weight: bold;
-    color: #4CAF50;
+    color: #667eea;
 }
 
 .stat-label {
@@ -395,7 +406,7 @@ body {
 
 .start-btn {
     width: 100%;
-    background: linear-gradient(135deg, #4CAF50 0%, #2E7D32 100%);
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
     color: white;
     border: none;
     padding: 16px;
@@ -403,8 +414,14 @@ body {
     font-size: 20px;
     font-weight: bold;
     cursor: pointer;
-    box-shadow: 0 4px 16px rgba(76, 175, 80, 0.4);
+    box-shadow: 0 4px 16px rgba(102, 126, 234, 0.4);
     transition: transform 0.2s;
+    margin-bottom: 10px;
+}
+
+.start-btn:nth-child(5) {
+    background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+    box-shadow: 0 4px 16px rgba(240, 147, 251, 0.4);
 }
 
 .start-btn:active {
@@ -2622,7 +2639,7 @@ body {
     left: 0;
     right: 0;
     height: 3px;
-    background: linear-gradient(90deg, #4CAF50, #45a049);
+    background: linear-gradient(90deg, #667eea, #764ba2);
 }
 
 .pet-store-page .pet-image {
@@ -2633,6 +2650,33 @@ body {
     margin-bottom: 12px;
     transition: transform 0.3s ease;
     border: 3px solid #f0f0f0;
+}
+
+.pet-store-page .pet-placeholder {
+    width: 80px;
+    height: 80px;
+    border-radius: 50%;
+    background: #f0f0f0;
+    margin: 0 auto 12px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    border: 3px solid #e0e0e0;
+}
+
+.pet-store-page .pet-placeholder:hover {
+    background: #e0e0e0;
+    transform: scale(1.05);
+}
+
+.pet-store-page .placeholder-text {
+    font-size: 10px;
+    color: #666;
+    text-align: center;
+    padding: 5px;
+    line-height: 1.2;
 }
 
 .pet-store-page .pet-card:hover .pet-image {
@@ -2647,7 +2691,7 @@ body {
 }
 
 .pet-store-page .adopt-btn {
-    background: linear-gradient(135deg, #4CAF50 0%, #2E7D32 100%);
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
     color: white;
     border: none;
     padding: 10px 16px;
