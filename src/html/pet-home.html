@@ -1,0 +1,263 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>宠物窝</title>
+    <link rel="stylesheet" href="../style.css">
+
+</head>
+<body class="pet-home-page">
+    <div class="page-header">
+        <button class="back-btn" onclick="window.location.href='index.html'">‹</button>
+        <div class="page-title">宠物窝</div>
+        <div class="points-display">
+            积分: <span id="userPoints">0</span>
+        </div>
+    </div>
+    
+    <div class="container">
+        <p class="subtitle">好好照顾你的宠物，让它们健康成长！</p>
+        
+        <div class="nav-buttons">
+            <a href="pet-store.html" class="btn btn-secondary">宠物商店</a>
+        </div>
+        
+        <div id="petList" class="pet-list">
+            <!-- 宠物列表将通过JavaScript动态生成 -->
+        </div>
+        
+        <div id="emptyState" class="empty-state" style="display: none;">
+            <h2>还没有宠物</h2>
+            <p>去宠物商店领养一只吧！</p>
+            <a href="pet-store.html">前往宠物商店</a>
+        </div>
+    </div>
+    
+    <script type="module" src="../js/main.js"></script>
+    <script>
+        let currentUser = 'youyou'; // 默认用户
+        
+        // 页面加载时初始化
+        document.addEventListener('DOMContentLoaded', function() {
+            // 检查用户信息
+            checkUserInfo();
+            // 检查宠物状态
+            if (typeof DataManager !== 'undefined') {
+                DataManager.checkPetStatus(currentUser);
+                // 加载宠物列表
+                loadPets();
+                // 更新积分显示
+                updatePointsDisplay();
+            } else {
+                setTimeout(() => {
+                    if (typeof DataManager !== 'undefined') {
+                        DataManager.checkPetStatus(currentUser);
+                        loadPets();
+                        updatePointsDisplay();
+                    } else {
+                        alert('数据管理器未加载，请刷新页面重试');
+                    }
+                }, 1000);
+            }
+        });
+        
+        // 检查用户信息
+        function checkUserInfo() {
+            const savedUser = localStorage.getItem('currentUser');
+            if (savedUser) {
+                currentUser = savedUser;
+            }
+        }
+        
+        // 检查图片是否存在
+        function checkImageExists(url) {
+            return new Promise((resolve) => {
+                const img = new Image();
+                img.onload = () => resolve(true);
+                img.onerror = () => resolve(false);
+                img.src = url;
+            });
+        }
+
+        // 加载宠物列表
+        async function loadPets() {
+            if (typeof DataManager !== 'undefined') {
+                const pets = DataManager.getPets(currentUser);
+                const petList = document.getElementById('petList');
+                const emptyState = document.getElementById('emptyState');
+                
+                if (pets.length === 0) {
+                    petList.style.display = 'none';
+                    emptyState.style.display = 'block';
+                    return;
+                }
+                
+                petList.style.display = 'grid';
+                emptyState.style.display = 'none';
+                
+                petList.innerHTML = '';
+                
+                for (const pet of pets) {
+                    // 获取宠物图片
+                    const petImage = getPetImage(pet.type, pet.adoptionDate);
+                    
+                    // 检查图片是否存在
+                    const imageExists = await checkImageExists(petImage);
+                    if (!imageExists) {
+                        continue; // 跳过没有图片的宠物
+                    }
+                    
+                    const petItem = document.createElement('div');
+                    petItem.className = 'pet-item';
+                    
+
+                    
+                    // 宠物状态
+                    const statusText = pet.isDead ? '已死亡' : '健康';
+                    const statusClass = pet.isDead ? 'dead' : 'alive';
+                    
+                    // 最后喂食日期
+                    const lastFeedText = pet.lastFeedDate ? `上次喂食: ${pet.lastFeedDate}` : '还未喂食';
+                    
+                    // 计算喂食进度（满6个月，30*6=180次达到100%）
+                    const maxFeedCount = 180;
+                    const progress = Math.min(Math.round((pet.feedCount / maxFeedCount) * 100), 100);
+                    
+                    // 检查是否达到100%进度
+                    const isFullyGrown = progress >= 100;
+                    
+                    petItem.innerHTML = `
+                        <img src="${petImage}" alt="${pet.name}" class="pet-image ${pet.isDead ? 'dead' : ''}">
+                        <div class="pet-name">${pet.name}</div>
+                        <div class="pet-info">
+                            <span class="label">类型:</span>
+                            <span class="value">${getPetTypeName(pet.type)}</span>
+                        </div>
+                        <div class="pet-info">
+                            <span class="label">喂食次数:</span>
+                            <span class="value">${pet.feedCount}/${maxFeedCount}次</span>
+                        </div>
+                        <div class="pet-info">
+                            <span class="label">成长进度:</span>
+                            <span class="value">${progress}%</span>
+                        </div>
+                        <div class="progress-bar-container">
+                            <div class="progress-bar" style="width: ${progress}%;"></div>
+                        </div>
+                        <div class="pet-info">
+                            <span class="label">上次喂食:</span>
+                            <span class="value">${pet.lastFeedDate ? pet.lastFeedDate : '还未喂食'}</span>
+                        </div>
+                        <div class="pet-status ${statusClass}">${isFullyGrown ? '已成年' : statusText}</div>
+                        <div class="action-buttons">
+                            ${pet.isDead ? `
+                                <button class="btn btn-secondary" onclick="revivePet('${pet.id}')">复活宠物 (40积分)</button>
+                            ` : isFullyGrown ? `
+                                <button class="btn btn-disabled" disabled>已成年，无需喂食</button>
+                            ` : `
+                                <button class="btn btn-primary" onclick="feedPet('${pet.id}')">喂食宠物粮 (消耗5积分)</button>
+                            `}
+                        </div>
+                    `;
+                    
+                    petList.appendChild(petItem);
+                }
+                
+                // 如果没有宠物可展示，显示空状态
+                if (petList.children.length === 0) {
+                    petList.style.display = 'none';
+                    emptyState.style.display = 'block';
+                }
+            } else {
+                alert('数据管理器未加载，请刷新页面重试');
+            }
+        }
+        
+        // 获取宠物类型的中文名称
+        function getPetTypeName(type) {
+            const typeNames = {
+                'mouse': '🐭 子鼠',
+                'cow': '🐮 丑牛',
+                'tiger': '🐯 寅虎',
+                'rabbit': '🐰 卯兔',
+                'dragon': '🐲 辰龙',
+                'horse': '🐎 午马',
+                'snake': '🐍 巳蛇',
+                'monkey': '🐵 申猴',
+                'chicken': '🐔 酉鸡',
+                'sheep': '🐑 未羊',
+                'dog': '🐶 戌狗',
+                'pig': '🐷 亥猪'
+            };
+            return typeNames[type] || type;
+        }
+        
+        // 获取宠物图片
+        function getPetImage(type, adoptionDate) {
+            // 计算宠物年龄（以月为单位）
+            let month = 1; // 默认第一个月
+            if (adoptionDate) {
+                const adoptionTime = new Date(adoptionDate).getTime();
+                const now = new Date().getTime();
+                const diffDays = Math.floor((now - adoptionTime) / (1000 * 60 * 60 * 24));
+                month = Math.floor(diffDays / 30) + 1;
+                // 6个月及以后一直都是6.jpg
+                month = Math.min(month, 6);
+            }
+            
+            // 构建图片路径
+            return `../../assets/pets/${type}/${month}.JPG`;
+        }
+        
+        // 喂食宠物
+        function feedPet(petId) {
+            if (typeof DataManager !== 'undefined') {
+                // 检查宠物是否已达到最大喂食次数
+                const pets = DataManager.getPets(currentUser);
+                const pet = pets.find(p => p.id === petId);
+                
+                if (pet && pet.feedCount >= 180) {
+                    alert('宠物已成年，无需再喂食');
+                    return;
+                }
+                
+                const result = DataManager.feedPet(currentUser, petId);
+                if (result.success) {
+                    alert(result.message);
+                    loadPets();
+                    updatePointsDisplay();
+                } else {
+                    alert(result.message);
+                }
+            } else {
+                alert('数据管理器未加载，请刷新页面重试');
+            }
+        }
+        
+        // 复活宠物
+        function revivePet(petId) {
+            if (typeof DataManager !== 'undefined') {
+                const result = DataManager.revivePet(currentUser, petId);
+                if (result.success) {
+                    alert(result.message);
+                    loadPets();
+                    updatePointsDisplay();
+                } else {
+                    alert(result.message);
+                }
+            } else {
+                alert('数据管理器未加载，请刷新页面重试');
+            }
+        }
+        
+        // 更新积分显示
+        function updatePointsDisplay() {
+            if (typeof DataManager !== 'undefined') {
+                const points = DataManager.getUserPoints(currentUser);
+                document.getElementById('userPoints').textContent = points;
+            }
+        }
+    </script>
+</body>
+</html>

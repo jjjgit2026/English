@@ -1,0 +1,176 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>单词学习工具</title>
+    <link rel="stylesheet" href="../style.css">
+</head>
+<body>
+    <!-- 首页 -->
+    <div class="home-page active" id="homePage">
+        <!-- 顶部栏 -->
+        <div class="top-bar">
+            <div class="left-placeholder"></div>
+            <div class="user-info">
+                <div class="user-name" id="userName">快来学单词吧！加油哦！</div>
+            </div>
+            <button class="switch-btn" onclick="showUserModal()">
+                <span id="currentUserDisplay">悠悠</span>
+                <span>👤</span>
+            </button>
+        </div>
+        
+        <!-- 教材卡片 -->
+        <div class="book-card">
+            <div class="book-title" id="bookTitle">外研版Join In-三年级下册</div>
+            
+            <div class="book-cover-section">
+                <div class="book-cover">
+                    <div class="subject">英语</div>
+                    <div class="grade" id="bookGrade">三年级 下册</div>
+                </div>
+                <button class="change-book-btn" onclick="withUserCheck(showBookModal)()">
+                    切换教材
+                    <span>›</span>
+                </button>
+            </div>
+            
+            <div class="stats-row">
+                <div class="stat-item">
+                    <div class="stat-value" id="totalWords">217</div>
+                    <div class="stat-label">单词总数</div>
+                </div>
+                <div class="stat-item">
+                    <div class="stat-value" id="learnedWords">0</div>
+                    <div class="stat-label">已完成学习</div>
+                </div>
+            </div>
+            
+            <button class="start-btn" onclick="withUserCheck(startLearning)()">开始学习!</button>
+            <button class="start-btn" style="margin-top: 10px; background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);" onclick="withUserCheck(openArticleListPage)()">趣文阅读</button>
+        </div>
+        
+        <!-- 打卡和积分区域 -->
+        <div class="checkin-section">
+            <div class="checkin-card">
+                <div class="checkin-header">
+                    <div class="checkin-title">每日打卡</div>
+                    <div style="display: flex; align-items: center; gap: 10px;">
+                        <div class="checkin-status" id="checkinStatus">未打卡</div>
+                        <button class="checkin-history-btn" onclick="withUserCheck(openCheckinHistoryPage)()" title="查看打卡记录">
+                            📅
+                        </button>
+                    </div>
+                </div>
+                <div class="checkin-info">
+                    <div class="checkin-item">
+                        <div class="checkin-value" id="consecutiveDays">0</div>
+                        <div class="checkin-label">连续打卡</div>
+                    </div>
+                    <div class="checkin-item">
+                        <div class="checkin-value" id="userPoints">0</div>
+                        <div class="checkin-label">总积分</div>
+                    </div>
+                </div>
+                <button class="checkin-btn" id="checkinBtn" onclick="withUserCheck(checkIn)()">
+                    立即打卡
+                </button>
+            </div>
+        </div>
+
+        <!-- 功能卡片和统计信息 -->
+        <div class="feature-cards">
+            <div class="feature-card error-book" onclick="withUserCheck(openErrorBookPage)()">
+                <div class="feature-title">错词本</div>
+                <div class="feature-subtitle">Error Notebook</div>
+                <div class="feature-icon">📓</div>
+            </div>
+            <div class="feature-card" style="background: linear-gradient(135deg, #a8edea 0%, #fed6e3 100%);" onclick="withUserCheck(openPetHomePage)()">
+                <div class="feature-title">宠物窝</div>
+                <div class="feature-subtitle">Pet Home</div>
+                <div class="feature-icon">�</div>
+            </div>
+            <div class="feature-card vocab-book" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);" onclick="withUserCheck(openStatsPage)()">
+                <div class="feature-title">学习统计</div>
+                <div class="feature-subtitle">Study Statistics</div>
+                <div class="feature-icon">�</div>
+            </div>
+            <div class="feature-card" style="background: linear-gradient(135deg, #fa709a 0%, #fee140 100%);" onclick="withUserCheck(openPointsHistoryPage)()">
+                <div class="feature-title">积分记录</div>
+                <div class="feature-subtitle">Points History</div>
+                <div class="feature-icon">💰</div>
+            </div>
+        </div>
+        
+        <!-- 消消乐悬浮入口 -->
+        <div class="game-floating-entry" onclick="withUserCheck(openGamePage)()">消消乐</div>
+    </div>
+    
+
+    
+    <!-- Loading 元素 -->
+    <div class="loading-overlay hidden" id="loadingOverlay">
+        <div class="loading-spinner"></div>
+        <div class="loading-text">加载中，请稍候...</div>
+    </div>
+    
+    <!-- 引入PDF.js库 -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.4.120/pdf.min.js"></script>
+    <script>
+        // 备用 CDN 加载
+        if (typeof pdfjsLib === 'undefined') {
+            document.write('<script src="https://cdn.jsdelivr.net/npm/pdfjs-dist@3.4.120/build/pdf.min.js"><\/script>');
+        }
+    </script>
+    
+    <!-- 临时函数，确保模块加载前所有函数都可用 -->
+    <script>
+        // 临时函数，在模块加载完成前提供基本功能
+        window.withUserCheck = function(callback) {
+            return function() {
+                // 检查模块是否已经加载
+                if (window.currentUser !== undefined) {
+                    callback();
+                } else {
+                    alert('应用正在加载1，请稍候...');
+                }
+            };
+        };
+        
+        // 临时的用户相关函数
+        window.showUserModal = function() {
+            alert('应用正在加载2，请稍候...');
+        };
+        window.showBookModal = function() {
+            alert('应用正在加载3，请稍候...');
+        };
+        window.startLearning = function() {
+            alert('应用正在加载4，请稍候...');
+        };
+        window.openArticleListPage = function() {
+            alert('应用正在加载5，请稍候...');
+        };
+        window.checkIn = function() {
+            alert('应用正在加载6，请稍候...');
+        };
+        window.openCheckinHistoryPage = function() {
+            alert('应用正在加载7，请稍候...');
+        };
+        window.openErrorBookPage = function() {
+            alert('应用正在加载8，请稍候...');
+        };
+        window.openStatsPage = function() {
+            alert('应用正在加载9，请稍候...');
+        };
+        window.openPetHomePage = function() {
+            alert('应用正在加载10，请稍候...');
+        };
+        window.openGamePage = function() {
+            alert('应用正在加载11，请稍候...');
+        };
+    </script>
+    
+    <script type="module" src="../js/main.js"></script>
+</body>
+</html>

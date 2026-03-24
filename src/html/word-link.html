@@ -1,0 +1,215 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>单词学习 - 单词学习工具</title>
+    <link rel="stylesheet" href="../style.css">
+</head>
+<body>
+    <!-- 单词链路页面 -->
+    <div class="word-link-page active" id="wordLinkPage">
+        <div class="link-header">
+            <button class="back-btn" onclick="backToWordList()">‹</button>
+            <div class="link-title" id="linkTitle">外研版Join In-三年级下册</div>
+            <div style="width: 36px;"></div>
+        </div>
+        
+        <!-- 单词链条 -->
+        <div class="word-chain" id="wordChain">
+            <!-- 单词链条将动态生成 -->
+        </div>
+        
+        <!-- 学习步骤 -->
+        <div class="learning-steps">
+            <div class="step-item active" data-step="learn" id="stepLearn">
+                <div class="step-icon">学</div>
+            </div>
+            <div class="step-item" data-step="read" id="stepRead">
+                <div class="step-icon">读</div>
+            </div>
+            <div class="step-item" data-step="practice" id="stepPractice">
+                <div class="step-icon">练</div>
+            </div>
+            <div class="step-item" data-step="spell" id="stepSpell">
+                <div class="step-icon">拼</div>
+            </div>
+            <div class="step-item" data-step="write" id="stepWrite">
+                <div class="step-icon">写</div>
+            </div>
+        </div>
+        
+        <!-- 学习内容区域 -->
+        <div class="learning-content">
+            <!-- 学 - 页面 -->
+            <div class="step-content active" id="contentLearn">
+                <div class="learn-section">
+                    <!-- 1. 彩色标注的单词 -->
+                    <div class="word-display">
+                        <div class="word-text-big" id="learnWord">
+                            <div class="word-letters" id="wordLetters">word</div>
+                        </div>
+                    </div>
+                    
+                    <!-- 2. 带颜色的音标 -->
+                    <div class="phonetic-container">
+                        <div class="phonetic-text" id="learnPhonetic">
+                            <span class="phonetic-wrapper" id="phoneticWrapper">[wɜːd]</span>
+                            <button class="audio-btn small" onclick="AudioManager.playPhoneticAudio()">🔊</button>
+                        </div>
+                    </div>
+                    
+                    <!-- 3. 单词释义 -->
+                    <div class="meaning-display" id="learnMeaning">单词</div>
+                    
+                    <!-- 4. 例句和翻译 -->
+                    <div class="example-display">
+                        <div class="example-sentence" id="learnExample">例句</div>
+                        <div class="example-translation" id="learnExampleTranslation">例句翻译</div>
+                        <button class="audio-btn small" onclick="AudioManager.playExampleAudio()">🔊</button>
+                    </div>
+
+                
+                    <!-- 操作按钮 -->
+                    <div class="action-buttons">
+                        <button class="next-btn" onclick="nextStep()">下一步</button>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- 读 - 页面 -->
+            <div class="step-content" id="contentRead">
+                <div class="read-section">
+                    <!-- 第一行：单词 -->
+                    <div class="word-display">
+                        <div class="word-text-big" id="readWord">word</div>
+                    </div>
+                    
+                    <!-- 第二行：音标和发音按钮 -->
+                    <div class="read-phonetic">
+                        <div class="phonetic-text" id="readPhonetic">/wɜːd/</div>
+                        <button class="audio-btn" onclick="AudioManager.playCurrentWordAudio()">🔊</button>
+                    </div>
+                    
+                    <!-- 第三行：录音按钮和打分结果 -->
+                    <div class="read-recording">
+                        <button class="record-btn" id="recordBtn" onclick="toggleRecording()">🎤 开始录音</button>
+                        <button class="record-btn" id="playbackBtn" onclick="playbackRecording()" disabled>🔊 回放录音</button>
+                        <div class="score-display" id="scoreDisplay">
+                            <span class="score-label">得分：</span>
+                            <span class="score-value" id="scoreValue">-</span>
+                        </div>
+                    </div>
+                    
+                    <div class="read-instructions">
+                        <p>请跟着音频朗读单词</p>
+                        <p class="recording-status" id="recordingStatus"></p>
+                    </div>
+                    
+                    <div class="action-buttons">
+                        <button class="next-btn" onclick="nextStep()">下一步</button>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- 练 - 页面 -->
+            <div class="step-content" id="contentPractice">
+                <div class="practice-section">
+                    <div class="practice-question" id="practiceQuestion">
+                        <!-- 练习问题将动态生成 -->
+                    </div>
+                    <div class="practice-options" id="practiceOptions">
+                        <!-- 练习选项将动态生成 -->
+                    </div>
+                    <div class="action-buttons">
+                        <button class="next-btn" onclick="nextStep()">下一步</button>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- 拼 - 页面 -->
+            <div class="step-content" id="contentSpell">
+                <div class="spell-section">
+                    <div class="spell-instructions">
+                        <p>请拼写以下单词</p>
+                    </div>
+                    
+                    <!-- 第一行：输入框 -->
+                    <div class="spell-inputs" id="spellInputs">
+                        <!-- 动态生成输入框 -->
+                    </div>
+                    
+                    <!-- 第二行：音标和发音按钮 -->
+                    <div class="spell-phonetic">
+                        <div class="phonetic-text" id="spellPhonetic">/wɜːd/</div>
+                        <button class="audio-btn" onclick="AudioManager.playCurrentWordAudio()">🔊</button>
+                    </div>
+                    
+                    <!-- 第三行：打乱的字母 -->
+                    <div class="spell-letters" id="spellLetters">
+                        <!-- 动态生成字母 -->
+                    </div>
+                    
+                    <div class="spell-result" id="spellResult"></div>
+                    <div class="action-buttons">
+                        <button class="next-btn" onclick="nextStep()">下一步</button>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- 写 - 页面 -->
+            <div class="step-content" id="contentWrite">
+                <div class="write-section">
+                    <!-- 第一行：输入区域 -->
+                    <div class="write-input-area">
+                        <input type="text" class="write-input-text" id="writeInput" placeholder="">
+                        <button class="write-clear-btn" id="writeClearBtn" onclick="clearWriteInput()">×</button>
+                    </div>
+                    
+                    <!-- 第二行：音标和发音按钮 -->
+                    <div class="write-phonetic">
+                        <div class="phonetic-text" id="writePhonetic">/wɜːd/</div>
+                        <button class="audio-btn" onclick="AudioManager.playCurrentWordAudio()">🔊</button>
+                    </div>
+                    
+                    <!-- 第三行：单词释义 -->
+                    <div class="write-meaning" id="writeMeaning">单词释义</div>
+                    
+                    <!-- 检查结果 -->
+                    <div class="write-result" id="writeResult"></div>
+                    
+                    <!-- 操作按钮 -->
+                    <div class="action-buttons">
+                        <button class="next-btn" onclick="nextStep()">下一步</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- 单词导航按钮 -->
+        <div class="word-navigation">
+            <button class="nav-btn prev-btn" id="prevWordBtn" onclick="goToPrevWord()">上一词</button>
+            <button class="nav-btn next-btn" id="nextWordBtn" onclick="goToNextWord()">下一词</button>
+        </div>
+    </div>
+    
+
+    
+    <!-- Loading 元素 -->
+    <div class="loading-overlay hidden" id="loadingOverlay">
+        <div class="loading-spinner"></div>
+        <div class="loading-text">加载中，请稍候...</div>
+    </div>
+    
+    <!-- 引入PDF.js库 -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.4.120/pdf.min.js"></script>
+    <script>
+        // 备用 CDN 加载
+        if (typeof pdfjsLib === 'undefined') {
+            document.write('<script src="https://cdn.jsdelivr.net/npm/pdfjs-dist@3.4.120/build/pdf.min.js"><\/script>');
+        }
+    </script>
+    
+    <script type="module" src="../js/main.js"></script>
+</body>
+</html>

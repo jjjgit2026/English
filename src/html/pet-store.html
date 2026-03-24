@@ -1,0 +1,198 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>宠物商店</title>
+    <link rel="stylesheet" href="../style.css">
+
+</head>
+<body class="pet-store-page">
+    <div class="page-header">
+        <button class="back-btn" onclick="window.location.href='index.html'">‹</button>
+        <div class="page-title">宠物商店</div>
+        <div class="points-display">
+            积分: <span id="userPoints">0</span>
+        </div>
+    </div>
+    
+    <div class="container">
+        <p class="subtitle">选择你喜欢的小动物领养回家吧！</p>
+        
+        <div class="pet-grid">
+            <!-- 鼠 -->
+            <div class="pet-card">
+                <img src="../../assets/pets/mouse/1.JPG" alt="老鼠" class="pet-image">
+                <div class="pet-name">鼠</div>
+                <button class="adopt-btn" onclick="openAdoptModal('mouse')">领养 (50积分)</button>
+            </div>
+            
+            <!-- 牛 -->
+            <div class="pet-card">
+                <img src="../../assets/pets/cow/1.JPG" alt="牛" class="pet-image">
+                <div class="pet-name">牛</div>
+                <button class="adopt-btn" onclick="openAdoptModal('cow')">领养 (50积分)</button>
+            </div>
+            
+            <!-- 虎 -->
+            <div class="pet-card">
+                <img src="../../assets/pets/tiger/1.JPG" alt="老虎" class="pet-image">
+                <div class="pet-name">虎</div>
+                <button class="adopt-btn" onclick="openAdoptModal('tiger')">领养 (50积分)</button>
+            </div>
+            
+            <!-- 兔 -->
+            <div class="pet-card">
+                <img src="../../assets/pets/rabbit/1.JPG" alt="兔子" class="pet-image">
+                <div class="pet-name">兔</div>
+                <button class="adopt-btn" onclick="openAdoptModal('rabbit')">领养 (50积分)</button>
+            </div>
+            
+            <!-- 龙 -->
+            <div class="pet-card">
+                <img src="../../assets/pets/dragon/1.JPG" alt="龙" class="pet-image">
+                <div class="pet-name">龙</div>
+                <button class="adopt-btn" onclick="openAdoptModal('dragon')">领养 (50积分)</button>
+            </div>
+            
+            <!-- 蛇 -->
+            <div class="pet-card">
+                <img src="../../assets/pets/snake/1.JPG" alt="蛇" class="pet-image">
+                <div class="pet-name">蛇</div>
+                <button class="adopt-btn" onclick="openAdoptModal('snake')">领养 (50积分)</button>
+            </div>
+            
+            <!-- 马 -->
+            <div class="pet-card">
+                <img src="../../assets/pets/horse/1.JPG" alt="马" class="pet-image">
+                <div class="pet-name">马</div>
+                <button class="adopt-btn" onclick="openAdoptModal('horse')">领养 (50积分)</button>
+            </div>
+            
+            <!-- 羊 -->
+            <div class="pet-card">
+                <img src="../../assets/pets/sheep/1.JPG" alt="羊" class="pet-image">
+                <div class="pet-name">羊</div>
+                <button class="adopt-btn" onclick="openAdoptModal('sheep')">领养 (50积分)</button>
+            </div>
+            
+            <!-- 猴 -->
+            <div class="pet-card">
+                <img src="../../assets/pets/monkey/1.JPG" alt="猴子" class="pet-image">
+                <div class="pet-name">猴</div>
+                <button class="adopt-btn" onclick="openAdoptModal('monkey')">领养 (50积分)</button>
+            </div>
+            
+            <!-- 鸡 -->
+            <div class="pet-card">
+                <img src="../../assets/pets/chicken/1.JPG" alt="鸡" class="pet-image">
+                <div class="pet-name">鸡</div>
+                <button class="adopt-btn" onclick="openAdoptModal('chicken')">领养 (50积分)</button>
+            </div>
+            
+            <!-- 狗 -->
+            <div class="pet-card">
+                <img src="../../assets/pets/dog/1.JPG" alt="狗" class="pet-image">
+                <div class="pet-name">狗</div>
+                <button class="adopt-btn" onclick="openAdoptModal('dog')">领养 (50积分)</button>
+            </div>
+            
+            <!-- 猪 -->
+            <div class="pet-card">
+                <img src="../../assets/pets/pig/1.JPG" alt="猪" class="pet-image">
+                <div class="pet-name">猪</div>
+                <button class="adopt-btn" onclick="openAdoptModal('pig')">领养 (50积分)</button>
+            </div>
+        </div>
+    </div>
+    
+    <!-- 领养弹窗 -->
+    <div id="adoptModal" class="modal">
+        <div class="modal-content">
+            <h2>领养宠物</h2>
+            <div class="form-group">
+                <label for="petName">记得每天来喂食哦！给宠物起个名字吧！</label>
+                <input type="text" id="petName" placeholder="输入宠物名字">
+            </div>
+            <div class="modal-buttons">
+                <button class="btn btn-primary" onclick="adoptPet()">确认领养</button>
+                <button class="btn btn-secondary" onclick="closeAdoptModal()">取消</button>
+            </div>
+        </div>
+    </div>
+    
+    <script type="module" src="../js/main.js"></script>
+    <script>
+        let currentUser = 'youyou'; // 默认用户
+        let currentPetType = '';
+        
+        // 页面加载时初始化
+        document.addEventListener('DOMContentLoaded', function() {
+            // 检查用户信息
+            checkUserInfo();
+            // 更新积分显示
+            updatePointsDisplay();
+        });
+        
+        // 检查用户信息
+        function checkUserInfo() {
+            const savedUser = localStorage.getItem('currentUser');
+            if (savedUser) {
+                currentUser = savedUser;
+            }
+        }
+        
+        // 更新积分显示
+        function updatePointsDisplay() {
+            if (typeof DataManager !== 'undefined') {
+                const points = DataManager.getUserPoints(currentUser);
+                document.getElementById('userPoints').textContent = points;
+            }
+        }
+        
+        // 打开领养弹窗
+        function openAdoptModal(petType) {
+            currentPetType = petType;
+            document.getElementById('adoptModal').style.display = 'flex';
+        }
+        
+        // 关闭领养弹窗
+        function closeAdoptModal() {
+            document.getElementById('adoptModal').style.display = 'none';
+            document.getElementById('petName').value = '';
+        }
+        
+        // 领养宠物
+        function adoptPet() {
+            const petName = document.getElementById('petName').value.trim();
+            if (!petName) {
+                alert('请给宠物起个名字');
+                return;
+            }
+            
+            if (typeof DataManager !== 'undefined') {
+                const result = DataManager.adoptPet(currentUser, currentPetType, petName);
+                if (result.success) {
+                    alert(result.message);
+                    closeAdoptModal();
+                    updatePointsDisplay();
+                    // 跳转到宠物窝页面
+                    window.location.href = 'pet-home.html';
+                } else {
+                    alert(result.message);
+                }
+            } else {
+                alert('数据管理器未加载，请刷新页面重试');
+            }
+        }
+        
+        // 点击模态框外部关闭
+        window.onclick = function(event) {
+            const modal = document.getElementById('adoptModal');
+            if (event.target == modal) {
+                closeAdoptModal();
+            }
+        }
+    </script>
+</body>
+</html>

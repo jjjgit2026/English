@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>积分收支记录 - 单词学习工具</title>
+    <link rel="stylesheet" href="../style.css">
+
+</head>
+<body>
+    <div class="points-history-page active" id="pointsHistoryPage">
+        <div class="points-header">
+            <button class="back-btn" onclick="backToHome()">‹</button>
+            <div class="page-title">积分收支记录</div>
+            <div style="width: 36px;"></div>
+        </div>
+        
+        <div class="points-summary" id="pointsSummary">
+            <div class="summary-item">
+                <span class="summary-label">总积分收入</span>
+                <span class="summary-value income" id="totalIncome">0</span>
+            </div>
+            <div class="summary-item">
+                <span class="summary-label">总积分支出</span>
+                <span class="summary-value expense" id="totalExpense">0</span>
+            </div>
+            <div class="summary-item">
+                <span class="summary-label">当前积分余额</span>
+                <span class="summary-value balance" id="currentBalance">0</span>
+            </div>
+        </div>
+        
+        <div class="points-list" id="pointsList">
+            <!-- 积分记录将动态生成 -->
+        </div>
+    </div>
+    
+
+    
+    <!-- Loading 元素 -->
+    <div class="loading-overlay hidden" id="loadingOverlay">
+        <div class="loading-spinner"></div>
+        <div class="loading-text">加载中，请稍候...</div>
+    </div>
+    
+    <script type="module" src="../js/main.js"></script>
+</body>
+</html>

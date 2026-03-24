@@ -1,0 +1,66 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>学习统计 - 单词学习工具</title>
+    <link rel="stylesheet" href="../style.css">
+</head>
+<body>
+    <!-- 学习统计页面 -->
+    <div class="stats-page active" id="statsPage">
+        <div class="list-header">
+            <div class="list-header-bar">
+                <button class="back-btn" onclick="backToHome()">‹</button>
+                <div class="list-title">学习统计</div>
+                <div style="width: 36px;"></div>
+            </div>
+        </div>
+        
+        <div class="stats-content">
+            <div class="stats-card">
+                <div class="stats-date" id="statsDate">2024-01-01</div>
+                <div class="stats-item">
+                    <div class="stats-label">今日完成单词</div>
+                    <div class="stats-value" id="todayCompleted">0</div>
+                </div>
+                <div class="stats-item">
+                    <div class="stats-label">今日新增错词</div>
+                    <div class="stats-value" id="todayError">0</div>
+                </div>
+            </div>
+            
+            <div class="stats-card">
+                <div class="stats-title">累计统计</div>
+                <div class="stats-item">
+                    <div class="stats-label">累计完成单词</div>
+                    <div class="stats-value" id="totalCompleted">0</div>
+                </div>
+                <div class="stats-item">
+                    <div class="stats-label">累计错词数</div>
+                    <div class="stats-value" id="totalError">0</div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+
+    
+    <!-- Loading 元素 -->
+    <div class="loading-overlay hidden" id="loadingOverlay">
+        <div class="loading-spinner"></div>
+        <div class="loading-text">加载中，请稍候...</div>
+    </div>
+    
+    <!-- 引入PDF.js库 -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.4.120/pdf.min.js"></script>
+    <script>
+        // 备用 CDN 加载
+        if (typeof pdfjsLib === 'undefined') {
+            document.write('<script src="https://cdn.jsdelivr.net/npm/pdfjs-dist@3.4.120/build/pdf.min.js"><\/script>');
+        }
+    </script>
+    
+    <script type="module" src="../js/main.js"></script>
+</body>
+</html>

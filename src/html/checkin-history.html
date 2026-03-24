@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>打卡记录 - 单词学习工具</title>
+    <link rel="stylesheet" href="../style.css">
+
+</head>
+<body>
+    <div class="checkin-history-page active" id="checkinHistoryPage">
+        <div class="checkin-header">
+            <button class="back-btn" onclick="backToHome()">‹</button>
+            <div class="month-selector">
+                <button class="month-btn" onclick="changeMonth(-1)">←</button>
+                <div class="current-month" id="currentMonth">2026年3月</div>
+                <button class="month-btn" onclick="changeMonth(1)">→</button>
+            </div>
+            <div style="width: 36px;"></div>
+        </div>
+        
+        <div class="calendar" id="calendar">
+            <div class="calendar-header">
+                <div class="weekday">日</div>
+                <div class="weekday">一</div>
+                <div class="weekday">二</div>
+                <div class="weekday">三</div>
+                <div class="weekday">四</div>
+                <div class="weekday">五</div>
+                <div class="weekday">六</div>
+            </div>
+            <div class="calendar-body" id="calendarBody">
+                <!-- 日历格子将动态生成 -->
+            </div>
+        </div>
+        
+        <div class="checkin-stats" id="checkinStats">
+            <div class="stat-item">
+                <span>总打卡次数:</span>
+                <span id="totalCheckins">0</span>
+            </div>
+            <div class="stat-item">
+                <span>连续打卡天数:</span>
+                <span id="consecutiveDays">0</span>
+            </div>
+            <div class="stat-item">
+                <span>本月打卡次数:</span>
+                <span id="monthlyCheckins">0</span>
+            </div>
+            <div class="stat-item">
+                <span>本月打卡积分:</span>
+                <span id="monthlyPoints">0</span>
+            </div>
+        </div>
+    </div>
+    
+
+    
+    <!-- Loading 元素 -->
+    <div class="loading-overlay hidden" id="loadingOverlay">
+        <div class="loading-spinner"></div>
+        <div class="loading-text">加载中，请稍候...</div>
+    </div>
+    
+    <script type="module" src="../js/main.js"></script>
+</body>
+</html>

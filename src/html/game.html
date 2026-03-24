@@ -1,0 +1,84 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>单词消消乐 - 单词学习工具</title>
+    <link rel="stylesheet" href="../style.css">
+</head>
+<body>
+    <!-- 消消乐页面 -->
+    <div class="game-page active" id="gamePage">
+        <div class="list-header">
+            <div class="list-header-bar">
+                <button class="back-btn" onclick="backToHome()">‹</button>
+                <div class="list-title">单词消消乐</div>
+                <div style="width: 36px;"></div>
+            </div>
+        </div>
+        
+        <!-- 进度条 -->
+        <div class="game-progress">
+            <div class="progress-info">
+                <span id="gameCorrectCount">0</span>/<span id="gameTotalCount">0</span>
+            </div>
+            <div class="progress-bar">
+                <div class="progress-fill" id="gameProgressFill"></div>
+            </div>
+        </div>
+        
+        <!-- 游戏区域 -->
+        <div class="game-area">
+            <div class="game-column" id="wordColumn">
+                <!-- 单词将动态生成 -->
+            </div>
+            <div class="game-column" id="meaningColumn">
+                <!-- 释义将动态生成 -->
+            </div>
+        </div>
+        
+        <!-- 时间显示 -->
+        <div class="game-timer">
+            用时: <span id="gameTimer">00:00</span>
+        </div>
+        
+        <!-- 游戏结果界面 -->
+        <div class="game-result hidden" id="gameResult">
+            <div class="result-content">
+                <h2>游戏结束</h2>
+                <div class="result-item">
+                    <span class="result-label">用时:</span>
+                    <span id="gameTime">00:00</span>
+                </div>
+                <div class="result-item">
+                    <span class="result-label">得分:</span>
+                    <span id="gameScore">0</span>
+                </div>
+                <div class="result-buttons">
+                    <button class="result-btn" onclick="restartGame()">再玩一次</button>
+                    <button class="result-btn" onclick="backToErrorBook()">返回错词本</button>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+
+    
+    <!-- Loading 元素 -->
+    <div class="loading-overlay hidden" id="loadingOverlay">
+        <div class="loading-spinner"></div>
+        <div class="loading-text">加载中，请稍候...</div>
+    </div>
+    
+    <!-- 引入PDF.js库 -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.4.120/pdf.min.js"></script>
+    <script>
+        // 备用 CDN 加载
+        if (typeof pdfjsLib === 'undefined') {
+            document.write('<script src="https://cdn.jsdelivr.net/npm/pdfjs-dist@3.4.120/build/pdf.min.js"><\/script>');
+        }
+    </script>
+    
+    <script type="module" src="../js/main.js"></script>
+</body>
+</html>

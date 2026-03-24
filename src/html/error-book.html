@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>错词本 - 单词学习工具</title>
+    <link rel="stylesheet" href="../style.css">
+</head>
+<body>
+    <!-- 错词本页面 -->
+    <div class="error-book-page active" id="errorBookPage">
+        <div class="list-header">
+            <div class="list-header-bar">
+                <button class="back-btn" onclick="backToHome()">‹</button>
+                <div class="list-title">错词本</div>
+                <div style="width: 36px;"></div>
+            </div>
+        </div>
+        
+        <!-- 遮罩模式 -->
+        <div class="mask-modes">
+            <button class="mask-mode active" data-mode="none">无遮盖</button>
+            <button class="mask-mode" data-mode="word">遮单词</button>
+            <button class="mask-mode" data-mode="meaning">遮中文</button>
+        </div>
+        
+        <!-- 单词列表 -->
+        <div class="word-list" id="errorWordList">
+            <!-- 错词将动态生成 -->
+        </div>
+        
+        <!-- 底部按钮 -->
+        <div class="list-footer">
+            <button class="study-action-btn" onclick="startErrorWordLearning()">开始详细学习</button>
+        </div>
+    </div>
+    
+
+    
+    <!-- Loading 元素 -->
+    <div class="loading-overlay hidden" id="loadingOverlay">
+        <div class="loading-spinner"></div>
+        <div class="loading-text">加载中，请稍候...</div>
+    </div>
+    
+    <!-- 引入PDF.js库 -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.4.120/pdf.min.js"></script>
+    <script>
+        // 备用 CDN 加载
+        if (typeof pdfjsLib === 'undefined') {
+            document.write('<script src="https://cdn.jsdelivr.net/npm/pdfjs-dist@3.4.120/build/pdf.min.js"><\/script>');
+        }
+    </script>
+    
+    <script type="module" src="../js/main.js"></script>
+</body>
+</html>
