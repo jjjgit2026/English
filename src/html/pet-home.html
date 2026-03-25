@@ -17,9 +17,9 @@
     </div>
     
     <div class="container">
-        <p class="subtitle">好好照顾你的宠物，让它们健康成长！</p>
+        <p class="subtitle" id="petCareText">好好照顾你的宠物，让它们健康成长！</p>
         
-        <div class="nav-buttons">
+        <div class="nav-buttons" id="petStoreButton">
             <a href="pet-store.html" class="btn btn-secondary">宠物商店</a>
         </div>
         
@@ -91,15 +91,23 @@
                 const pets = DataManager.getPets(currentUser);
                 const petList = document.getElementById('petList');
                 const emptyState = document.getElementById('emptyState');
+                const petCareText = document.getElementById('petCareText');
+                const petStoreButton = document.getElementById('petStoreButton');
                 
                 if (pets.length === 0) {
                     petList.style.display = 'none';
                     emptyState.style.display = 'block';
+                    // 隐藏上方的文字和宠物商店按钮
+                    petCareText.style.display = 'none';
+                    petStoreButton.style.display = 'none';
                     return;
                 }
                 
                 petList.style.display = 'grid';
                 emptyState.style.display = 'none';
+                // 显示上方的文字和宠物商店按钮
+                petCareText.style.display = 'block';
+                petStoreButton.style.display = 'block';
                 
                 petList.innerHTML = '';
                 
@@ -171,9 +179,15 @@
                 if (petList.children.length === 0) {
                     petList.style.display = 'none';
                     emptyState.style.display = 'block';
+                    // 隐藏上方的文字和宠物商店按钮
+                    petCareText.style.display = 'none';
+                    petStoreButton.style.display = 'none';
                 } else {
                     // 为生成的宠物图片添加点击事件
                     addImageClickEvents();
+                    // 显示上方的文字和宠物商店按钮
+                    petCareText.style.display = 'block';
+                    petStoreButton.style.display = 'block';
                 }
             } else {
                 alert('数据管理器未加载，请刷新页面重试');
