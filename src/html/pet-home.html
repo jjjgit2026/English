@@ -28,10 +28,15 @@
         </div>
         
         <div id="emptyState" class="empty-state" style="display: none;">
-            <h2>还没有宠物</h2>
-            <p>去宠物商店领养一只吧！</p>
-            <a href="pet-store.html">前往宠物商店</a>
-        </div>
+        <h2>还没有宠物</h2>
+        <p>去宠物商店领养一只吧！</p>
+        <a href="pet-store.html">前往宠物商店</a>
+    </div>
+</div>
+    
+    <!-- 图片放大弹窗 -->
+    <div id="imageModal" class="image-modal">
+        <img id="modalImage" class="modal-image" src="" alt="宠物图片">
     </div>
     
     <script type="module" src="../js/main.js"></script>
@@ -111,8 +116,6 @@
                     const petItem = document.createElement('div');
                     petItem.className = 'pet-item';
                     
-
-                    
                     // 宠物状态
                     const statusText = pet.isDead ? '已死亡' : '健康';
                     const statusClass = pet.isDead ? 'dead' : 'alive';
@@ -168,6 +171,9 @@
                 if (petList.children.length === 0) {
                     petList.style.display = 'none';
                     emptyState.style.display = 'block';
+                } else {
+                    // 为生成的宠物图片添加点击事件
+                    addImageClickEvents();
                 }
             } else {
                 alert('数据管理器未加载，请刷新页面重试');
@@ -257,6 +263,48 @@
                 const points = DataManager.getUserPoints(currentUser);
                 document.getElementById('userPoints').textContent = points;
             }
+        }
+        
+        // 打开图片放大弹窗
+        function openImageModal(imageSrc) {
+            const modal = document.getElementById('imageModal');
+            const modalImage = document.getElementById('modalImage');
+            modalImage.src = imageSrc;
+            modal.classList.add('active');
+        }
+        
+        // 关闭图片放大弹窗
+        function closeImageModal() {
+            const modal = document.getElementById('imageModal');
+            modal.classList.remove('active');
+        }
+        
+        // 点击模态框外部关闭
+        document.getElementById('imageModal').onclick = function(event) {
+            if (event.target === this) {
+                closeImageModal();
+            }
+        }
+        
+        // 为模态框图片添加点击事件
+        document.getElementById('modalImage').onclick = function() {
+            // 添加动画类
+            this.classList.add('click-animation');
+            
+            // 动画结束后移除动画类，以便下次点击时再次触发
+            setTimeout(() => {
+                this.classList.remove('click-animation');
+            }, 600);
+        }
+        
+        // 为所有宠物图片添加点击事件
+        function addImageClickEvents() {
+            const petImages = document.querySelectorAll('.pet-image');
+            petImages.forEach(img => {
+                img.onclick = function() {
+                    openImageModal(this.src);
+                };
+            });
         }
     </script>
 </body>

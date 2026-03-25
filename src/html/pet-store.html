@@ -145,6 +145,11 @@
         </div>
     </div>
     
+    <!-- 图片放大弹窗 -->
+    <div id="imageModal" class="image-modal">
+        <img id="modalImage" class="modal-image" src="" alt="宠物图片">
+    </div>
+    
     <script type="module" src="../js/main.js"></script>
     <script>
         let currentUser = 'youyou'; // 默认用户
@@ -218,8 +223,45 @@
             img.alt = petType;
             img.className = 'pet-image';
             
+            // 添加点击事件
+            img.onclick = function() {
+                openImageModal(this.src);
+            };
+            
             // 替换占位符
             element.parentNode.replaceChild(img, element);
+        }
+        
+        // 打开图片放大弹窗
+        function openImageModal(imageSrc) {
+            const modal = document.getElementById('imageModal');
+            const modalImage = document.getElementById('modalImage');
+            modalImage.src = imageSrc;
+            modal.classList.add('active');
+        }
+        
+        // 关闭图片放大弹窗
+        function closeImageModal() {
+            const modal = document.getElementById('imageModal');
+            modal.classList.remove('active');
+        }
+        
+        // 点击模态框外部关闭
+        document.getElementById('imageModal').onclick = function(event) {
+            if (event.target === this) {
+                closeImageModal();
+            }
+        }
+        
+        // 为模态框图片添加点击事件
+        document.getElementById('modalImage').onclick = function() {
+            // 添加动画类
+            this.classList.add('click-animation');
+            
+            // 动画结束后移除动画类，以便下次点击时再次触发
+            setTimeout(() => {
+                this.classList.remove('click-animation');
+            }, 600);
         }
         
         // 点击模态框外部关闭
