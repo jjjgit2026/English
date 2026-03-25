@@ -185,6 +185,24 @@ export function closeBookModal() {
 // 显示用户选择弹窗
 export function showUserModal() {
     document.getElementById('userModal').classList.add('active');
+    
+    // 延迟绑定事件，确保DOM元素已加载
+    setTimeout(() => {
+        const exportBtn = document.getElementById('exportDataBtn');
+        const importBtn = document.getElementById('importDataBtn');
+        
+        if (exportBtn) {
+            // 移除旧的事件监听器，避免重复绑定
+            exportBtn.removeEventListener('click', window.exportData);
+            exportBtn.addEventListener('click', window.exportData);
+        }
+        
+        if (importBtn) {
+            // 移除旧的事件监听器，避免重复绑定
+            importBtn.removeEventListener('click', window.importData);
+            importBtn.addEventListener('click', window.importData);
+        }
+    }, 100);
 }
 
 // 关闭用户选择弹窗
@@ -228,6 +246,9 @@ export async function closeUserModal() {
         
         // 加载单词数据
         await loadPDF();
+        
+        // 更新打卡状态显示
+        updateCheckInStatus();
     }
     document.getElementById('userModal').classList.remove('active');
 }

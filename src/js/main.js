@@ -59,6 +59,143 @@ window.errorBookMaskMode = errorBookMaskMode;
 window.userStats = userStats;
 window.currentWordIndex = currentWordIndex;
 window.currentStep = currentStep;
+
+// 导出数据功能
+window.exportData = function() {
+    try {
+        // 收集所有 localStorage 数据
+        const data = {};
+        for (let i = 0; i < localStorage.length; i++) {
+            const key = localStorage.key(i);
+            data[key] = localStorage.getItem(key);
+        }
+        
+        // 创建 JSON 字符串
+        const jsonStr = JSON.stringify(data, null, 2);
+        
+        // 创建 Blob 对象
+        const blob = new Blob([jsonStr], { type: 'application/json' });
+        
+        // 创建下载链接
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        
+        // 生成带有时分秒的文件名
+        const now = new Date();
+        const fileName = `vocabulary-app-data-${now.getFullYear()}${String(now.getMonth() + 1).padStart(2, '0')}${String(now.getDate()).padStart(2, '0')}${String(now.getHours()).padStart(2, '0')}${String(now.getMinutes()).padStart(2, '0')}${String(now.getSeconds()).padStart(2, '0')}.json`;
+        
+        a.href = url;
+        a.download = fileName;
+        
+        // 触发下载
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        
+        // 释放 URL 对象
+        URL.revokeObjectURL(url);
+        
+        alert('数据导出成功！');
+    } catch (error) {
+        console.error('导出数据失败:', error);
+        alert('导出数据失败，请重试');
+    }
+};
+
+// 导入数据功能
+window.importData = function() {
+    const fileInput = document.getElementById('dataFileInput');
+    fileInput.click();
+    
+    fileInput.onchange = function(e) {
+        const file = e.target.files[0];
+        if (!file) return;
+        
+        // 检查文件类型
+        if (!file.name.endsWith('.json')) {
+            alert('请选择JSON格式的文件');
+            return;
+        }
+        
+        const reader = new FileReader();
+        reader.onload = function(e) {
+            try {
+                const jsonStr = e.target.result;
+                
+                // 验证JSON格式
+                let data;
+                try {
+                    data = JSON.parse(jsonStr);
+                } catch (parseError) {
+                    alert('文件格式错误：不是有效的JSON格式');
+                    return;
+                }
+                
+                // 验证数据结构
+                if (!data || typeof data !== 'object') {
+                    alert('文件格式错误：数据结构不正确');
+                    return;
+                }
+                
+                // 验证是否包含必要的数据字段
+                const requiredFields = ['currentUser', 'currentUserName'];
+                const hasRequiredFields = requiredFields.some(field => data.hasOwnProperty(field));
+                
+                if (!hasRequiredFields) {
+                    alert('文件格式错误：缺少必要的数据字段');
+                    return;
+                }
+                
+                // 清空现有数据
+                localStorage.clear();
+                
+                // 导入数据
+                for (const key in data) {
+                    if (data.hasOwnProperty(key)) {
+                        localStorage.setItem(key, data[key]);
+                    }
+                }
+                
+                alert('数据导入成功！请刷新页面以应用更改。');
+            } catch (error) {
+                console.error('导入数据失败:', error);
+                alert('导入数据失败，请确保文件格式正确');
+            }
+        };
+        reader.readAsText(file);
+    };
+};
+
+// 绑定数据管理按钮事件
+function bindDataManagementEvents() {
+    const exportBtn = document.getElementById('exportDataBtn');
+    const importBtn = document.getElementById('importDataBtn');
+    
+    if (exportBtn) {
+        exportBtn.addEventListener('click', window.exportData);
+        console.log('已绑定导出按钮事件');
+    }
+    
+    if (importBtn) {
+        importBtn.addEventListener('click', window.importData);
+        console.log('已绑定导入按钮事件');
+    }
+}
+
+// 页面加载完成后绑定事件
+document.addEventListener('DOMContentLoaded', function() {
+    bindDataManagementEvents();
+    console.log('DOM加载完成，尝试绑定数据管理按钮事件');
+});
+
+// 当用户弹窗显示时重新绑定事件
+window.showUserModal = function() {
+    // 显示用户弹窗
+    document.getElementById('userModal').classList.add('active');
+    // 重新绑定事件，确保按钮可点击
+    setTimeout(bindDataManagementEvents, 100);
+    console.log('显示用户弹窗，重新绑定数据管理按钮事件');
+};
 window.isErrorBookMode = isErrorBookMode;
 window.errorWords = errorWords;
 
