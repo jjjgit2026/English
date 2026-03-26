@@ -886,6 +886,7 @@ body {
     margin: 0 auto;
     border-radius: 16px 16px 0 0;
     box-sizing: border-box;
+    justify-content: center;
 }
 
 .refresh-btn {
@@ -904,7 +905,6 @@ body {
 
 .study-action-btn {
     flex: 1;
-    max-width: 200px;
     height: 48px;
     background: linear-gradient(135deg, #4CAF50 0%, #2E7D32 100%);
     color: white;
@@ -916,6 +916,7 @@ body {
     display: flex;
     align-items: center;
     justify-content: center;
+    max-width: 200px;
     margin: 0 auto;
 }
 
@@ -1598,36 +1599,24 @@ body {
     position: fixed;
     bottom: 80px;
     right: 20px;
-    width: 65px;
-    height: 65px;
-    background: linear-gradient(135deg, #FF6B6B 0%, #4ECDC4 100%);
+    width: 60px;
+    height: 60px;
+    background: linear-gradient(135deg, #4CAF50 0%, #45a049 100%);
     border-radius: 50%;
     display: flex;
     align-items: center;
     justify-content: center;
     color: white;
     font-weight: bold;
-    font-size: 14px;
-    box-shadow: 0 6px 16px rgba(255, 107, 107, 0.4);
+    box-shadow: 0 4px 12px rgba(76, 175, 80, 0.4);
     cursor: pointer;
-    animation: floatAnimation 3s ease-in-out infinite, pulseAnimation 2s ease-in-out infinite;
+    animation: floatAnimation 3s ease-in-out infinite;
     z-index: 1000;
-    transition: all 0.3s ease;
-}
-
-.game-floating-entry:hover {
-    transform: scale(1.1) rotate(5deg);
-    box-shadow: 0 8px 20px rgba(255, 107, 107, 0.6);
 }
 
 @keyframes floatAnimation {
     0%, 100% { transform: translateY(0); }
     50% { transform: translateY(-10px); }
-}
-
-@keyframes pulseAnimation {
-    0%, 100% { transform: scale(1); }
-    50% { transform: scale(1.05); }
 }
 
 /* 信息卡片样式 */
@@ -2919,6 +2908,112 @@ body {
     transition: transform 0.2s, box-shadow 0.2s;
 }
 
+/* 家长盖章按钮样式 */
+.stamp-btn {
+    background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+    color: white;
+    border: none;
+    padding: 12px 24px;
+    border-radius: 25px;
+    font-size: 16px;
+    font-weight: bold;
+    cursor: pointer;
+    transition: all 0.3s ease;
+}
+
+.stamp-btn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(79, 172, 254, 0.4);
+}
+
+/* 家长盖章模态框样式 */
+#parentStampModal {
+    display: flex;
+}
+
+#parentStampModal .modal-content {
+    background-color: white;
+    border-radius: 10px;
+    padding: 20px;
+    width: 90%;
+    max-width: 400px;
+    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
+}
+
+#parentStampModal .modal-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 20px;
+    padding-bottom: 10px;
+    border-bottom: 1px solid #eee;
+}
+
+#parentStampModal .modal-header h3 {
+    margin: 0;
+    color: #333;
+}
+
+#parentStampModal .close-btn {
+    background: none;
+    border: none;
+    font-size: 24px;
+    cursor: pointer;
+    color: #999;
+}
+
+#parentStampModal .modal-body {
+    margin-bottom: 20px;
+}
+
+#parentStampModal .form-group {
+    margin-top: 15px;
+}
+
+#parentStampModal .form-group label {
+    display: block;
+    margin-bottom: 8px;
+    font-weight: bold;
+    color: #333;
+}
+
+#parentStampModal .form-group input {
+    width: 100%;
+    padding: 10px;
+    border: 1px solid #ddd;
+    border-radius: 5px;
+    font-size: 16px;
+}
+
+#parentStampModal .modal-footer {
+    display: flex;
+    justify-content: flex-end;
+    gap: 10px;
+    padding-top: 15px;
+    border-top: 1px solid #eee;
+}
+
+#parentStampModal .cancel-btn {
+    background-color: #f0f0f0;
+    color: #333;
+    border: none;
+    padding: 8px 16px;
+    border-radius: 5px;
+    cursor: pointer;
+    font-size: 14px;
+}
+
+#parentStampModal .confirm-btn {
+    background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+    color: white;
+    border: none;
+    padding: 8px 16px;
+    border-radius: 5px;
+    cursor: pointer;
+    font-size: 14px;
+    font-weight: bold;
+}
+
 .article-list-page .article-item:hover {
     transform: translateY(-2px);
     box-shadow: 0 4px 15px rgba(0,0,0,0.1);
@@ -3022,6 +3117,31 @@ body {
     font-size: 15px;
     line-height: 1.6;
     color: #555;
+    max-height: 1000px;
+    overflow: hidden;
+    margin-bottom: 24px;
+    transition: all 0.3s ease;
+}
+
+.article-detail-page .article-translation.collapsed {
+    max-height: 0;
+    margin-bottom: 0;
+}
+
+.article-detail-page .collapsible-title {
+    cursor: pointer;
+    position: relative;
+}
+
+.article-detail-page .collapsible-title::after {
+    content: '▼';
+    position: absolute;
+    right: 0;
+    transition: transform 0.3s ease;
+}
+
+.article-detail-page .collapsible-title.expanded::after {
+    transform: rotate(180deg);
 }
 
 .article-detail-page .article-grammar {

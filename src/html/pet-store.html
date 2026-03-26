@@ -181,6 +181,15 @@
         
         // 打开领养弹窗
         function openAdoptModal(petType) {
+            // 检查用户积分是否足够
+            if (typeof DataManager !== 'undefined') {
+                const points = DataManager.getUserPoints(currentUser);
+                if (points < 50) {
+                    alert('积分不足，需要50积分才能领养宠物');
+                    return;
+                }
+            }
+            
             currentPetType = petType;
             document.getElementById('adoptModal').style.display = 'flex';
         }

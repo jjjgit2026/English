@@ -69,8 +69,6 @@ export default class AudioManager {
     static markWordAsLearned(word) {
         try {
             DataManager.markWordAsLearned(currentUser, currentFile, word);
-            // 学习新单词奖励1积分
-            DataManager.addPoints(currentUser, 1);
             // 更新统计显示
             updateStatsDisplay();
         } catch (e) {

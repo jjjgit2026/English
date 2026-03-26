@@ -880,10 +880,11 @@ export default class DataManager {
         return `${year}-${month}-${day}`;
     }
 
-    static addPoints(user, points) {
+    static addPoints(user, points, description = '学习单词') {
         console.log('[DataManager] addPoints 开始');
         console.log('[DataManager] user:', user);
         console.log('[DataManager] points:', points);
+        console.log('[DataManager] description:', description);
         try {
             // 使用 getUserData 获取数据，确保数据结构完整和版本一致
             let userData = DataManager.getUserData(user);
@@ -919,7 +920,7 @@ export default class DataManager {
             console.log('[DataManager] 添加后的积分:', userData.total.points);
             
             // 添加积分收入记录
-            this.addPointsHistory(userData, 'income', pointsToAdd, '学习单词');
+            this.addPointsHistory(userData, 'income', pointsToAdd, description);
             
             // 使用 saveUserData 函数来保存数据，确保数据结构完整
             DataManager.saveUserData(user, userData);
@@ -985,18 +986,41 @@ export default class DataManager {
         try {
             const today = this.getLocalDateString();
             
-            const pointsRecord = {
-                date: today,
-                type: type, // 'income' or 'expense'
-                amount: amount,
-                description: description
-            };
-            
             if (!userData.pointsHistory) {
                 userData.pointsHistory = [];
             }
             
-            userData.pointsHistory.push(pointsRecord);
+            // 检查是否是学习单词的记录
+            if (description === '学习单词') {
+                // 查找当天是否已经存在学习单词的记录
+                const existingRecordIndex = userData.pointsHistory.findIndex(record => 
+                    record.date === today && record.description === '学习单词' && record.type === type
+                );
+                
+                if (existingRecordIndex !== -1) {
+                    // 更新现有记录的积分
+                    userData.pointsHistory[existingRecordIndex].amount += amount;
+                } else {
+                    // 添加新记录
+                    const pointsRecord = {
+                        date: today,
+                        type: type, // 'income' or 'expense'
+                        amount: amount,
+                        description: description
+                    };
+                    userData.pointsHistory.push(pointsRecord);
+                }
+            } else {
+                // 其他类型的记录直接添加
+                const pointsRecord = {
+                    date: today,
+                    type: type, // 'income' or 'expense'
+                    amount: amount,
+                    description: description
+                };
+                userData.pointsHistory.push(pointsRecord);
+            }
+            
             return true;
         } catch (error) {
             console.error('添加积分记录失败:', error);
@@ -1124,9 +1148,10 @@ export default class DataManager {
                 return { success: false, message: '今天已经喂过宠物了' };
             }
             
-            const feedCost = 5; // 喂食需要5积分
+            // 计算喂食成本：喂养10天后，积分消耗由5个涨至10个
+            const feedCost = pet.feedCount >= 10 ? 10 : 5;
             if (userData.total.points < feedCost) {
-                return { success: false, message: '积分不足，需要5积分才能喂食' };
+                return { success: false, message: `积分不足，需要${feedCost}积分才能喂食` };
             }
             
             // 扣除积分

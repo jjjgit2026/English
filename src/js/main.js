@@ -16,7 +16,7 @@ import { checkUserInfo, loadUserBook, saveUserBook, loadUserStats, updateCheckIn
 import { loadPDF, renderWordList, generateWordChain, updateLearningContent, updateNavigationButtons, resetLearningSteps, switchStep, isStepCompleted, nextStep, goToPrevWord, goToNextWord, backToWordList, generatePracticeQuestion, checkPracticeAnswer, addLetter, removeLetter, checkSpelling, checkWriting, clearWriteInput, generateErrorWordChain, updateErrorWordLearningContent, updateErrorWordNavigationButtons, renderErrorWordList, startErrorWordLearning, openWordLinkPage, openErrorWordLinkPage, updateStatsPage, getPhoneticColor, initCheckinHistoryPage, changeMonth, initPointsHistoryPage } from './modules/word.js';
 
 // 导入工具模块
-import { initEventListeners, startLearning, startDetailedLearning, openArticleListPage, backToHome, generateUnitTabs, resetRecordingState, toggleRecording, startRecording, analyzeRecording, calculateScore, calculateSimilarity, playbackRecording, openErrorBookPage, openStatsPage, openPetHomePage, openCheckinHistoryPage, openPointsHistoryPage, openGamePage } from './modules/utils.js';
+import { initEventListeners, startLearning, startDetailedLearning, openArticleListPage, openModelEssayListPage, backToHome, generateUnitTabs, resetRecordingState, toggleRecording, startRecording, analyzeRecording, calculateScore, calculateSimilarity, playbackRecording, openErrorBookPage, openStatsPage, openPetHomePage, openCheckinHistoryPage, openPointsHistoryPage, openGamePage } from './modules/utils.js';
 
 // 导入游戏模块
 import { initGame, loadNextGameGroup, generateGameContent, selectGameItem, updateGameTimer, endGame, restartGame, backToErrorBook } from './modules/game.js';
@@ -251,6 +251,7 @@ window.initEventListeners = initEventListeners;
 window.startLearning = startLearning;
 window.startDetailedLearning = startDetailedLearning;
 window.openArticleListPage = openArticleListPage;
+window.openModelEssayListPage = openModelEssayListPage;
 window.backToHome = backToHome;
 window.generateUnitTabs = generateUnitTabs;
 window.resetRecordingState = resetRecordingState;

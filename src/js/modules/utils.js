@@ -111,6 +111,28 @@ export function openArticleListPage() {
     window.location.href = 'article-list.html';
 }
 
+// 打开必背范文列表页面
+export function openModelEssayListPage() {
+    // 根据当前教材确定要加载的文件
+    const grade = parseInt(currentFile[0]);
+    const isPrimary = grade >= 3 && grade <= 6;
+    const isJunior = grade >= 7 && grade <= 9;
+    
+    // 设置要加载的文件路径
+    let targetFile = '';
+    if (isPrimary) {
+        targetFile = 'all-小学.md';
+    } else if (isJunior) {
+        targetFile = 'all-初中.md';
+    } else {
+        // 默认加载小学范文
+        targetFile = 'all-小学.md';
+    }
+    
+    // 跳转到文章列表页面，并传递文件参数
+    window.location.href = `article-list.html?file=${encodeURIComponent(targetFile)}`;
+}
+
 // 返回首页
 export function backToHome() {
     window.location.href = 'index.html';

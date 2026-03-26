@@ -20,15 +20,20 @@
             <div class="article-chinese-title" id="articleChineseTitle"></div>
             
             <div class="article-section">
-                <h2 class="section-title">英文原文</h2>
+                <h2 class="section-title" style="display: flex; justify-content: space-between; align-items: center;">
+                    英文原文
+                    <div id="parentStampContainer">
+                        <button class="stamp-btn" onclick="showParentStampModal()">家长盖章</button>
+                    </div>
+                </h2>
                 <div class="article-body" id="articleBody">
                     <!-- 英文原文将通过JavaScript动态生成 -->
                 </div>
             </div>
             
             <div class="article-section">
-                <h2 class="section-title">中文大意</h2>
-                <div class="article-translation" id="articleTranslation">
+                <h2 class="section-title collapsible-title" onclick="toggleCollapse('articleTranslation')">中文大意</h2>
+                <div class="article-translation collapsed" id="articleTranslation">
                     <!-- 中文大意将通过JavaScript动态生成 -->
                 </div>
             </div>
@@ -48,6 +53,27 @@
         <div class="loading-text">加载中，请稍候...</div>
     </div>
     
+    <!-- 家长盖章模态框 -->
+    <div class="modal hidden" id="parentStampModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>家长盖章</h3>
+                <button class="close-btn" onclick="closeParentStampModal()">&times;</button>
+            </div>
+            <div class="modal-body">
+                <p id="stampMessage"></p>
+                <div class="form-group">
+                    <label for="stampPassword">请输入密码：</label>
+                    <input type="password" id="stampPassword" placeholder="输入密码">
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="cancel-btn" onclick="closeParentStampModal()">取消</button>
+                <button class="confirm-btn" onclick="verifyStampPassword()">确认</button>
+            </div>
+        </div>
+    </div>
+    
     <!-- 引入PDF.js库 -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.4.120/pdf.min.js"></script>
     <script>
@@ -62,15 +88,27 @@
         // 全局变量
         let articles = [];
         let currentArticleIndex = 0;
+        let clickedSentences = new Set();
+        let totalSentences = 0;
+        let currentUser = 'youyou'; // 默认用户
         
         // 初始化文章详情页面
         document.addEventListener('DOMContentLoaded', async function() {
             console.log('[文章详情页面初始化] 开始');
             
+            // 检查用户信息
+            checkUserInfo();
+            
             // 获取URL参数中的文章索引
             const urlParams = new URLSearchParams(window.location.search);
             currentArticleIndex = parseInt(urlParams.get('index')) || 0;
             console.log('[文章详情页面初始化] 当前文章索引:', currentArticleIndex);
+            
+            // 更新页面标题
+            updatePageTitle();
+            
+            // 检查是否显示家长盖章按钮
+            checkStampButton();
             
             // 确保全局变量已初始化
             if (typeof window.currentFile === 'undefined') {
@@ -94,6 +132,35 @@
             console.log('[文章详情页面初始化] 结束');
         });
         
+        // 更新页面标题
+        function updatePageTitle() {
+            // 获取URL参数中的文件路径
+            const urlParams = new URLSearchParams(window.location.search);
+            const targetFile = urlParams.get('file');
+            
+            // 根据文件类型设置页面标题
+            const pageTitle = document.querySelector('.page-title');
+            const documentTitle = document.querySelector('title');
+            
+            if (targetFile === 'all-小学.md' || targetFile === 'all-初中.md') {
+                // 必背范文
+                if (pageTitle) {
+                    pageTitle.textContent = '范文详情';
+                }
+                if (documentTitle) {
+                    documentTitle.textContent = '范文详情';
+                }
+            } else {
+                // 趣文阅读
+                if (pageTitle) {
+                    pageTitle.textContent = '文章详情';
+                }
+                if (documentTitle) {
+                    documentTitle.textContent = '文章阅读';
+                }
+            }
+        }
+        
         // 加载文章数据
         async function loadArticles() {
             console.log('[加载文章数据] 开始');
@@ -104,16 +171,29 @@
             }
             
             try {
-                // 检查currentFile是否存在
-                if (!window.currentFile) {
-                    throw new Error('当前课本未设置');
-                }
+                // 获取URL参数中的文件路径
+                const urlParams = new URLSearchParams(window.location.search);
+                const targetFile = urlParams.get('file');
                 
-                // 首先尝试加载当前课本对应的短文文件
-                let mdPath = `../../data/${window.currentFile.replace('.pdf', '短文.md')}`;
-                console.log('[加载文章数据] 尝试加载短文文件路径:', mdPath);
-                console.log('[加载文章数据] 当前currentFile:', window.currentFile);
-                console.log('[加载文章数据] 当前currentBookName:', window.currentBookName);
+                let mdPath = '';
+                
+                if (targetFile) {
+                    // 如果URL参数中指定了文件，直接加载该文件
+                    mdPath = `../../data/${targetFile}`;
+                    console.log('[加载文章数据] 从URL参数加载文件:', mdPath);
+                } else {
+                    // 否则按照原来的逻辑加载当前课本对应的短文文件
+                    // 检查currentFile是否存在
+                    if (!window.currentFile) {
+                        throw new Error('当前课本未设置');
+                    }
+                    
+                    // 首先尝试加载当前课本对应的短文文件
+                    mdPath = `../../data/${window.currentFile.replace('.pdf', '短文.md')}`;
+                    console.log('[加载文章数据] 尝试加载短文文件路径:', mdPath);
+                    console.log('[加载文章数据] 当前currentFile:', window.currentFile);
+                    console.log('[加载文章数据] 当前currentBookName:', window.currentBookName);
+                }
                 
                 // 尝试加载MD文件
                 let response = await fetch(mdPath);
@@ -124,8 +204,8 @@
                     console.log('[加载文章数据] MD文件加载成功，内容长度:', content.length);
                     parseArticles(content);
                 } else {
-                    console.log('[加载文章数据] 当前课本的短文文件不存在，尝试加载3下的短文文件');
-                    // 如果当前课本的短文文件不存在，加载3下的短文文件
+                    console.log('[加载文章数据] 文件不存在，尝试加载3下的短文文件');
+                    // 如果指定的文件不存在，加载3下的短文文件
                     mdPath = `../../data/3下短文.md`;
                     console.log('[加载文章数据] 加载3下短文文件路径:', mdPath);
                     
@@ -233,6 +313,10 @@
         
         // 显示文章
         function displayArticle(article) {
+            // 重置已点击句子集合和总句子数
+            clickedSentences.clear();
+            totalSentences = 0;
+            
             // 更新标题
             document.getElementById('articleTitle').textContent = article.title;
             document.getElementById('articleChineseTitle').textContent = article.chineseTitle;
@@ -245,10 +329,14 @@
             bodyElement.innerHTML = paragraphs.map(paragraph => {
                 // 对每个段落，按句子分割
                 const sentences = paragraph.split('. ').filter(s => s.trim());
-                return `<div class="paragraph">${sentences.map(sentence => {
+                totalSentences += sentences.length;
+                return `<div class="paragraph">${sentences.map((sentence, index) => {
                     // 确保句子以句号结尾
                     const completeSentence = sentence + (sentence.endsWith('.') ? '' : '.');
-                    return `<span class="sentence" onclick="selectSentence(this, '${completeSentence}')">${completeSentence}</span>`;
+                    const sentenceId = `${currentArticleIndex}-${index}`;
+                    // 转义单引号，避免HTML语法错误
+                    const escapedSentence = completeSentence.replace(/'/g, "\\'");
+                    return `<span class="sentence" data-sentence-id="${sentenceId}" onclick="selectSentence(this, '${escapedSentence}', '${sentenceId}')">${completeSentence}</span>`;
                 }).join(' ')}</div>`;
             }).join('');
             
@@ -266,17 +354,37 @@
         }
         
         // 选择句子并播放发音
-        function selectSentence(element, sentence) {
+        function selectSentence(element, sentence, sentenceId) {
             // 移除所有句子的选中状态
             document.querySelectorAll('.sentence').forEach(s => s.classList.remove('selected'));
             
             // 添加当前句子的选中状态
             element.classList.add('selected');
             
+            // 标记句子为已点击
+            clickedSentences.add(sentenceId);
+            console.log('[点击句子]', sentenceId, '已点击句子数:', clickedSentences.size, '总句子数:', totalSentences);
+            
+            // 检查是否点击了所有句子
+            if (clickedSentences.size === totalSentences && totalSentences > 0) {
+                console.log('[文章点读完成] 所有句子都已点击');
+                // 延迟5秒后弹出积分奖励弹窗
+                setTimeout(() => {
+                    // 给用户增加5个积分
+                    if (typeof DataManager !== 'undefined' && typeof currentUser !== 'undefined') {
+                        DataManager.addPoints(currentUser, 5, '完成文章点读');
+                        alert('恭喜你完成了文章的所有句子点读！获得5积分奖励。');
+                    } else {
+                        console.error('DataManager 或 currentUser 未定义');
+                        alert('恭喜你完成了文章的所有句子点读！');
+                    }
+                }, 5000);
+            }
+            
             // 播放句子发音
             console.log('[播放句子发音]', sentence);
             if (typeof AudioManager !== 'undefined') {
-                AudioManager.playWordAudio(sentence, true);
+                AudioManager.playWordAudio(sentence, false);
             } else {
                 console.error('AudioManager 未定义');
             }
@@ -284,12 +392,134 @@
         
         // 返回文章列表页面
         function backToArticleList() {
-            window.location.href = 'article-list.html';
+            // 获取URL参数中的file参数
+            const urlParams = new URLSearchParams(window.location.search);
+            const targetFile = urlParams.get('file');
+            
+            // 构建返回URL，包含file参数
+            let url = 'article-list.html';
+            if (targetFile) {
+                url += `?file=${encodeURIComponent(targetFile)}`;
+            }
+            
+            window.location.href = url;
+        }
+        
+        // 检查用户信息
+        function checkUserInfo() {
+            const savedUser = localStorage.getItem('currentUser');
+            if (savedUser) {
+                currentUser = savedUser;
+                console.log('[检查用户信息] 加载保存的用户:', currentUser);
+            }
+        }
+        
+        // 切换折叠状态
+        function toggleCollapse(elementId) {
+            const element = document.getElementById(elementId);
+            if (element) {
+                element.classList.toggle('collapsed');
+                // 切换标题的展开状态
+                const title = element.previousElementSibling;
+                if (title) {
+                    title.classList.toggle('expanded');
+                }
+            }
+        }
+        
+        // 家长盖章相关函数
+        function showParentStampModal() {
+            // 获取当前用户名称
+            const userName = window.currentUserName || '小朋友';
+            
+            // 获取当前文章的中文标题
+            const chineseTitle = document.getElementById('articleChineseTitle').textContent;
+            
+            // 提取序号
+            const serialNumber = extractSerialNumber(chineseTitle);
+            
+            // 更新提示信息
+            const messageElement = document.getElementById('stampMessage');
+            messageElement.textContent = `家长确认${userName}已经完成该必备文章的背诵，确认给${userName}添加5个积分。`;
+            
+            // 显示模态框
+            document.getElementById('parentStampModal').classList.remove('hidden');
+        }
+        
+        function closeParentStampModal() {
+            // 关闭模态框
+            document.getElementById('parentStampModal').classList.add('hidden');
+            // 清空密码输入框
+            document.getElementById('stampPassword').value = '';
+        }
+        
+        function verifyStampPassword() {
+            // 获取输入的密码
+            const password = document.getElementById('stampPassword').value;
+            
+            // 验证密码
+            if (password === 'love') {
+                // 密码正确，添加积分
+                addStampPoints();
+                // 关闭模态框
+                closeParentStampModal();
+            } else {
+                // 密码错误
+                alert('密码错误，请重新输入');
+            }
+        }
+        
+        function addStampPoints() {
+            // 获取当前用户
+            const user = currentUser;
+            
+            // 获取当前文章的中文标题
+            const chineseTitle = document.getElementById('articleChineseTitle').textContent;
+            
+            // 提取序号
+            const serialNumber = extractSerialNumber(chineseTitle);
+            
+            // 添加积分
+            if (typeof DataManager !== 'undefined' && user) {
+                DataManager.addPoints(user, 5, `背诵必背范文-${serialNumber}`);
+                alert('盖章成功！已为小朋友添加5个积分。');
+            } else {
+                console.error('DataManager 或用户未定义');
+                alert('盖章成功！');
+            }
+        }
+        
+        function extractSerialNumber(title) {
+            // 从标题中提取数字序号
+            const match = title.match(/^(\d+)/);
+            return match ? match[1] : '';
+        }
+        
+        // 检查是否显示家长盖章按钮
+        function checkStampButton() {
+            // 获取URL参数中的文件路径
+            const urlParams = new URLSearchParams(window.location.search);
+            const targetFile = urlParams.get('file');
+            
+            const stampContainer = document.getElementById('parentStampContainer');
+            if (stampContainer) {
+                if (targetFile === 'all-小学.md' || targetFile === 'all-初中.md') {
+                    // 必背范文，显示盖章按钮
+                    stampContainer.style.display = 'block';
+                } else {
+                    // 趣文阅读，隐藏盖章按钮
+                    stampContainer.style.display = 'none';
+                }
+            }
         }
         
         // 暴露函数到全局作用域
         window.selectSentence = selectSentence;
         window.backToArticleList = backToArticleList;
+        window.toggleCollapse = toggleCollapse;
+        window.showParentStampModal = showParentStampModal;
+        window.closeParentStampModal = closeParentStampModal;
+        window.verifyStampPassword = verifyStampPassword;
     </script>
 </body>
 </html>

@@ -197,6 +197,11 @@ export function endGame() {
     const score = totalCorrectCount * 100;
     gameScore.textContent = score;
     
+    // 游戏结束，给用户奖励1积分
+    if (typeof DataManager !== 'undefined') {
+        DataManager.addPoints(currentUser, 1, '玩消消乐游戏');
+    }
+    
     gameResult.classList.remove('hidden');
 }
 
