@@ -69,17 +69,114 @@
         
         // 检查用户信息
         function checkUserInfo() {
-            const savedUser = localStorage.getItem('currentUser');
-            if (savedUser) {
-                currentUser = savedUser;
+            // 优先使用全局的 currentUser 变量
+            if (window.currentUser) {
+                currentUser = window.currentUser;
+            } else {
+                // 否则从 localStorage 获取
+                const savedUser = localStorage.getItem('currentUser');
+                if (savedUser) {
+                    currentUser = savedUser;
+                }
             }
+        }
+        
+        // 监听用户切换事件
+        window.addEventListener('storage', function(event) {
+            if (event.key === 'currentUser') {
+                // 用户发生变化，重新加载页面
+                window.location.reload();
+            }
+        });
+        
+        // 定期检查用户是否发生变化
+        let lastUser = currentUser;
+        setInterval(function() {
+            // 优先检查全局变量
+            const newUser = window.currentUser || localStorage.getItem('currentUser');
+            if (newUser && newUser !== lastUser) {
+                lastUser = newUser;
+                currentUser = newUser;
+                // 重新加载宠物列表
+                loadPets();
+                // 更新积分显示
+                updatePointsDisplay();
+            }
+        }, 1000);
+        
+        // 图片缓存对象
+        const imageCache = {
+            // 检查图片是否在缓存中
+            get: function(key) {
+                try {
+                    const cached = localStorage.getItem(`petImage_${key}`);
+                    return cached;
+                } catch (e) {
+                    console.error('读取图片缓存失败:', e);
+                    return null;
+                }
+            },
+            
+            // 缓存图片
+            set: function(key, value) {
+                try {
+                    // 限制缓存大小，只缓存前100张图片
+                    const cacheKeys = Object.keys(localStorage).filter(key => key.startsWith('petImage_'));
+                    if (cacheKeys.length >= 100) {
+                        // 删除最早的缓存
+                        const oldestKey = cacheKeys.sort()[0];
+                        localStorage.removeItem(oldestKey);
+                    }
+                    localStorage.setItem(`petImage_${key}`, value);
+                } catch (e) {
+                    console.error('写入图片缓存失败:', e);
+                }
+            }
+        };
+        
+        // 获取当天日期字符串
+        function getTodayString() {
+            const date = new Date();
+            const year = date.getFullYear();
+            const month = String(date.getMonth() + 1).padStart(2, '0');
+            const day = String(date.getDate()).padStart(2, '0');
+            return `${year}-${month}-${day}`;
         }
         
         // 检查图片是否存在
         function checkImageExists(url) {
             return new Promise((resolve) => {
+                // 从URL中提取图片键
+                const parts = url.split('/');
+                const type = parts[parts.length - 2];
+                const month = parts[parts.length - 1].replace('.JPG', '');
+                const imageKey = `${type}_${month}`;
+                
+                // 检查缓存
+                const cachedImage = imageCache.get(imageKey);
+                if (cachedImage) {
+                    // 缓存存在，直接返回存在
+                    resolve(true);
+                    return;
+                }
+                
+                // 缓存不存在，加载图片
                 const img = new Image();
-                img.onload = () => resolve(true);
+                img.onload = function() {
+                    // 图片加载成功，缓存图片
+                    const canvas = document.createElement('canvas');
+                    canvas.width = img.width;
+                    canvas.height = img.height;
+                    const ctx = canvas.getContext('2d');
+                    ctx.drawImage(img, 0, 0);
+                    try {
+                        const base64 = canvas.toDataURL('image/jpeg', 0.8); // 0.8是压缩质量
+                        imageCache.set(imageKey, base64);
+                    } catch (e) {
+                        console.error('图片转换失败:', e);
+                    }
+                    resolve(true);
+                };
                 img.onerror = () => resolve(false);
                 img.src = url;
             });
@@ -88,6 +185,8 @@
         // 加载宠物列表
         async function loadPets() {
             if (typeof DataManager !== 'undefined') {
+                // 再次检查宠物状态，确保以最新状态展示
+                DataManager.checkPetStatus(currentUser);
                 const pets = DataManager.getPets(currentUser);
                 const petList = document.getElementById('petList');
                 const emptyState = document.getElementById('emptyState');
@@ -124,13 +223,6 @@
                     const petItem = document.createElement('div');
                     petItem.className = 'pet-item';
                     
-                    // 宠物状态
-                    const statusText = pet.isDead ? '已死亡' : '健康';
-                    const statusClass = pet.isDead ? 'dead' : 'alive';
-                    
-                    // 最后喂食日期
-                    const lastFeedText = pet.lastFeedDate ? `上次喂食: ${pet.lastFeedDate}` : '还未喂食';
-                    
                     // 计算喂食进度（满6个月，30*6=180次达到100%）
                     const maxFeedCount = 180;
                     const progress = Math.min(Math.round((pet.feedCount / maxFeedCount) * 100), 100);
@@ -138,9 +230,38 @@
                     // 检查是否达到100%进度
                     const isFullyGrown = progress >= 100;
                     
+                    // 宠物状态
+                    const today = getTodayString();
+                    const hasFedToday = pet.lastFeedDate === today;
+                    let statusText, statusClass;
+                    
+                    if (pet.isDead) {
+                        statusText = '小可爱饿晕啦';
+                        statusClass = 'dead';
+                    } else if (isFullyGrown) {
+                        statusText = '已成年';
+                        statusClass = 'alive';
+                    } else if (!hasFedToday) {
+                        statusText = '未喂食';
+                        statusClass = 'hungry';
+                    } else {
+                        statusText = '健康';
+                        statusClass = 'alive';
+                    }
+                    
+                    // 最后喂食日期
+                    const lastFeedText = pet.lastFeedDate ? `上次喂食: ${pet.lastFeedDate}` : '还未喂食';
+                    
+                    // 格式化领养时间
+                    const adoptionDateFormatted = pet.adoptionDate ? new Date(pet.adoptionDate).toISOString().split('T')[0] : '未知';
+                    
                     petItem.innerHTML = `
                         <img src="${petImage}" alt="${pet.name}" class="pet-image ${pet.isDead ? 'dead' : ''}">
                         <div class="pet-name">${pet.name}</div>
+                        <div class="pet-info">
+                            <span class="label">领养时间:</span>
+                            <span class="value">${adoptionDateFormatted}</span>
+                        </div>
                         <div class="pet-info">
                             <span class="label">类型:</span>
                             <span class="value">${getPetTypeName(pet.type)}</span>
@@ -224,6 +345,15 @@
                 month = Math.floor(diffDays / 30) + 1;
                 // 6个月及以后一直都是6.jpg
                 month = Math.min(month, 6);
+            }
+            
+            const imageKey = `${type}_${month}`;
+            
+            // 检查缓存
+            const cachedImage = imageCache.get(imageKey);
+            if (cachedImage) {
+                // 返回缓存的图片
+                return cachedImage;
             }
             
             // 构建图片路径

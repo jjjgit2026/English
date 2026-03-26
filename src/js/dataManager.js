@@ -1148,8 +1148,15 @@ export default class DataManager {
                 return { success: false, message: '今天已经喂过宠物了' };
             }
             
-            // 计算喂食成本：喂养10天后，积分消耗由5个涨至10个
-            const feedCost = pet.feedCount >= 10 ? 10 : 5;
+            // 计算喂食成本：喂养10天后，积分消耗由5个涨至10个，第50天开始涨至20个
+            let feedCost;
+            if (pet.feedCount >= 50) {
+                feedCost = 20;
+            } else if (pet.feedCount >= 10) {
+                feedCost = 10;
+            } else {
+                feedCost = 5;
+            }
             if (userData.total.points < feedCost) {
                 return { success: false, message: `积分不足，需要${feedCost}积分才能喂食` };
             }
@@ -1209,7 +1216,8 @@ export default class DataManager {
             pet.deathDate = null;
             pet.size = 1.0; // 恢复初始大小
             pet.feedCount = 0; // 重置喂食次数
-            pet.lastFeedDate = null;
+            pet.lastFeedDate = null; // 保持为 null，因为还未喂食
+            pet.adoptionDate = new Date().toISOString(); // 更新领养时间为当前时间
             
             this.saveUserData(user, userData);
             
@@ -1223,20 +1231,26 @@ export default class DataManager {
     static checkPetStatus(user) {
         try {
             const userData = this.getUserData(user);
-            const today = this.getLocalDateString();
+            const today = new Date();
             let updated = false;
             
             userData.pets.forEach(pet => {
-                if (!pet.isDead && pet.lastFeedDate) {
-                    const lastFeedDate = new Date(pet.lastFeedDate);
-                    const currentDate = new Date(today);
-                    const diffTime = Math.abs(currentDate - lastFeedDate);
-                    const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
-                    
-                    if (diffDays >= 3) {
-                        pet.isDead = true;
-                        pet.deathDate = today;
-                        updated = true;
+                if (!pet.isDead) {
+                    // 确定用于计算的日期：优先使用 lastFeedDate，否则使用 adoptionDate
+                    const targetDate = pet.lastFeedDate || pet.adoptionDate;
+                    if (targetDate) {
+                        const lastDate = new Date(targetDate);
+                        // 标准化日期，只保留年月日部分，消除时区差异
+                        const lastDateNormalized = new Date(lastDate.getFullYear(), lastDate.getMonth(), lastDate.getDate());
+                        const todayNormalized = new Date(today.getFullYear(), today.getMonth(), today.getDate());
+                        const diffTime = todayNormalized - lastDateNormalized;
+                        const diffDays = Math.floor(diffTime / (1000 * 60 * 60 * 24));
+                        
+                        if (diffDays >= 3) {
+                            pet.isDead = true;
+                            pet.deathDate = this.getLocalDateString();
+                            updated = true;
+                        }
                     }
                 }
             });

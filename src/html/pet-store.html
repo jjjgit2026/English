@@ -224,13 +224,80 @@
             }
         }
         
+        // 图片缓存对象
+        const imageCache = {
+            // 检查图片是否在缓存中
+            get: function(key) {
+                try {
+                    const cached = localStorage.getItem(`petImage_${key}`);
+                    return cached;
+                } catch (e) {
+                    console.error('读取图片缓存失败:', e);
+                    return null;
+                }
+            },
+            
+            // 缓存图片
+            set: function(key, value) {
+                try {
+                    // 限制缓存大小，只缓存前100张图片
+                    const cacheKeys = Object.keys(localStorage).filter(key => key.startsWith('petImage_'));
+                    if (cacheKeys.length >= 100) {
+                        // 删除最早的缓存
+                        const oldestKey = cacheKeys.sort()[0];
+                        localStorage.removeItem(oldestKey);
+                    }
+                    localStorage.setItem(`petImage_${key}`, value);
+                } catch (e) {
+                    console.error('写入图片缓存失败:', e);
+                }
+            }
+        };
+        
         // 加载宠物图片
         function loadPetImage(petType, element) {
+            const imageKey = `${petType}_1`;
+            
+            // 检查缓存
+            const cachedImage = imageCache.get(imageKey);
+            if (cachedImage) {
+                // 使用缓存的图片
+                const img = document.createElement('img');
+                img.src = cachedImage;
+                img.alt = petType;
+                img.className = 'pet-image';
+                
+                // 添加点击事件
+                img.onclick = function() {
+                    openImageModal(this.src);
+                };
+                
+                // 替换占位符
+                element.parentNode.replaceChild(img, element);
+                return;
+            }
+            
             // 创建img元素
             const img = document.createElement('img');
             img.src = `../../assets/pets/${petType}/1.JPG`;
             img.alt = petType;
             img.className = 'pet-image';
+            
+            // 图片加载完成后缓存
+            img.onload = function() {
+                // 将图片转换为Base64并缓存
+                const canvas = document.createElement('canvas');
+                canvas.width = img.width;
+                canvas.height = img.height;
+                const ctx = canvas.getContext('2d');
+                ctx.drawImage(img, 0, 0);
+                try {
+                    const base64 = canvas.toDataURL('image/jpeg', 0.8); // 0.8是压缩质量
+                    imageCache.set(imageKey, base64);
+                } catch (e) {
+                    console.error('图片转换失败:', e);
+                }
+            };
             
             // 添加点击事件
             img.onclick = function() {

@@ -2420,7 +2420,10 @@ body {
     display: flex;
     gap: 10px;
     justify-content: center;
+    align-items: center;
     margin-bottom: 24px;
+    width: 100%;
+    text-align: center;
 }
 
 .pet-home-page .pet-list {
@@ -2520,6 +2523,11 @@ body {
 .pet-home-page .pet-status.dead {
     background-color: #ffebee;
     color: #f44336;
+}
+
+.pet-home-page .pet-status.hungry {
+    background-color: #fff3e0;
+    color: #ff9800;
 }
 
 .pet-home-page .action-buttons {
