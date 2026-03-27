@@ -17,7 +17,7 @@ export function checkUserInfo() {
         // 更新UI上的用户名称显示
         const userNameElement = document.getElementById('userName');
         if (userNameElement) {
-            userNameElement.textContent = `${currentUserName}，快来学单词吧！加油哦！`;
+            userNameElement.textContent = `${currentUserName}，快来学单词！`;
         }
         
         const currentUserDisplayElement = document.getElementById('currentUserDisplay');
