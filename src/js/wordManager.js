@@ -1257,7 +1257,11 @@ export function goToNextWord() {
  * 返回单词列表页
  */
 export function backToWordList() {
-    window.location.href = 'word-list.html';
+    if (isErrorBookMode) {
+        window.location.href = 'error-book.html';
+    } else {
+        window.location.href = 'word-list.html';
+    }
 }
 
 /**

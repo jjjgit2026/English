@@ -477,7 +477,9 @@ export function generateWordChain() {
     // 使用文档片段批量更新
     const fragment = document.createDocumentFragment();
     
-    words.forEach((word, index) => {
+    const wordList = isErrorBookMode ? errorWords : words;
+    
+    wordList.forEach((word, index) => {
         const wordElement = document.createElement('div');
         wordElement.className = 'chain-word-item';
         
@@ -499,7 +501,13 @@ export function generateWordChain() {
         } else {
             wordText.textContent = word.word;
         }
-        wordText.onclick = () => openWordLinkPage(index);
+        wordText.onclick = () => {
+            if (isErrorBookMode) {
+                openErrorWordLinkPage(index);
+            } else {
+                openWordLinkPage(index);
+            }
+        };
         
         const wordIndex = document.createElement('div');
         wordIndex.className = 'chain-word-index';
@@ -525,7 +533,7 @@ export function generateWordChain() {
 
 // 更新学习内容
 export function updateLearningContent() {
-    const currentWord = words[currentWordIndex];
+    const currentWord = isErrorBookMode ? errorWords[currentWordIndex] : words[currentWordIndex];
     if (!currentWord) return;
     
     // 更新学页面
@@ -936,6 +944,12 @@ export function goToNextWord() {
             console.log('标记单词为已学:', currentWord.word);
             console.log('[goToNextWord] 当前课本:', currentFile);
             
+            // 如果是错词本模式，从错词本中删除该单词
+            if (isErrorBookMode) {
+                DataManager.removeErrorWord(currentUser, currentWord);
+                console.log('[goToNextWord] 从错词本中删除单词成功');
+            }
+            
             // 使用DataManager标记单词为已学
             const bookData = DataManager.markWordAsLearned(currentUser, currentFile, currentWord);
             console.log('[goToNextWord] 标记单词为已学成功，已学数量:', bookData.learnedCount);
@@ -1008,20 +1022,25 @@ export function goToNextWord() {
 
 // 返回单词列表页
 export function backToWordList() {
-    window.location.href = 'word-list.html';
+    if (isErrorBookMode) {
+        window.location.href = 'error-book.html';
+    } else {
+        window.location.href = 'word-list.html';
+    }
 }
 
 // 更新导航按钮状态
 export function updateNavigationButtons() {
     const prevBtn = document.getElementById('prevWordBtn');
     const nextBtn = document.getElementById('nextWordBtn');
+    const wordListLength = isErrorBookMode ? errorWords.length : words.length;
     
     if (prevBtn) {
         prevBtn.disabled = currentWordIndex === 0;
     }
     
     if (nextBtn) {
-        nextBtn.disabled = currentWordIndex === words.length - 1;
+        nextBtn.disabled = currentWordIndex === wordListLength - 1;
     }
 }
 
@@ -1112,8 +1131,6 @@ export function checkPracticeAnswer(selected, correct) {
     // 播放音效
     if (selected === correct) {
         AudioManager.playSuccessSound();
-        // 练习正确奖励1积分
-        DataManager.addPoints(currentUser, 1);
         
         // 使用DataManager获取用户数据
         const userData = DataManager.getUserData(currentUser);
@@ -1365,6 +1382,16 @@ export function updateErrorWordLearningContent() {
     const learnMeaning = document.getElementById('learnMeaning');
     if (learnMeaning) {
         learnMeaning.textContent = currentWord.meaning;
+    }
+    
+    const learnExample = document.getElementById('learnExample');
+    if (learnExample) {
+        learnExample.textContent = currentWord.example || '例句';
+    }
+    
+    const learnExampleTranslation = document.getElementById('learnExampleTranslation');
+    if (learnExampleTranslation) {
+        learnExampleTranslation.textContent = currentWord.translation || '例句翻译';
     }
     
     // 更新读页面
