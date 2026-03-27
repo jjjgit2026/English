@@ -1416,26 +1416,39 @@ export default class DataManager {
         }
     }
 
-    static adoptPet(user, petType, petName) {
+    static adoptPet(user, petType, petName, selectedImage = null) {
         try {
             const userData = this.getUserData(user);
-            const adoptionCost = 50; // 领养宠物需要50积分
             
-            if (userData.total.points < adoptionCost) {
-                return { success: false, message: '积分不足，需要50积分才能领养宠物' };
+            // 检查是否是免费宠物
+            const isFreePet = petType === 'cat' || petType === 'parrot';
+            
+            // 检查免费宠物领养限制
+            if (isFreePet) {
+                const freePets = userData.pets.filter(pet => (pet.type === 'cat' || pet.type === 'parrot') && !pet.isDead);
+                if (freePets.length > 0) {
+                    return { success: false, message: '每个用户只能领养一个免费宠物' };
+                }
+            } else {
+                // 非免费宠物需要积分
+                const adoptionCost = 50; // 领养宠物需要50积分
+                
+                if (userData.total.points < adoptionCost) {
+                    return { success: false, message: '积分不足，需要50积分才能领养宠物' };
+                }
+                
+                // 检查是否已经领养了相同类型的宠物
+                const existingPet = userData.pets.find(pet => pet.type === petType && !pet.isDead);
+                if (existingPet) {
+                    return { success: false, message: '你已经领养了这种类型的宠物' };
+                }
+                
+                // 扣除积分
+                userData.total.points -= adoptionCost;
+                
+                // 添加积分支出记录
+                this.addPointsHistory(userData, 'expense', adoptionCost, '领养宠物');
             }
-            
-            // 检查是否已经领养了相同类型的宠物
-            const existingPet = userData.pets.find(pet => pet.type === petType && !pet.isDead);
-            if (existingPet) {
-                return { success: false, message: '你已经领养了这种类型的宠物' };
-            }
-            
-            // 扣除积分
-            userData.total.points -= adoptionCost;
-            
-            // 添加积分支出记录
-            this.addPointsHistory(userData, 'expense', adoptionCost, '领养宠物');
 
             
             // 添加新宠物
@@ -1448,13 +1461,15 @@ export default class DataManager {
                 lastFeedDate: null, // 最后喂食日期
                 isDead: false, // 是否死亡
                 deathDate: null, // 死亡日期
-                adoptionDate: new Date().toISOString() // 领养日期
+                adoptionDate: new Date().toISOString(), // 领养日期
+                isFreePet: isFreePet, // 标记是否是免费宠物
+                selectedImage: selectedImage // 存储选中的猫咪图片
             };
             
             userData.pets.push(newPet);
             this.saveUserData(user, userData);
             
-            return { success: true, message: '宠物领养成功！', pet: newPet };
+            return { success: true, message: isFreePet ? '免费宠物领养成功！' : '宠物领养成功！', pet: newPet };
         } catch (error) {
             console.error('领养宠物失败:', error);
             return { success: false, message: '领养宠物失败' };
@@ -1484,9 +1499,11 @@ export default class DataManager {
                 return { success: false, message: '今天已经喂过宠物了' };
             }
             
-            // 计算喂食成本：喂养10天后，积分消耗由5个涨至10个，第50天开始涨至20个
+            // 计算喂食成本：免费宠物永远6积分，其他宠物喂养10天后涨至10个，第50天开始涨至20个
             let feedCost;
-            if (pet.feedCount >= 50) {
+            if (pet.isFreePet) {
+                feedCost = 6; // 免费宠物永远6积分
+            } else if (pet.feedCount >= 50) {
                 feedCost = 20;
             } else if (pet.feedCount >= 10) {
                 feedCost = 10;
@@ -1508,8 +1525,8 @@ export default class DataManager {
             pet.lastFeedDate = today;
             pet.feedCount += 1;
             
-            // 每30天喂食，宠物大小增加20%
-            if (pet.feedCount % 30 === 0) {
+            // 每30天喂食，宠物大小增加20%（免费宠物不长大）
+            if (!pet.isFreePet && pet.feedCount % 30 === 0) {
                 pet.size *= 1.2;
             }
             
@@ -1570,7 +1587,8 @@ export default class DataManager {
             const today = new Date();
             let updated = false;
             
-            userData.pets.forEach(pet => {
+            // 过滤掉3天不喂食的免费宠物，其他宠物标记为死亡
+            userData.pets = userData.pets.filter(pet => {
                 if (!pet.isDead) {
                     // 确定用于计算的日期：优先使用 lastFeedDate，否则使用 adoptionDate
                     const targetDate = pet.lastFeedDate || pet.adoptionDate;
@@ -1583,12 +1601,21 @@ export default class DataManager {
                         const diffDays = Math.floor(diffTime / (1000 * 60 * 60 * 24));
                         
                         if (diffDays >= 3) {
-                            pet.isDead = true;
-                            pet.deathDate = this.getLocalDateString();
-                            updated = true;
+                            if (pet.isFreePet) {
+                                // 免费宠物3天不喂食后变成未领养状态（从列表中移除）
+                                updated = true;
+                                return false;
+                            } else {
+                                // 其他宠物标记为死亡
+                                pet.isDead = true;
+                                pet.deathDate = this.getLocalDateString();
+                                updated = true;
+                                return true;
+                            }
                         }
                     }
                 }
+                return true;
             });
             
             if (updated) {

@@ -20,6 +20,24 @@
         <p class="subtitle">选择你喜欢的小动物领养回家吧！</p>
         
         <div class="pet-grid">
+            <!-- 猫咪（免费） -->
+            <div class="pet-card">
+                <div class="pet-placeholder" onclick="loadFreePetImage('cat', this)">
+                    <div class="placeholder-text">点一下看看我长什么样吧</div>
+                </div>
+                <div class="pet-name">猫咪</div>
+                <button class="adopt-btn free" onclick="openFreeAdoptModal('cat')">免费领养</button>
+            </div>
+            
+            <!-- 小鹦鹉（免费） -->
+            <div class="pet-card">
+                <div class="pet-placeholder" onclick="loadFreePetImage('parrot', this)">
+                    <div class="placeholder-text">点一下看看我长什么样吧</div>
+                </div>
+                <div class="pet-name">小鹦鹉</div>
+                <button class="adopt-btn free" onclick="openFreeAdoptModal('parrot')">免费领养</button>
+            </div>
+            
             <!-- 鼠 -->
             <div class="pet-card">
                 <div class="pet-placeholder" onclick="loadPetImage('mouse', this)">
@@ -191,6 +209,64 @@
             document.getElementById('adoptModal').style.display = 'flex';
         }
         
+        // 打开免费领养弹窗
+        function openFreeAdoptModal(petType) {
+            // 直接使用 window.currentUser 确保获取最新的用户信息
+            const user = window.currentUser || currentUser;
+            console.log('打开免费领养弹窗前 - 用户:', user);
+            
+            // 检查用户是否已经领养了免费宠物
+            if (typeof DataManager !== 'undefined') {
+                const userData = DataManager.getUserData(user);
+                if (userData && userData.pets) {
+                    const freePets = userData.pets.filter(pet => pet.type === 'cat' || pet.type === 'parrot' && !pet.isDead);
+                    if (freePets.length > 0) {
+                        alert('每个用户只能领养一个免费宠物。');
+                        return;
+                    }
+                }
+            }
+            
+            // 告诉用户免费宠物的规则
+            alert('免费宠物领养规则：\n1. 每个用户只能领养一个免费宠物\n2. 领养后需要每天喂食\n3. 3天不喂食会变成未领养状态\n');
+            
+            currentPetType = petType;
+            document.getElementById('adoptModal').style.display = 'flex';
+        }
+        
+        // 加载免费宠物图片
+        function loadFreePetImage(petType, element) {
+            let imageSrc;
+            let selectedImage;
+            
+            if (petType === 'cat') {
+                // 随机选择一张猫咪图片
+                const catImages = ['cat.jpg', 'cat1.jpg', 'cat2.jpg'];
+                const randomIndex = Math.floor(Math.random() * catImages.length);
+                selectedImage = catImages[randomIndex];
+                imageSrc = `../../assets/pets/${selectedImage}`;
+            } else if (petType === 'parrot') {
+                selectedImage = 'parrot.jpg';
+                imageSrc = `../../assets/pets/parrot.jpg`;
+            }
+            
+            // 创建img元素
+            const img = document.createElement('img');
+            img.src = imageSrc;
+            img.alt = petType;
+            img.className = 'pet-image';
+            // 存储选中的图片信息
+            img.dataset.selectedImage = selectedImage;
+            
+            // 添加点击事件
+            img.onclick = function() {
+                openImageModal(this.src);
+            };
+            
+            // 替换占位符
+            element.parentNode.replaceChild(img, element);
+        }
+        
         // 关闭领养弹窗
         function closeAdoptModal() {
             document.getElementById('adoptModal').style.display = 'none';
@@ -205,13 +281,42 @@
                 return;
             }
             
+            // 验证宠物名字长度：最多5个汉字或10个英文字符
+            let charCount = 0;
+            for (let i = 0; i < petName.length; i++) {
+                // 中文字符算2个字符，英文字符算1个字符
+                if (/[\u4e00-\u9fa5]/.test(petName[i])) {
+                    charCount += 2;
+                } else {
+                    charCount += 1;
+                }
+            }
+            
+            if (charCount > 10) {
+                alert('宠物名字长度不能超过5个汉字或10个英文字符');
+                return;
+            }
+            
             // 直接使用 window.currentUser 确保获取最新的用户信息
             const user = window.currentUser || currentUser;
             console.log('领养宠物 - 用户:', user);
             
+            // 获取选中的猫咪图片
+            let selectedImage = null;
+            if (currentPetType === 'cat') {
+                const catCards = document.querySelectorAll('.pet-card');
+                for (const card of catCards) {
+                    const img = card.querySelector('img[data-selected-image]');
+                    if (img && card.querySelector('.pet-name').textContent === '猫咪') {
+                        selectedImage = img.dataset.selectedImage;
+                        break;
+                    }
+                }
+            }
+            
             if (typeof DataManager !== 'undefined') {
-                console.log('调用 DataManager.adoptPet - 用户:', user, '宠物类型:', currentPetType);
-                const result = DataManager.adoptPet(user, currentPetType, petName);
+                console.log('调用 DataManager.adoptPet - 用户:', user, '宠物类型:', currentPetType, '选中图片:', selectedImage);
+                const result = DataManager.adoptPet(user, currentPetType, petName, selectedImage);
                 console.log('领养结果:', result);
                 if (result.success) {
                     alert(result.message);

@@ -126,9 +126,16 @@
             return `${year}-${month}-${day}`;
         }
         
-        // 检查图片是否存在
+        // 检查图片或视频是否存在
         function checkImageExists(url) {
             return new Promise((resolve) => {
+                // 检查是否是视频文件
+                if (url.endsWith('.mp4')) {
+                    // 视频文件直接返回存在（假设视频文件都存在）
+                    resolve(true);
+                    return;
+                }
+                
                 // 从URL中提取图片键
                 const parts = url.split('/');
                 const type = parts[parts.length - 2];
@@ -196,7 +203,7 @@
                 
                 for (const pet of pets) {
                     // 获取宠物图片
-                    const petImage = getPetImage(pet.type, pet.adoptionDate);
+                    const petImage = getPetImage(pet.type, pet.adoptionDate, pet.selectedImage);
                     
                     // 检查图片是否存在
                     const imageExists = await checkImageExists(petImage);
@@ -205,7 +212,7 @@
                     }
                     
                     const petItem = document.createElement('div');
-                    petItem.className = 'pet-item';
+                    petItem.className = `pet-item ${pet.isFreePet ? 'free-pet' : ''}`;
                     
                     // 计算喂食进度（满6个月，30*6=180次达到100%）
                     const maxFeedCount = 180;
@@ -239,8 +246,19 @@
                     // 格式化领养时间
                     const adoptionDateFormatted = pet.adoptionDate ? new Date(pet.adoptionDate).toISOString().split('T')[0] : '未知';
                     
-                    petItem.innerHTML = `
-                        <img src="${petImage}" alt="${pet.name}" class="pet-image ${pet.isDead ? 'dead' : ''}">
+                    // 构建宠物卡片内容
+                    let petMedia;
+                    if (pet.type === 'cat' || pet.type === 'parrot') {
+                        // 免费宠物使用视频，添加 free-pet-media 类
+                        petMedia = `<video src="${petImage}" alt="${pet.name}" class="pet-image free-pet-media ${pet.isDead ? 'dead' : ''}" autoplay loop muted playsinline></video>`;
+                    } else {
+                        // 其他宠物使用图片
+                        petMedia = `<img src="${petImage}" alt="${pet.name}" class="pet-image ${pet.isDead ? 'dead' : ''}">`;
+                    }
+                    
+                    // 构建宠物卡片内容
+                    let petContent = `
+                        ${petMedia}
                         <div class="pet-name">${pet.name}</div>
                         <div class="pet-info">
                             <span class="label">领养时间:</span>
@@ -252,15 +270,22 @@
                         </div>
                         <div class="pet-info">
                             <span class="label">喂食次数:</span>
-                            <span class="value">${pet.feedCount}/${maxFeedCount}次</span>
-                        </div>
+                            <span class="value">${pet.feedCount}次</span>
+                        </div>`;
+                    
+                    // 非免费宠物显示成长进度
+                    if (pet.type !== 'cat' && pet.type !== 'parrot') {
+                        petContent += `
                         <div class="pet-info">
                             <span class="label">成长进度:</span>
                             <span class="value">${progress}%</span>
                         </div>
                         <div class="progress-bar-container">
                             <div class="progress-bar" style="width: ${progress}%;"></div>
-                        </div>
+                        </div>`;
+                    }
+                    
+                    petContent += `
                         <div class="pet-info">
                             <span class="label">上次喂食:</span>
                             <span class="value">${pet.lastFeedDate ? pet.lastFeedDate : '还未喂食'}</span>
@@ -272,10 +297,12 @@
                             ` : isFullyGrown ? `
                                 <button class="btn btn-disabled" disabled>已成年，无需喂食</button>
                             ` : `
-                                <button class="btn btn-primary" onclick="feedPet('${pet.id}')">喂食宠物粮 (消耗5积分)</button>
+                                <button class="btn btn-primary" onclick="feedPet('${pet.id}')">喂食宠物粮 (${pet.isFreePet ? '6' : '5'}积分)</button>
                             `}
                         </div>
                     `;
+                    
+                    petItem.innerHTML = petContent;
                     
                     petList.appendChild(petItem);
                 }
@@ -313,13 +340,25 @@
                 'chicken': '🐔 酉鸡',
                 'sheep': '🐑 未羊',
                 'dog': '🐶 戌狗',
-                'pig': '🐷 亥猪'
+                'pig': '🐷 亥猪',
+                'cat': '🐱 猫咪',
+                'parrot': '🦜 小鹦鹉'
             };
             return typeNames[type] || type;
         }
         
         // 获取宠物图片
-        function getPetImage(type, adoptionDate) {
+        function getPetImage(type, adoptionDate, selectedImage = null) {
+            // 免费宠物返回视频路径
+            if (type === 'cat' || type === 'parrot') {
+                if (type === 'cat' && selectedImage) {
+                    // 根据选中的图片返回对应的视频
+                    const imageName = selectedImage.replace('.jpg', '');
+                    return `../../assets/pets/${imageName}.mp4`;
+                }
+                return `../../assets/pets/${type}.mp4`;
+            }
+            
             // 计算宠物年龄（以月为单位）
             let month = 1; // 默认第一个月
             if (adoptionDate) {
@@ -396,11 +435,32 @@
             }
         }
         
-        // 打开图片放大弹窗
-        function openImageModal(imageSrc) {
+        // 打开图片或视频放大弹窗
+        function openImageModal(mediaSrc) {
             const modal = document.getElementById('imageModal');
             const modalImage = document.getElementById('modalImage');
-            modalImage.src = imageSrc;
+            
+            // 清空之前的内容
+            modal.innerHTML = '';
+            
+            if (mediaSrc.endsWith('.mp4')) {
+                // 视频
+                const video = document.createElement('video');
+                video.src = mediaSrc;
+                video.className = 'modal-image';
+                video.autoplay = true;
+                video.loop = true;
+                video.muted = false; // 允许播放声音
+                video.playsinline = true;
+                modal.appendChild(video);
+            } else {
+                // 图片
+                const img = document.createElement('img');
+                img.src = mediaSrc;
+                img.className = 'modal-image';
+                modal.appendChild(img);
+            }
+            
             modal.classList.add('active');
         }
         
@@ -428,12 +488,12 @@
             }, 600);
         }
         
-        // 为所有宠物图片添加点击事件
+        // 为所有宠物图片和视频添加点击事件
         function addImageClickEvents() {
-            const petImages = document.querySelectorAll('.pet-image');
-            petImages.forEach(img => {
-                img.onclick = function() {
-                    openImageModal(this.src);
+            const petMedia = document.querySelectorAll('.pet-image');
+            petMedia.forEach(media => {
+                media.onclick = function() {
+                    openImageModal(this.src || this.querySelector('video')?.src);
                 };
             });
         }
