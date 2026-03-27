@@ -1,0 +1,250 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>测试图片缓存</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 20px;
+        }
+        .test-section {
+            margin: 20px 0;
+            padding: 15px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+        }
+        .result {
+            margin: 10px 0;
+            padding: 10px;
+            background: #f5f5f5;
+            border-radius: 3px;
+        }
+        img {
+            max-width: 200px;
+            margin: 10px 0;
+        }
+    </style>
+</head>
+<body>
+    <h1>测试图片缓存</h1>
+    
+    <div class="test-section">
+        <h2>1. 测试localStorage存储限制</h2>
+        <button onclick="testStorageLimit()">测试存储限制</button>
+        <div id="storageLimitResult" class="result"></div>
+    </div>
+    
+    <div class="test-section">
+        <h2>2. 测试图片转换为base64</h2>
+        <img id="testImage" src="../assets/pets/chicken/1.JPG" alt="测试图片">
+        <button onclick="testImageConversion()">测试转换</button>
+        <div id="conversionResult" class="result"></div>
+    </div>
+    
+    <div class="test-section">
+        <h2>3. 测试缓存读写</h2>
+        <button onclick="testCache()">测试缓存</button>
+        <div id="cacheResult" class="result"></div>
+    </div>
+    
+    <div class="test-section">
+        <h2>4. 查看现有缓存</h2>
+        <button onclick="viewCache()">查看缓存</button>
+        <div id="cacheView" class="result"></div>
+    </div>
+    
+    <div class="test-section">
+        <h2>5. 清除缓存</h2>
+        <button onclick="clearCache()">清除所有图片缓存</button>
+        <div id="clearResult" class="result"></div>
+    </div>
+
+    <script>
+        // 图片缓存对象
+        const imageCache = {
+            get: function(key) {
+                try {
+                    const cached = localStorage.getItem(`petImage_${key}`);
+                    return cached;
+                } catch (e) {
+                    console.error('读取图片缓存失败:', e);
+                    return null;
+                }
+            },
+            set: function(key, value) {
+                try {
+                    const cacheKeys = Object.keys(localStorage).filter(key => key.startsWith('petImage_'));
+                    if (cacheKeys.length >= 100) {
+                        const oldestKey = cacheKeys.sort()[0];
+                        localStorage.removeItem(oldestKey);
+                    }
+                    localStorage.setItem(`petImage_${key}`, value);
+                    return true;
+                } catch (e) {
+                    console.error('写入图片缓存失败:', e);
+                    return false;
+                }
+            }
+        };
+
+        // 测试存储限制
+        function testStorageLimit() {
+            const resultDiv = document.getElementById('storageLimitResult');
+            try {
+                // 测试localStorage大小
+                let testString = 'a';
+                let size = 0;
+                
+                while (true) {
+                    try {
+                        localStorage.setItem('test_limit', testString);
+                        size = testString.length;
+                        testString += testString;
+                    } catch (e) {
+                        break;
+                    }
+                }
+                
+                localStorage.removeItem('test_limit');
+                
+                // 检查现有缓存
+                const cacheKeys = Object.keys(localStorage).filter(key => key.startsWith('petImage_'));
+                let totalCacheSize = 0;
+                cacheKeys.forEach(key => {
+                    const value = localStorage.getItem(key);
+                    if (value) {
+                        totalCacheSize += value.length;
+                    }
+                });
+                
+                resultDiv.innerHTML = `
+                    <p>LocalStorage 估算容量: ${(size / 1024 / 1024).toFixed(2)} MB</p>
+                    <p>现有图片缓存数量: ${cacheKeys.length}</p>
+                    <p>现有缓存总大小: ${(totalCacheSize / 1024 / 1024).toFixed(2)} MB</p>
+                `;
+            } catch (e) {
+                resultDiv.innerHTML = `<p>测试失败: ${e.message}</p>`;
+            }
+        }
+
+        // 测试图片转换
+        function testImageConversion() {
+            const resultDiv = document.getElementById('conversionResult');
+            const img = document.getElementById('testImage');
+            
+            if (!img.complete) {
+                resultDiv.innerHTML = '<p>图片尚未加载完成</p>';
+                return;
+            }
+            
+            try {
+                const canvas = document.createElement('canvas');
+                canvas.width = img.width;
+                canvas.height = img.height;
+                const ctx = canvas.getContext('2d');
+                ctx.drawImage(img, 0, 0);
+                
+                const base64 = canvas.toDataURL('image/jpeg', 0.8);
+                const base64Size = base64.length;
+                
+                resultDiv.innerHTML = `
+                    <p>图片尺寸: ${img.width}x${img.height}</p>
+                    <p>Base64大小: ${(base64Size / 1024).toFixed(2)} KB</p>
+                    <p>Base64前缀: ${base64.substring(0, 50)}...</p>
+                    <img src="${base64}" alt="Base64图片">
+                `;
+            } catch (e) {
+                resultDiv.innerHTML = `<p>转换失败: ${e.message}</p>`;
+            }
+        }
+
+        // 测试缓存读写
+        function testCache() {
+            const resultDiv = document.getElementById('cacheResult');
+            const img = document.getElementById('testImage');
+            
+            if (!img.complete) {
+                resultDiv.innerHTML = '<p>图片尚未加载完成</p>';
+                return;
+            }
+            
+            try {
+                // 转换为base64
+                const canvas = document.createElement('canvas');
+                canvas.width = img.width;
+                canvas.height = img.height;
+                const ctx = canvas.getContext('2d');
+                ctx.drawImage(img, 0, 0);
+                const base64 = canvas.toDataURL('image/jpeg', 0.8);
+                
+                // 存储到缓存
+                const storeResult = imageCache.set('test_chicken', base64);
+                
+                // 从缓存读取
+                const cachedImage = imageCache.get('test_chicken');
+                
+                resultDiv.innerHTML = `
+                    <p>存储结果: ${storeResult ? '成功' : '失败'}</p>
+                    <p>读取结果: ${cachedImage ? '成功' : '失败'}</p>
+                    ${cachedImage ? `<img src="${cachedImage}" alt="缓存图片">` : ''}
+                `;
+            } catch (e) {
+                resultDiv.innerHTML = `<p>测试失败: ${e.message}</p>`;
+            }
+        }
+
+        // 查看现有缓存
+        function viewCache() {
+            const resultDiv = document.getElementById('cacheView');
+            
+            try {
+                const cacheKeys = Object.keys(localStorage).filter(key => key.startsWith('petImage_'));
+                
+                if (cacheKeys.length === 0) {
+                    resultDiv.innerHTML = '<p>无缓存图片</p>';
+                    return;
+                }
+                
+                let html = `<p>缓存图片数量: ${cacheKeys.length}</p>`;
+                cacheKeys.forEach(key => {
+                    const value = localStorage.getItem(key);
+                    if (value) {
+                        html += `
+                            <div style="margin: 10px 0; padding: 10px; background: #e8f4f8;">
+                                <p>键: ${key}</p>
+                                <p>大小: ${(value.length / 1024).toFixed(2)} KB</p>
+                                <p>前缀: ${value.substring(0, 50)}...</p>
+                                <img src="${value}" alt="${key}" style="max-width: 100px;">
+                            </div>
+                        `;
+                    }
+                });
+                
+                resultDiv.innerHTML = html;
+            } catch (e) {
+                resultDiv.innerHTML = `<p>查看失败: ${e.message}</p>`;
+            }
+        }
+
+        // 清除缓存
+        function clearCache() {
+            const resultDiv = document.getElementById('clearResult');
+            
+            try {
+                const cacheKeys = Object.keys(localStorage).filter(key => key.startsWith('petImage_'));
+                const count = cacheKeys.length;
+                
+                cacheKeys.forEach(key => {
+                    localStorage.removeItem(key);
+                });
+                
+                resultDiv.innerHTML = `<p>已清除 ${count} 个缓存图片</p>`;
+            } catch (e) {
+                resultDiv.innerHTML = `<p>清除失败: ${e.message}</p>`;
+            }
+        }
+    </script>
+</body>
+</html>
