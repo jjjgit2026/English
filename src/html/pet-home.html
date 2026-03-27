@@ -41,15 +41,12 @@
     
     <script type="module" src="../js/main.js"></script>
     <script>
-        let currentUser = 'youyou'; // 默认用户
-        
         // 页面加载时初始化
         document.addEventListener('DOMContentLoaded', function() {
-            // 检查用户信息
-            checkUserInfo();
             // 检查宠物状态
             if (typeof DataManager !== 'undefined') {
-                DataManager.checkPetStatus(currentUser);
+                const user = window.currentUser || 'youyou';
+                DataManager.checkPetStatus(user);
                 // 加载宠物列表
                 loadPets();
                 // 更新积分显示
@@ -57,7 +54,8 @@
             } else {
                 setTimeout(() => {
                     if (typeof DataManager !== 'undefined') {
-                        DataManager.checkPetStatus(currentUser);
+                        const user = window.currentUser || 'youyou';
+                        DataManager.checkPetStatus(user);
                         loadPets();
                         updatePointsDisplay();
                     } else {
@@ -66,20 +64,6 @@
                 }, 1000);
             }
         });
-        
-        // 检查用户信息
-        function checkUserInfo() {
-            // 优先使用全局的 currentUser 变量
-            if (window.currentUser) {
-                currentUser = window.currentUser;
-            } else {
-                // 否则从 localStorage 获取
-                const savedUser = localStorage.getItem('currentUser');
-                if (savedUser) {
-                    currentUser = savedUser;
-                }
-            }
-        }
         
         // 监听用户切换事件
         window.addEventListener('storage', function(event) {
@@ -90,13 +74,12 @@
         });
         
         // 定期检查用户是否发生变化
-        let lastUser = currentUser;
+        let lastUser = window.currentUser || 'youyou';
         setInterval(function() {
             // 优先检查全局变量
-            const newUser = window.currentUser || localStorage.getItem('currentUser');
+            const newUser = window.currentUser || localStorage.getItem('currentUser') || 'youyou';
             if (newUser && newUser !== lastUser) {
                 lastUser = newUser;
-                currentUser = newUser;
                 // 重新加载宠物列表
                 loadPets();
                 // 更新积分显示
@@ -186,8 +169,9 @@
         async function loadPets() {
             if (typeof DataManager !== 'undefined') {
                 // 再次检查宠物状态，确保以最新状态展示
-                DataManager.checkPetStatus(currentUser);
-                const pets = DataManager.getPets(currentUser);
+                const user = window.currentUser || 'youyou';
+                DataManager.checkPetStatus(user);
+                const pets = DataManager.getPets(user);
                 const petList = document.getElementById('petList');
                 const emptyState = document.getElementById('emptyState');
                 const petCareText = document.getElementById('petCareText');
@@ -363,8 +347,9 @@
         // 喂食宠物
         function feedPet(petId) {
             if (typeof DataManager !== 'undefined') {
+                const user = window.currentUser || 'youyou';
                 // 检查宠物是否已达到最大喂食次数
-                const pets = DataManager.getPets(currentUser);
+                const pets = DataManager.getPets(user);
                 const pet = pets.find(p => p.id === petId);
                 
                 if (pet && pet.feedCount >= 180) {
@@ -372,7 +357,7 @@
                     return;
                 }
                 
-                const result = DataManager.feedPet(currentUser, petId);
+                const result = DataManager.feedPet(user, petId);
                 if (result.success) {
                     alert(result.message);
                     loadPets();
@@ -388,7 +373,8 @@
         // 复活宠物
         function revivePet(petId) {
             if (typeof DataManager !== 'undefined') {
-                const result = DataManager.revivePet(currentUser, petId);
+                const user = window.currentUser || 'youyou';
+                const result = DataManager.revivePet(user, petId);
                 if (result.success) {
                     alert(result.message);
                     loadPets();
@@ -404,7 +390,8 @@
         // 更新积分显示
         function updatePointsDisplay() {
             if (typeof DataManager !== 'undefined') {
-                const points = DataManager.getUserPoints(currentUser);
+                const user = window.currentUser || 'youyou';
+                const points = DataManager.getUserPoints(user);
                 document.getElementById('userPoints').textContent = points;
             }
         }

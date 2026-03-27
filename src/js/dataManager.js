@@ -9,6 +9,124 @@ export default class DataManager {
         return `${year}-${month}-${day}`;
     }
 
+    // 获取本周开始日期（周一）
+    static getWeekStartDate() {
+        const date = new Date();
+        const day = date.getDay();
+        const diff = date.getDate() - day + (day === 0 ? -6 : 1); // 调整为周一开始
+        const weekStart = new Date(date.setDate(diff));
+        const year = weekStart.getFullYear();
+        const month = String(weekStart.getMonth() + 1).padStart(2, '0');
+        const dayOfMonth = String(weekStart.getDate()).padStart(2, '0');
+        return `${year}-${month}-${dayOfMonth}`;
+    }
+
+    // 获取本月开始日期
+    static getMonthStartDate() {
+        const date = new Date();
+        const year = date.getFullYear();
+        const month = String(date.getMonth() + 1).padStart(2, '0');
+        return `${year}-${month}-01`;
+    }
+
+    // 检查并更新学习目标
+    static checkAndUpdateGoals(userData) {
+        const today = this.getLocalDateString();
+        const currentWeekStart = this.getWeekStartDate();
+        const currentMonthStart = this.getMonthStartDate();
+        
+        // 检查每周目标
+        if (userData.goals.weekly.weekStart !== currentWeekStart) {
+            // 新的一周开始，重置每周目标
+            userData.goals.weekly = {
+                target: 100,
+                current: 0,
+                weekStart: currentWeekStart,
+                completed: false
+            };
+        }
+        
+        // 检查每月目标
+        if (userData.goals.monthly.monthStart !== currentMonthStart) {
+            // 新的一月开始，重置每月目标
+            userData.goals.monthly = {
+                target: 400,
+                current: 0,
+                monthStart: currentMonthStart,
+                completed: false
+            };
+        }
+        
+        // 计算总学习量（使用 total.learning 作为总学习量）
+        const totalLearning = parseInt(userData.total.learning) || 0;
+        
+        // 检查学习里程碑
+        userData.goals.milestones.forEach(milestone => {
+            if (!milestone.completed && totalLearning >= milestone.target) {
+                milestone.completed = true;
+                if (!milestone.rewarded) {
+                    // 给予里程碑奖励
+                    let rewardPoints = 0;
+                    switch (milestone.target) {
+                        case 100:
+                            rewardPoints = 10;
+                            break;
+                        case 500:
+                            rewardPoints = 20;
+                            break;
+                        case 1000:
+                            rewardPoints = 50;
+                            break;
+                        case 5000:
+                            rewardPoints = 100;
+                            break;
+                        case 10000:
+                            rewardPoints = 200;
+                            break;
+                    }
+                    
+                    if (rewardPoints > 0) {
+                        userData.total.points = (parseFloat(userData.total.points) || 0) + rewardPoints;
+                        this.addPointsHistory(userData, 'income', rewardPoints, `学习里程碑奖励 - 累计学习 ${milestone.target} 个单词`);
+                        milestone.rewarded = true;
+                        // 显示奖励提示
+                        alert(`恭喜你达成学习里程碑！累计学习 ${milestone.target} 个单词，获得 ${rewardPoints} 积分奖励！`);
+                    }
+                }
+            }
+        });
+    }
+
+    // 更新学习进度并检查目标完成情况
+    static updateLearningProgress(userData, wordsCount) {
+        // 更新每周目标进度
+        userData.goals.weekly.current += wordsCount;
+        if (userData.goals.weekly.current >= userData.goals.weekly.target && !userData.goals.weekly.completed) {
+            userData.goals.weekly.completed = true;
+            // 给予每周目标奖励
+            const rewardPoints = 10;
+            userData.total.points = (parseFloat(userData.total.points) || 0) + rewardPoints;
+            this.addPointsHistory(userData, 'income', rewardPoints, '每周学习目标完成奖励');
+            // 显示奖励提示
+            alert(`恭喜你完成每周学习目标！获得 ${rewardPoints} 积分奖励！`);
+        }
+        
+        // 更新每月目标进度
+        userData.goals.monthly.current += wordsCount;
+        if (userData.goals.monthly.current >= userData.goals.monthly.target && !userData.goals.monthly.completed) {
+            userData.goals.monthly.completed = true;
+            // 给予每月目标奖励
+            const rewardPoints = 20;
+            userData.total.points = (parseFloat(userData.total.points) || 0) + rewardPoints;
+            this.addPointsHistory(userData, 'income', rewardPoints, '每月学习目标完成奖励');
+            // 显示奖励提示
+            alert(`恭喜你完成每月学习目标！获得 ${rewardPoints} 积分奖励！`);
+        }
+        
+        // 检查学习里程碑
+        this.checkAndUpdateGoals(userData);
+    }
+
     // 数据版本号
     static DATA_VERSION = '1.0';
 
@@ -52,7 +170,29 @@ export default class DataManager {
                         },
                         books: {},
                         checkinHistory: [],
-                        pets: []
+                        pointsHistory: [],
+                        pets: [],
+                        goals: {
+                            weekly: {
+                                target: 100, // 每周学习目标：100个单词
+                                current: 0, // 当前进度
+                                weekStart: DataManager.getWeekStartDate(), // 本周开始日期
+                                completed: false // 是否完成
+                            },
+                            monthly: {
+                                target: 400, // 每月学习目标：400个单词
+                                current: 0, // 当前进度
+                                monthStart: DataManager.getMonthStartDate(), // 本月开始日期
+                                completed: false // 是否完成
+                            },
+                            milestones: [
+                                { target: 100, completed: false, rewarded: false },
+                                { target: 500, completed: false, rewarded: false },
+                                { target: 1000, completed: false, rewarded: false },
+                                { target: 5000, completed: false, rewarded: false },
+                                { target: 10000, completed: false, rewarded: false }
+                            ]
+                        }
                     };
                 }
                 
@@ -124,6 +264,75 @@ export default class DataManager {
                             }
                         }
                     }
+                    
+                    // 确保 goals 对象存在且字段完整
+                    if (!userData.goals || typeof userData.goals !== 'object') {
+                        userData.goals = {
+                            weekly: {
+                                target: 100, // 每周学习目标：100个单词
+                                current: 0, // 当前进度
+                                weekStart: DataManager.getWeekStartDate(), // 本周开始日期
+                                completed: false // 是否完成
+                            },
+                            monthly: {
+                                target: 400, // 每月学习目标：400个单词
+                                current: 0, // 当前进度
+                                monthStart: DataManager.getMonthStartDate(), // 本月开始日期
+                                completed: false // 是否完成
+                            },
+                            milestones: [
+                                { target: 100, completed: false, rewarded: false },
+                                { target: 500, completed: false, rewarded: false },
+                                { target: 1000, completed: false, rewarded: false },
+                                { target: 5000, completed: false, rewarded: false },
+                                { target: 10000, completed: false, rewarded: false }
+                            ]
+                        };
+                    } else {
+                        // 补全 weekly 目标
+                        if (!userData.goals.weekly || typeof userData.goals.weekly !== 'object') {
+                            userData.goals.weekly = {
+                                target: 100,
+                                current: 0,
+                                weekStart: DataManager.getWeekStartDate(),
+                                completed: false
+                            };
+                        } else {
+                            userData.goals.weekly.target = userData.goals.weekly.target || 100;
+                            userData.goals.weekly.current = parseInt(userData.goals.weekly.current) || 0;
+                            userData.goals.weekly.weekStart = userData.goals.weekly.weekStart || DataManager.getWeekStartDate();
+                            userData.goals.weekly.completed = userData.goals.weekly.completed || false;
+                        }
+                        
+                        // 补全 monthly 目标
+                        if (!userData.goals.monthly || typeof userData.goals.monthly !== 'object') {
+                            userData.goals.monthly = {
+                                target: 400,
+                                current: 0,
+                                monthStart: DataManager.getMonthStartDate(),
+                                completed: false
+                            };
+                        } else {
+                            userData.goals.monthly.target = userData.goals.monthly.target || 400;
+                            userData.goals.monthly.current = parseInt(userData.goals.monthly.current) || 0;
+                            userData.goals.monthly.monthStart = userData.goals.monthly.monthStart || DataManager.getMonthStartDate();
+                            userData.goals.monthly.completed = userData.goals.monthly.completed || false;
+                        }
+                        
+                        // 补全 milestones
+                        if (!userData.goals.milestones || !Array.isArray(userData.goals.milestones)) {
+                            userData.goals.milestones = [
+                                { target: 100, completed: false, rewarded: false },
+                                { target: 500, completed: false, rewarded: false },
+                                { target: 1000, completed: false, rewarded: false },
+                                { target: 5000, completed: false, rewarded: false },
+                                { target: 10000, completed: false, rewarded: false }
+                            ];
+                        }
+                    }
+                    
+                    // 检查并更新学习目标
+                    DataManager.checkAndUpdateGoals(userData);
                     
                     console.log('[DataManager] getUserData - 返回的数据:', userData);
                     return userData;
@@ -228,6 +437,34 @@ export default class DataManager {
                     userData.errorWords = [];
                 }
                 
+                // 确保 goals 对象存在且字段完整
+                if (!userData.goals || typeof userData.goals !== 'object') {
+                    userData.goals = {
+                        weekly: {
+                            target: 100, // 每周学习目标：100个单词
+                            current: 0, // 当前进度
+                            weekStart: DataManager.getWeekStartDate(), // 本周开始日期
+                            completed: false // 是否完成
+                        },
+                        monthly: {
+                            target: 400, // 每月学习目标：400个单词
+                            current: 0, // 当前进度
+                            monthStart: DataManager.getMonthStartDate(), // 本月开始日期
+                            completed: false // 是否完成
+                        },
+                        milestones: [
+                            { target: 100, completed: false, rewarded: false },
+                            { target: 500, completed: false, rewarded: false },
+                            { target: 1000, completed: false, rewarded: false },
+                            { target: 5000, completed: false, rewarded: false },
+                            { target: 10000, completed: false, rewarded: false }
+                        ]
+                    };
+                }
+                
+                // 检查并更新学习目标
+                DataManager.checkAndUpdateGoals(userData);
+                
                 // 转换完成后保存回 localStorage，确保下次加载时使用新格式
                 try {
                     // 使用 saveUserData 函数来保存数据，确保数据结构完整
@@ -263,7 +500,29 @@ export default class DataManager {
                     },
                     books: {},
                     checkinHistory: [],
-                    pets: []
+                    pointsHistory: [],
+                    pets: [],
+                    goals: {
+                        weekly: {
+                            target: 100, // 每周学习目标：100个单词
+                            current: 0, // 当前进度
+                            weekStart: DataManager.getWeekStartDate(), // 本周开始日期
+                            completed: false // 是否完成
+                        },
+                        monthly: {
+                            target: 400, // 每月学习目标：400个单词
+                            current: 0, // 当前进度
+                            monthStart: DataManager.getMonthStartDate(), // 本月开始日期
+                            completed: false // 是否完成
+                        },
+                        milestones: [
+                            { target: 100, completed: false, rewarded: false },
+                            { target: 500, completed: false, rewarded: false },
+                            { target: 1000, completed: false, rewarded: false },
+                            { target: 5000, completed: false, rewarded: false },
+                            { target: 10000, completed: false, rewarded: false }
+                        ]
+                    }
                 };
                 
                 // 保存默认数据到 localStorage，确保下次加载时使用
@@ -303,7 +562,28 @@ export default class DataManager {
                 books: {},
                 checkinHistory: [],
                 pointsHistory: [],
-                pets: []
+                pets: [],
+                goals: {
+                    weekly: {
+                        target: 100, // 每周学习目标：100个单词
+                        current: 0, // 当前进度
+                        weekStart: DataManager.getWeekStartDate(), // 本周开始日期
+                        completed: false // 是否完成
+                    },
+                    monthly: {
+                        target: 400, // 每月学习目标：400个单词
+                        current: 0, // 当前进度
+                        monthStart: DataManager.getMonthStartDate(), // 本月开始日期
+                        completed: false // 是否完成
+                    },
+                    milestones: [
+                        { target: 100, completed: false, rewarded: false },
+                        { target: 500, completed: false, rewarded: false },
+                        { target: 1000, completed: false, rewarded: false },
+                        { target: 5000, completed: false, rewarded: false },
+                        { target: 10000, completed: false, rewarded: false }
+                    ]
+                }
             };
             console.log('[DataManager] getUserData - 返回错误数据:', errorData);
             return errorData;
@@ -373,7 +653,58 @@ export default class DataManager {
                 })() : {},
                 checkinHistory: Array.isArray(data.checkinHistory) ? data.checkinHistory : [],
                 pointsHistory: Array.isArray(data.pointsHistory) ? data.pointsHistory : [],
-                pets: Array.isArray(data.pets) ? data.pets : []
+                pets: Array.isArray(data.pets) ? data.pets : [],
+                goals: typeof data.goals === 'object' && data.goals !== null ? {
+                    weekly: typeof data.goals.weekly === 'object' && data.goals.weekly !== null ? {
+                        target: data.goals.weekly.target || 100,
+                        current: parseInt(data.goals.weekly.current) || 0,
+                        weekStart: data.goals.weekly.weekStart || DataManager.getWeekStartDate(),
+                        completed: data.goals.weekly.completed || false
+                    } : {
+                        target: 100,
+                        current: 0,
+                        weekStart: DataManager.getWeekStartDate(),
+                        completed: false
+                    },
+                    monthly: typeof data.goals.monthly === 'object' && data.goals.monthly !== null ? {
+                        target: data.goals.monthly.target || 400,
+                        current: parseInt(data.goals.monthly.current) || 0,
+                        monthStart: data.goals.monthly.monthStart || DataManager.getMonthStartDate(),
+                        completed: data.goals.monthly.completed || false
+                    } : {
+                        target: 400,
+                        current: 0,
+                        monthStart: DataManager.getMonthStartDate(),
+                        completed: false
+                    },
+                    milestones: Array.isArray(data.goals.milestones) ? data.goals.milestones : [
+                        { target: 100, completed: false, rewarded: false },
+                        { target: 500, completed: false, rewarded: false },
+                        { target: 1000, completed: false, rewarded: false },
+                        { target: 5000, completed: false, rewarded: false },
+                        { target: 10000, completed: false, rewarded: false }
+                    ]
+                } : {
+                    weekly: {
+                        target: 100,
+                        current: 0,
+                        weekStart: DataManager.getWeekStartDate(),
+                        completed: false
+                    },
+                    monthly: {
+                        target: 400,
+                        current: 0,
+                        monthStart: DataManager.getMonthStartDate(),
+                        completed: false
+                    },
+                    milestones: [
+                        { target: 100, completed: false, rewarded: false },
+                        { target: 500, completed: false, rewarded: false },
+                        { target: 1000, completed: false, rewarded: false },
+                        { target: 5000, completed: false, rewarded: false },
+                        { target: 10000, completed: false, rewarded: false }
+                    ]
+                }
             };
             
             // 确保 books 对象中的每个课本都有必要的字段
@@ -733,11 +1064,11 @@ export default class DataManager {
             
             // 连续打卡奖励
             if (consecutiveDays === 3) {
-                pointsReward += 10;
+                pointsReward += 1;
             } else if (consecutiveDays === 7) {
-                pointsReward += 20;
+                pointsReward += 2;
             } else if (consecutiveDays === 30) {
-                pointsReward += 50;
+                pointsReward += 5;
             }
             
             userData.total.points = (parseFloat(userData.total.points) || 0) + pointsReward;
@@ -921,6 +1252,11 @@ export default class DataManager {
             
             // 添加积分收入记录
             this.addPointsHistory(userData, 'income', pointsToAdd, description);
+            
+            // 如果是学习单词，更新学习目标进度
+            if (description === '学习单词') {
+                this.updateLearningProgress(userData, 1); // 每次学习一个单词
+            }
             
             // 使用 saveUserData 函数来保存数据，确保数据结构完整
             DataManager.saveUserData(user, userData);

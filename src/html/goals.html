@@ -3,45 +3,193 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>里程碑 - 单词学习工具</title>
+    <title>学习目标 - 单词学习工具</title>
     <link rel="stylesheet" href="../style.css">
+    <style>
+        .goals-page {
+            padding-top: 60px;
+            min-height: 100vh;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        }
+        
+        .goals-content {
+            padding: 20px;
+        }
+        
+        .goals-card {
+            background: rgba(255, 255, 255, 0.95);
+            border-radius: 16px;
+            box-shadow: 0 4px 30px rgba(0, 0, 0, 0.1);
+            backdrop-filter: blur(5px);
+            -webkit-backdrop-filter: blur(5px);
+            border: 1px solid rgba(255, 255, 255, 0.3);
+            padding: 20px;
+            margin-bottom: 20px;
+        }
+        
+        .goals-card h2 {
+            font-size: 18px;
+            font-weight: 600;
+            margin-bottom: 15px;
+            color: #333;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        
+        .goals-card h2 .icon {
+            font-size: 20px;
+        }
+        
+        .goal-item {
+            margin-bottom: 15px;
+        }
+        
+        .goal-info {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 8px;
+        }
+        
+        .goal-label {
+            font-size: 14px;
+            color: #666;
+        }
+        
+        .goal-progress {
+            font-size: 14px;
+            font-weight: 600;
+            color: #4CAF50;
+        }
+        
+        .progress-bar-container {
+            width: 100%;
+            height: 12px;
+            background-color: #f0f0f0;
+            border-radius: 6px;
+            overflow: hidden;
+        }
+        
+        .progress-bar {
+            height: 100%;
+            background: linear-gradient(90deg, #4CAF50, #45a049);
+            border-radius: 6px;
+            transition: width 0.3s ease;
+        }
+        
+        .milestone-item {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 12px;
+            background-color: #f9f9f9;
+            border-radius: 8px;
+            margin-bottom: 10px;
+        }
+        
+        .milestone-info {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        
+        .milestone-icon {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            background-color: #e3f2fd;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 18px;
+        }
+        
+        .milestone-icon.completed {
+            background-color: #e8f5e8;
+        }
+        
+        .milestone-text {
+            flex: 1;
+        }
+        
+        .milestone-title {
+            font-size: 14px;
+            font-weight: 600;
+            color: #333;
+        }
+        
+        .milestone-reward {
+            font-size: 12px;
+            color: #666;
+        }
+        
+        .milestone-status {
+            font-size: 12px;
+            font-weight: 600;
+            padding: 4px 12px;
+            border-radius: 12px;
+        }
+        
+        .milestone-status.pending {
+            background-color: #fff3e0;
+            color: #ff9800;
+        }
+        
+        .milestone-status.completed {
+            background-color: #e8f5e8;
+            color: #4CAF50;
+        }
+        
+        .reward-popup {
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: white;
+            border-radius: 16px;
+            padding: 30px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+            z-index: 1000;
+            text-align: center;
+            max-width: 300px;
+        }
+        
+        .reward-popup h3 {
+            margin-top: 0;
+            color: #4CAF50;
+        }
+        
+        .reward-popup p {
+            margin-bottom: 20px;
+        }
+        
+        .reward-popup button {
+            background-color: #4CAF50;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 20px;
+            font-size: 14px;
+            cursor: pointer;
+        }
+        
+        .reward-popup button:hover {
+            background-color: #45a049;
+        }
+    </style>
 </head>
 <body>
-    <!-- 里程碑页面 -->
-    <div class="stats-page active" id="statsPage">
+    <!-- 学习目标页面 -->
+    <div class="goals-page active" id="goalsPage">
         <div class="list-header">
             <div class="list-header-bar">
                 <button class="back-btn" onclick="backToHome()">‹</button>
-                <div class="list-title">里程碑</div>
+                <div class="list-title">学习目标</div>
                 <div style="width: 36px;"></div>
             </div>
         </div>
         
-        <div class="stats-content">
-            <div class="stats-card">
-                <div class="stats-date" id="statsDate">2024-01-01</div>
-                <div class="stats-item">
-                    <div class="stats-label">今日完成单词</div>
-                    <div class="stats-value" id="todayCompleted">0</div>
-                </div>
-                <div class="stats-item">
-                    <div class="stats-label">今日新增错词</div>
-                    <div class="stats-value" id="todayError">0</div>
-                </div>
-            </div>
-            
-            <div class="stats-card">
-                <div class="stats-title">累计统计</div>
-                <div class="stats-item">
-                    <div class="stats-label">累计完成单词</div>
-                    <div class="stats-value" id="totalCompleted">0</div>
-                </div>
-                <div class="stats-item">
-                    <div class="stats-label">累计错词数</div>
-                    <div class="stats-value" id="totalError">0</div>
-                </div>
-            </div>
-            
+        <div class="goals-content">
             <!-- 每周学习目标 -->
             <div class="goals-card">
                 <h2><span class="icon">📅</span> 每周学习目标</h2>
@@ -57,10 +205,6 @@
                 <div class="goal-info" style="margin-top: 10px;">
                     <span class="goal-label">本周开始日期</span>
                     <span id="weekStartDate"></span>
-                </div>
-                <div class="goal-info" style="margin-top: 10px;">
-                    <span class="goal-label">完成奖励</span>
-                    <span class="goal-reward">10 积分</span>
                 </div>
             </div>
             
@@ -80,10 +224,6 @@
                     <span class="goal-label">本月开始日期</span>
                     <span id="monthStartDate"></span>
                 </div>
-                <div class="goal-info" style="margin-top: 10px;">
-                    <span class="goal-label">完成奖励</span>
-                    <span class="goal-reward">20 积分</span>
-                </div>
             </div>
             
             <!-- 学习里程碑 -->
@@ -96,12 +236,17 @@
         </div>
     </div>
     
-
-    
     <!-- Loading 元素 -->
     <div class="loading-overlay hidden" id="loadingOverlay">
         <div class="loading-spinner"></div>
         <div class="loading-text">加载中，请稍候...</div>
+    </div>
+    
+    <!-- 奖励弹窗 -->
+    <div class="reward-popup hidden" id="rewardPopup">
+        <h3>🎉 恭喜你！</h3>
+        <p id="rewardMessage"></p>
+        <button onclick="closeRewardPopup()">确定</button>
     </div>
     
     <!-- 引入PDF.js库 -->
@@ -117,10 +262,7 @@
     <script>
         // 页面加载完成后初始化
         document.addEventListener('DOMContentLoaded', function() {
-            console.log('学习统计页面加载完成');
-            
-            // 加载学习统计数据
-            loadStats();
+            console.log('学习目标页面加载完成');
             
             // 等待 DataManager 加载
             if (typeof DataManager !== 'undefined') {
@@ -130,30 +272,6 @@
                 setTimeout(loadGoals, 1000);
             }
         });
-        
-        // 加载学习统计数据
-        function loadStats() {
-            try {
-                const user = window.currentUser || 'youyou';
-                if (typeof DataManager !== 'undefined') {
-                    const userData = DataManager.getUserData(user);
-                    if (userData) {
-                        // 更新日期
-                        document.getElementById('statsDate').textContent = DataManager.getLocalDateString();
-                        
-                        // 更新今日数据
-                        document.getElementById('todayCompleted').textContent = userData.today.learning || 0;
-                        document.getElementById('todayError').textContent = userData.today.error || 0;
-                        
-                        // 更新累计数据
-                        document.getElementById('totalCompleted').textContent = userData.total.learning || 0;
-                        document.getElementById('totalError').textContent = userData.total.error || 0;
-                    }
-                }
-            } catch (error) {
-                console.error('加载学习统计数据失败:', error);
-            }
-        }
         
         // 加载学习目标数据
         function loadGoals() {
@@ -247,11 +365,13 @@
             document.getElementById('rewardPopup').classList.add('hidden');
         }
         
+        // 返回首页
+        function backToHome() {
+            window.location.href = 'index.html';
+        }
+        
         // 定期更新目标数据
-        setInterval(function() {
-            loadStats();
-            loadGoals();
-        }, 30000); // 每30秒更新一次
+        setInterval(loadGoals, 30000); // 每30秒更新一次
     </script>
 </body>
 </html>

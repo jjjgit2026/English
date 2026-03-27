@@ -90,14 +90,10 @@
         let currentArticleIndex = 0;
         let clickedSentences = new Set();
         let totalSentences = 0;
-        let currentUser = 'youyou'; // 默认用户
         
         // 初始化文章详情页面
         document.addEventListener('DOMContentLoaded', async function() {
             console.log('[文章详情页面初始化] 开始');
-            
-            // 检查用户信息
-            checkUserInfo();
             
             // 获取URL参数中的文章索引
             const urlParams = new URLSearchParams(window.location.search);
@@ -405,14 +401,7 @@
             window.location.href = url;
         }
         
-        // 检查用户信息
-        function checkUserInfo() {
-            const savedUser = localStorage.getItem('currentUser');
-            if (savedUser) {
-                currentUser = savedUser;
-                console.log('[检查用户信息] 加载保存的用户:', currentUser);
-            }
-        }
+
         
         // 切换折叠状态
         function toggleCollapse(elementId) {
@@ -471,7 +460,7 @@
         
         function addStampPoints() {
             // 获取当前用户
-            const user = currentUser;
+            const user = window.currentUser || 'youyou';
             
             // 获取当前文章的中文标题
             const chineseTitle = document.getElementById('articleChineseTitle').textContent;

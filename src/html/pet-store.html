@@ -152,38 +152,35 @@
     
     <script type="module" src="../js/main.js"></script>
     <script>
-        let currentUser = 'youyou'; // 默认用户
         let currentPetType = '';
         
         // 页面加载时初始化
         document.addEventListener('DOMContentLoaded', function() {
-            // 检查用户信息
-            checkUserInfo();
             // 更新积分显示
             updatePointsDisplay();
         });
         
-        // 检查用户信息
-        function checkUserInfo() {
-            const savedUser = localStorage.getItem('currentUser');
-            if (savedUser) {
-                currentUser = savedUser;
-            }
-        }
-        
         // 更新积分显示
         function updatePointsDisplay() {
             if (typeof DataManager !== 'undefined') {
-                const points = DataManager.getUserPoints(currentUser);
+                // 直接使用 window.currentUser 确保获取最新的用户信息
+                const user = window.currentUser || 'youyou';
+                const points = DataManager.getUserPoints(user);
+                console.log('更新积分显示 - 用户:', user, '积分:', points);
                 document.getElementById('userPoints').textContent = points;
             }
         }
         
         // 打开领养弹窗
         function openAdoptModal(petType) {
+            // 直接使用 window.currentUser 确保获取最新的用户信息
+            const user = window.currentUser || currentUser;
+            console.log('打开领养弹窗前 - 用户:', user);
+            
             // 检查用户积分是否足够
             if (typeof DataManager !== 'undefined') {
-                const points = DataManager.getUserPoints(currentUser);
+                const points = DataManager.getUserPoints(user);
+                console.log('检查积分 - 用户:', user, '积分:', points);
                 if (points < 50) {
                     alert('积分不足，需要50积分才能领养宠物');
                     return;
@@ -208,8 +205,14 @@
                 return;
             }
             
+            // 直接使用 window.currentUser 确保获取最新的用户信息
+            const user = window.currentUser || currentUser;
+            console.log('领养宠物 - 用户:', user);
+            
             if (typeof DataManager !== 'undefined') {
-                const result = DataManager.adoptPet(currentUser, currentPetType, petName);
+                console.log('调用 DataManager.adoptPet - 用户:', user, '宠物类型:', currentPetType);
+                const result = DataManager.adoptPet(user, currentPetType, petName);
+                console.log('领养结果:', result);
                 if (result.success) {
                     alert(result.message);
                     closeAdoptModal();
