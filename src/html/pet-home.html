@@ -87,88 +87,7 @@
             }
         }, 1000);
         
-        // 图片缓存对象
-        const imageCache = {
-            // 检查图片是否在缓存中
-            get: function(key) {
-                try {
-                    const cached = localStorage.getItem(`petImage_${key}`);
-                    return cached;
-                } catch (e) {
-                    console.error('读取图片缓存失败:', e);
-                    return null;
-                }
-            },
-            
-            // 缓存图片
-            set: function(key, value) {
-                try {
-                    // 增加缓存大小限制到200张
-                    const cacheKeys = Object.keys(localStorage).filter(key => key.startsWith('petImage_'));
-                    if (cacheKeys.length >= 200) {
-                        // 删除最早的缓存
-                        const oldestKey = cacheKeys.sort()[0];
-                        localStorage.removeItem(oldestKey);
-                    }
-                    localStorage.setItem(`petImage_${key}`, value);
-                } catch (e) {
-                    console.error('写入图片缓存失败:', e);
-                }
-            }
-        };
-        
-        // 优化的图片加载函数
-        function loadPetImageOptimized(type, month) {
-            const imageKey = `${type}_${month}`;
-            const cachedImage = imageCache.get(imageKey);
-            
-            if (cachedImage) {
-                return Promise.resolve(cachedImage);
-            }
-            
-            // 使用 WebP 格式优先
-            const webpUrl = `../../assets/pets/${type}/${month}.webp`;
-            const jpgUrl = `../../assets/pets/${type}/${month}.JPG`;
-            
-            // 尝试加载 WebP，失败后回退到 JPG
-            return new Promise((resolve) => {
-                const img = new Image();
-                img.onload = function() {
-                    // 缓存压缩后的图片
-                    const canvas = document.createElement('canvas');
-                    canvas.width = img.width;
-                    canvas.height = img.height;
-                    const ctx = canvas.getContext('2d');
-                    ctx.drawImage(img, 0, 0);
-                    try {
-                        const base64 = canvas.toDataURL('image/jpeg', 0.7); // 进一步降低质量以减少大小
-                        imageCache.set(imageKey, base64);
-                    } catch (e) {
-                        console.error('图片转换失败:', e);
-                    }
-                    resolve(img.src);
-                };
-                img.onerror = function() {
-                    // WebP加载失败，尝试JPG
-                    img.src = jpgUrl;
-                };
-                img.src = webpUrl;
-            });
-        }
-        
-        // 预加载宠物图片
-        function preloadPetImages(pets) {
-            pets.forEach(pet => {
-                if (pet.type !== 'cat' && pet.type !== 'parrot') {
-                    const month = Math.min(Math.floor((Date.now() - new Date(pet.adoptionDate).getTime()) / (1000 * 60 * 60 * 24 * 30)) + 1, 6);
-                    const imageKey = `${pet.type}_${month}`;
-                    if (!imageCache.get(imageKey)) {
-                        const img = new Image();
-                        img.src = `../../assets/pets/${pet.type}/${month}.JPG`;
-                    }
-                }
-            });
-        }
+
         
         // 获取当天日期字符串
         function getTodayString() {
@@ -179,36 +98,20 @@
             return `${year}-${month}-${day}`;
         }
         
-        // 检查图片或视频是否存在
+        // 检查图片是否存在
         function checkImageExists(url) {
             return new Promise((resolve) => {
-                // 检查是否是免费宠物图片
+                // 免费宠物图片直接返回存在（假设图片都存在）
                 if (url.includes('cat.jpg') || url.includes('parrot.jpg')) {
-                    // 免费宠物图片直接返回存在（假设图片都存在）
                     resolve(true);
                     return;
                 }
                 
-                // 从URL中提取图片键
-                const parts = url.split('/');
-                const type = parts[parts.length - 2];
-                const month = parts[parts.length - 1].replace('.JPG', '');
-                const imageKey = `${type}_${month}`;
-                
-                // 检查缓存
-                const cachedImage = imageCache.get(imageKey);
-                if (cachedImage) {
-                    // 缓存存在，直接返回存在
-                    resolve(true);
-                    return;
-                }
-                
-                // 缓存不存在，使用优化的加载函数
-                loadPetImageOptimized(type, month).then(() => {
-                    resolve(true);
-                }).catch(() => {
-                    resolve(false);
-                });
+                // 直接加载图片检查是否存在
+                const img = new Image();
+                img.onload = () => resolve(true);
+                img.onerror = () => resolve(false);
+                img.src = url;
             });
         }
 
@@ -238,9 +141,6 @@
                 // 显示上方的文字和宠物商店按钮
                 petCareText.style.display = 'block';
                 petStoreButton.style.display = 'block';
-                
-                // 预加载宠物图片
-                preloadPetImages(pets);
                 
                 petList.innerHTML = '';
                 
@@ -414,15 +314,6 @@
                 month = Math.floor(diffDays / 30) + 1;
                 // 6个月及以后一直都是6.jpg
                 month = Math.min(month, 6);
-            }
-            
-            const imageKey = `${type}_${month}`;
-            
-            // 检查缓存
-            const cachedImage = imageCache.get(imageKey);
-            if (cachedImage) {
-                // 返回缓存的图片
-                return cachedImage;
             }
             
             // 构建图片路径
