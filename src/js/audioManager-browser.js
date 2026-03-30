@@ -1,5 +1,5 @@
-// 音频管理模块
-export default class AudioManager {
+// 音频管理模块 - 浏览器版本
+class AudioManager {
     static audioCache = new Map();
     static ttsStatus = {
         native: true,
@@ -68,9 +68,8 @@ export default class AudioManager {
     
     static markWordAsLearned(word) {
         try {
-            DataManager.markWordAsLearned(currentUser, currentFile, word);
-            // 更新统计显示
-            updateStatsDisplay();
+            // 简化版本，不依赖 DataManager
+            console.log('标记单词为已学:', word);
         } catch (e) {
             console.error('[播放音频] 标记已学失败:', e);
         }
@@ -371,3 +370,5 @@ export default class AudioManager {
     }
 }
 
+// 将 AudioManager 暴露到全局作用域
+window.AudioManager = AudioManager;

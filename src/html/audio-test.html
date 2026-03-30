@@ -1,0 +1,479 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>发音测试</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #f5f5f5;
+        }
+        .container {
+            background-color: white;
+            padding: 30px;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        h1 {
+            text-align: center;
+            color: #333;
+        }
+        .test-section {
+            margin: 20px 0;
+            padding: 20px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+        }
+        .test-section h2 {
+            margin-top: 0;
+            color: #555;
+        }
+        .word-input {
+            width: 100%;
+            padding: 10px;
+            font-size: 16px;
+            margin: 10px 0;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+        }
+        .button-group {
+            margin: 10px 0;
+        }
+        .btn {
+            padding: 10px 20px;
+            margin: 5px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 14px;
+        }
+        .btn-primary {
+            background-color: #4CAF50;
+            color: white;
+        }
+        .btn-secondary {
+            background-color: #2196F3;
+            color: white;
+        }
+        .settings {
+            margin: 15px 0;
+            padding: 10px;
+            background-color: #f9f9f9;
+            border-radius: 4px;
+        }
+        .setting-item {
+            margin: 10px 0;
+        }
+        .setting-item label {
+            display: inline-block;
+            width: 100px;
+        }
+        .setting-item input[type="range"] {
+            width: 200px;
+        }
+        .setting-item input[type="number"] {
+            width: 60px;
+        }
+        .result {
+            margin: 10px 0;
+            padding: 10px;
+            background-color: #f0f8ff;
+            border-radius: 4px;
+        }
+        .letter {
+            display: inline-block;
+            width: 30px;
+            height: 30px;
+            text-align: center;
+            line-height: 30px;
+            margin: 2px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            font-size: 18px;
+        }
+        .letter.highlight {
+            background-color: #ffeb3b;
+            transform: scale(1.1);
+            transition: all 0.2s;
+        }
+        .comparison {
+            display: flex;
+            justify-content: space-between;
+            margin: 20px 0;
+        }
+        .comparison > div {
+            flex: 1;
+            margin: 0 10px;
+            padding: 15px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+        }
+        @media (max-width: 600px) {
+            .comparison {
+                flex-direction: column;
+            }
+            .comparison > div {
+                margin: 10px 0;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>发音测试页面</h1>
+        
+        <div class="test-section">
+            <h2>1. 基础发音测试</h2>
+            <input type="text" class="word-input" id="testWord" placeholder="输入要测试的单词或句子" value="Hello world">
+            <div class="button-group">
+                <button class="btn btn-primary" onclick="testBrowserTTS()">浏览器TTS发音</button>
+                <button class="btn btn-secondary" onclick="testBaiduTTS()">百度API发音</button>
+                <button class="btn" onclick="testBoth()">同时测试两种</button>
+            </div>
+        </div>
+        
+        <div class="test-section">
+            <h2>2. 发音设置调整</h2>
+            
+            <div class="comparison">
+                <div>
+                    <h3>浏览器TTS设置</h3>
+                    <div class="settings">
+                        <div class="setting-item">
+                            <label>语速:</label>
+                            <input type="range" id="browserRate" min="0.1" max="2" step="0.1" value="0.8">
+                            <input type="number" id="browserRateValue" min="0.1" max="2" step="0.1" value="0.8">
+                        </div>
+                        <div class="setting-item">
+                            <label>音调:</label>
+                            <input type="range" id="browserPitch" min="0" max="2" step="0.1" value="1.0">
+                            <input type="number" id="browserPitchValue" min="0" max="2" step="0.1" value="1.0">
+                        </div>
+                        <div class="setting-item">
+                            <label>音量:</label>
+                            <input type="range" id="browserVolume" min="0" max="1" step="0.1" value="1.0">
+                            <input type="number" id="browserVolumeValue" min="0" max="1" step="0.1" value="1.0">
+                        </div>
+                    </div>
+                    <button class="btn btn-primary" onclick="testBrowserTTSWithSettings()">测试设置效果</button>
+                </div>
+                
+                <div>
+                    <h3>百度API设置</h3>
+                    <div class="settings">
+                        <div class="setting-item">
+                            <label>语速:</label>
+                            <input type="range" id="baiduSpd" min="0" max="9" step="1" value="3">
+                            <input type="number" id="baiduSpdValue" min="0" max="9" step="1" value="3">
+                        </div>
+                        <div class="setting-item">
+                            <label>音调:</label>
+                            <input type="range" id="baiduPit" min="0" max="9" step="1" value="5">
+                            <input type="number" id="baiduPitValue" min="0" max="9" step="1" value="5">
+                        </div>
+                        <div class="setting-item">
+                            <label>音量:</label>
+                            <input type="range" id="baiduVol" min="0" max="9" step="1" value="5">
+                            <input type="number" id="baiduVolValue" min="0" max="9" step="1" value="5">
+                        </div>
+                        <div class="setting-item">
+                            <label>发音人:</label>
+                            <select id="baiduPer">
+                                <option value="0">0 - 女声</option>
+                                <option value="1">1 - 男声</option>
+                                <option value="2">2 - 情感女声</option>
+                                <option value="3">3 - 情感男声</option>
+                            </select>
+                        </div>
+                    </div>
+                    <button class="btn btn-secondary" onclick="testBaiduTTSWithSettings()">测试设置效果</button>
+                </div>
+            </div>
+        </div>
+        
+        <div class="test-section">
+            <h2>3. 发音效果对比</h2>
+            <p>以下是一些常用单词的发音对比：</p>
+            <div class="button-group">
+                <button class="btn" onclick="compareWord('apple')">apple</button>
+                <button class="btn" onclick="compareWord('banana')">banana</button>
+                <button class="btn" onclick="compareWord('computer')">computer</button>
+                <button class="btn" onclick="compareWord('university')">university</button>
+                <button class="btn" onclick="compareWord('pronunciation')">pronunciation</button>
+            </div>
+        </div>
+        
+        <div class="test-section">
+            <h2>4. 发音可视化</h2>
+            <div id="letterDisplay"></div>
+            <div class="result" id="result"></div>
+        </div>
+    </div>
+    
+    <script src="../js/audioManager-browser.js"></script>
+    <script>
+        // 初始化事件监听器
+        function initEventListeners() {
+            // 浏览器TTS设置
+            document.getElementById('browserRate').addEventListener('input', function() {
+                document.getElementById('browserRateValue').value = this.value;
+            });
+            document.getElementById('browserRateValue').addEventListener('input', function() {
+                document.getElementById('browserRate').value = this.value;
+            });
+            
+            document.getElementById('browserPitch').addEventListener('input', function() {
+                document.getElementById('browserPitchValue').value = this.value;
+            });
+            document.getElementById('browserPitchValue').addEventListener('input', function() {
+                document.getElementById('browserPitch').value = this.value;
+            });
+            
+            document.getElementById('browserVolume').addEventListener('input', function() {
+                document.getElementById('browserVolumeValue').value = this.value;
+            });
+            document.getElementById('browserVolumeValue').addEventListener('input', function() {
+                document.getElementById('browserVolume').value = this.value;
+            });
+            
+            // 百度API设置
+            document.getElementById('baiduSpd').addEventListener('input', function() {
+                document.getElementById('baiduSpdValue').value = this.value;
+            });
+            document.getElementById('baiduSpdValue').addEventListener('input', function() {
+                document.getElementById('baiduSpd').value = this.value;
+            });
+            
+            document.getElementById('baiduPit').addEventListener('input', function() {
+                document.getElementById('baiduPitValue').value = this.value;
+            });
+            document.getElementById('baiduPitValue').addEventListener('input', function() {
+                document.getElementById('baiduPit').value = this.value;
+            });
+            
+            document.getElementById('baiduVol').addEventListener('input', function() {
+                document.getElementById('baiduVolValue').value = this.value;
+            });
+            document.getElementById('baiduVolValue').addEventListener('input', function() {
+                document.getElementById('baiduVol').value = this.value;
+            });
+        }
+        
+        // 显示单词字母
+        function displayWord(word) {
+            const letterDisplay = document.getElementById('letterDisplay');
+            letterDisplay.innerHTML = '';
+            
+            for (let char of word) {
+                const letter = document.createElement('span');
+                letter.className = 'letter';
+                letter.textContent = char;
+                letterDisplay.appendChild(letter);
+            }
+        }
+        
+        // 测试浏览器TTS
+        function testBrowserTTS() {
+            const word = document.getElementById('testWord').value;
+            if (!word) {
+                alert('请输入要测试的单词');
+                return;
+            }
+            
+            displayWord(word);
+            AudioManager.playWordAudioNative(word, false);
+            document.getElementById('result').textContent = `正在使用浏览器TTS发音: ${word}`;
+        }
+        
+        // 测试百度TTS
+        function testBaiduTTS() {
+            const word = document.getElementById('testWord').value;
+            if (!word) {
+                alert('请输入要测试的单词');
+                return;
+            }
+            
+            displayWord(word);
+            AudioManager.playWordAudioBaidu(word, false);
+            document.getElementById('result').textContent = `正在使用百度API发音: ${word}`;
+        }
+        
+        // 同时测试两种
+        function testBoth() {
+            const word = document.getElementById('testWord').value;
+            if (!word) {
+                alert('请输入要测试的单词');
+                return;
+            }
+            
+            displayWord(word);
+            document.getElementById('result').textContent = `正在测试两种发音方式: ${word}`;
+            
+            // 先测试浏览器TTS
+            AudioManager.playWordAudioNative(word, false).then(() => {
+                // 延迟2秒后测试百度TTS
+                setTimeout(() => {
+                    AudioManager.playWordAudioBaidu(word, false);
+                }, 2000);
+            });
+        }
+        
+        // 测试浏览器TTS（带设置）
+        function testBrowserTTSWithSettings() {
+            const word = document.getElementById('testWord').value;
+            if (!word) {
+                alert('请输入要测试的单词');
+                return;
+            }
+            
+            const rate = parseFloat(document.getElementById('browserRate').value);
+            const pitch = parseFloat(document.getElementById('browserPitch').value);
+            const volume = parseFloat(document.getElementById('browserVolume').value);
+            
+            displayWord(word);
+            
+            // 直接调用浏览器TTS并应用设置
+            const utterance = new SpeechSynthesisUtterance(word);
+            utterance.lang = 'en-US';
+            utterance.rate = rate;
+            utterance.pitch = pitch;
+            utterance.volume = volume;
+            
+            // 选择语音
+            const voices = window.speechSynthesis.getVoices();
+            const preferredVoices = [
+                voices.find(v => v.name.includes('Google') && v.lang.includes('en-US')),
+                voices.find(v => v.name.includes('Microsoft') && v.lang.includes('en-US')),
+                voices.find(v => v.name.includes('Amazon') && v.lang.includes('en-US')),
+                voices.find(v => v.lang.includes('en-US')),
+                voices.find(v => v.lang.includes('en'))
+            ].filter(Boolean);
+            
+            const selectedVoice = preferredVoices[0] || voices[0];
+            if (selectedVoice) {
+                utterance.voice = selectedVoice;
+            }
+            
+            utterance.onstart = () => {
+                document.getElementById('result').textContent = `正在使用浏览器TTS发音（语速: ${rate}, 音调: ${pitch}, 音量: ${volume}）: ${word}`;
+            };
+            
+            utterance.onend = () => {
+                document.getElementById('result').textContent += ' - 发音完成';
+            };
+            
+            utterance.onerror = (event) => {
+                document.getElementById('result').textContent = `浏览器TTS发音失败: ${event.error}`;
+            };
+            
+            // 开始高亮动画
+            let currentTime = 1000;
+            const letters = document.querySelectorAll('.letter');
+            letters.forEach((letter, index) => {
+                setTimeout(() => {
+                    letter.classList.add('highlight');
+                    setTimeout(() => {
+                        letter.classList.remove('highlight');
+                    }, 200);
+                }, currentTime);
+                currentTime += 200;
+            });
+            
+            window.speechSynthesis.speak(utterance);
+        }
+        
+        // 测试百度TTS（带设置）
+        function testBaiduTTSWithSettings() {
+            const word = document.getElementById('testWord').value;
+            if (!word) {
+                alert('请输入要测试的单词');
+                return;
+            }
+            
+            const spd = parseInt(document.getElementById('baiduSpd').value);
+            const pit = parseInt(document.getElementById('baiduPit').value);
+            const vol = parseInt(document.getElementById('baiduVol').value);
+            const per = parseInt(document.getElementById('baiduPer').value);
+            
+            displayWord(word);
+            document.getElementById('result').textContent = `正在使用百度API发音（语速: ${spd}, 音调: ${pit}, 音量: ${vol}, 发音人: ${per}）: ${word}`;
+            
+            // 直接调用百度TTS API
+            const url = 'https://tsn.baidu.com/text2audio';
+            const params = new URLSearchParams({
+                tex: encodeURIComponent(word),
+                lan: 'en',
+                tok: AudioManager.BaiduTTS.token,
+                ctp: 1,
+                cuid: 'web前端应用',
+                spd: spd,
+                pit: pit,
+                vol: vol,
+                per: per
+            });
+            
+            const audioUrl = `${url}?${params.toString()}`;
+            const audio = new Audio(audioUrl);
+            
+            audio.oncanplaythrough = () => {
+                audio.play().catch(error => {
+                    document.getElementById('result').textContent = `百度API发音失败: ${error.message}`;
+                });
+            };
+            
+            audio.onerror = () => {
+                document.getElementById('result').textContent = '百度API音频加载失败';
+            };
+            
+            audio.onended = () => {
+                document.getElementById('result').textContent += ' - 发音完成';
+            };
+            
+            // 开始高亮动画
+            let currentTime = 500;
+            const letters = document.querySelectorAll('.letter');
+            letters.forEach((letter, index) => {
+                setTimeout(() => {
+                    letter.classList.add('highlight');
+                    setTimeout(() => {
+                        letter.classList.remove('highlight');
+                    }, 200);
+                }, currentTime);
+                currentTime += 200;
+            });
+            
+            audio.load();
+        }
+        
+        // 对比单词发音
+        function compareWord(word) {
+            document.getElementById('testWord').value = word;
+            displayWord(word);
+            document.getElementById('result').textContent = `正在对比单词 "${word}" 的发音`;
+            
+            // 先测试浏览器TTS
+            AudioManager.playWordAudioNative(word, false).then(() => {
+                // 延迟2秒后测试百度TTS
+                setTimeout(() => {
+                    AudioManager.playWordAudioBaidu(word, false);
+                }, 2000);
+            });
+        }
+        
+        // 初始化
+        window.onload = function() {
+            initEventListeners();
+            // 等待语音加载
+            if (window.speechSynthesis) {
+                window.speechSynthesis.onvoiceschanged = function() {
+                    console.log('语音已加载');
+                };
+            }
+        };
+    </script>
+</body>
+</html>
