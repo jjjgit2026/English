@@ -249,8 +249,8 @@
                     // 构建宠物卡片内容
                     let petMedia;
                     if (pet.type === 'cat' || pet.type === 'parrot') {
-                        // 免费宠物使用视频，添加 free-pet-media 类
-                        petMedia = `<video src="${petImage}" alt="${pet.name}" class="pet-image free-pet-media ${pet.isDead ? 'dead' : ''}" autoplay loop muted playsinline></video>`;
+                        // 免费宠物使用图片，添加 free-pet-media 类
+                        petMedia = `<img src="${petImage}" alt="${pet.name}" class="pet-image free-pet-media ${pet.isDead ? 'dead' : ''}">`;
                     } else {
                         // 其他宠物使用图片
                         petMedia = `<img src="${petImage}" alt="${pet.name}" class="pet-image ${pet.isDead ? 'dead' : ''}">`;
@@ -258,47 +258,51 @@
                     
                     // 构建宠物卡片内容
                     let petContent = `
-                        ${petMedia}
-                        <div class="pet-name">${pet.name}</div>
-                        <div class="pet-info">
-                            <span class="label">领养时间:</span>
-                            <span class="value">${adoptionDateFormatted}</span>
+                        <div class="pet-image-container">
+                            ${petMedia}
+                            <div class="pet-name">${pet.name}</div>
+                            <div class="pet-status ${statusClass}">${isFullyGrown ? '已成年' : statusText}</div>
                         </div>
-                        <div class="pet-info">
-                            <span class="label">类型:</span>
-                            <span class="value">${getPetTypeName(pet.type)}</span>
-                        </div>
-                        <div class="pet-info">
-                            <span class="label">喂食次数:</span>
-                            <span class="value">${pet.feedCount}次</span>
-                        </div>`;
+                        <div class="pet-content">
+                            <div class="pet-info">
+                                <span class="label">领养时间:</span>
+                                <span class="value">${adoptionDateFormatted}</span>
+                            </div>
+                            <div class="pet-info">
+                                <span class="label">类型:</span>
+                                <span class="value">${getPetTypeName(pet.type)}</span>
+                            </div>
+                            <div class="pet-info">
+                                <span class="label">喂食次数:</span>
+                                <span class="value">${pet.feedCount}次</span>
+                            </div>`;
                     
                     // 非免费宠物显示成长进度
                     if (pet.type !== 'cat' && pet.type !== 'parrot') {
                         petContent += `
-                        <div class="pet-info">
-                            <span class="label">成长进度:</span>
-                            <span class="value">${progress}%</span>
-                        </div>
-                        <div class="progress-bar-container">
-                            <div class="progress-bar" style="width: ${progress}%;"></div>
-                        </div>`;
+                            <div class="pet-info">
+                                <span class="label">成长进度:</span>
+                                <span class="value">${progress}%</span>
+                            </div>
+                            <div class="progress-bar-container">
+                                <div class="progress-bar" style="width: ${progress}%;"></div>
+                            </div>`;
                     }
                     
                     petContent += `
-                        <div class="pet-info">
-                            <span class="label">上次喂食:</span>
-                            <span class="value">${pet.lastFeedDate ? pet.lastFeedDate : '还未喂食'}</span>
-                        </div>
-                        <div class="pet-status ${statusClass}">${isFullyGrown ? '已成年' : statusText}</div>
-                        <div class="action-buttons">
-                            ${pet.isDead ? `
-                                <button class="btn btn-secondary" onclick="revivePet('${pet.id}')">复活宠物 (40积分)</button>
-                            ` : isFullyGrown ? `
-                                <button class="btn btn-disabled" disabled>已成年，无需喂食</button>
-                            ` : `
-                                <button class="btn btn-primary" onclick="feedPet('${pet.id}')">喂食宠物粮 (${pet.isFreePet ? '6' : '5'}积分)</button>
-                            `}
+                            <div class="pet-info">
+                                <span class="label">上次喂食:</span>
+                                <span class="value">${pet.lastFeedDate ? pet.lastFeedDate : '还未喂食'}</span>
+                            </div>
+                            <div class="action-buttons">
+                                ${pet.isDead ? `
+                                    <button class="btn btn-secondary" onclick="revivePet('${pet.id}')">复活宠物 (40积分)</button>
+                                ` : isFullyGrown ? `
+                                    <button class="btn btn-disabled" disabled>已成年，无需喂食</button>
+                                ` : `
+                                    <button class="btn btn-primary" onclick="feedPet('${pet.id}')">喂食宠物粮 (${pet.isFreePet ? '6' : '5'}积分)</button>
+                                `}
+                            </div>
                         </div>
                     `;
                     
@@ -349,14 +353,13 @@
         
         // 获取宠物图片
         function getPetImage(type, adoptionDate, selectedImage = null) {
-            // 免费宠物返回视频路径
+            // 免费宠物返回图片路径
             if (type === 'cat' || type === 'parrot') {
                 if (type === 'cat' && selectedImage) {
-                    // 根据选中的图片返回对应的视频
-                    const imageName = selectedImage.replace('.jpg', '');
-                    return `../../assets/pets/${imageName}.mp4`;
+                    // 根据选中的图片返回对应的图片
+                    return `../../assets/pets/${selectedImage}`;
                 }
-                return `../../assets/pets/${type}.mp4`;
+                return `../../assets/pets/${type}.jpg`;
             }
             
             // 计算宠物年龄（以月为单位）
@@ -435,26 +438,23 @@
             }
         }
         
-        // 打开图片或视频放大弹窗
+        // 打开图片放大弹窗
         function openImageModal(mediaSrc) {
             const modal = document.getElementById('imageModal');
-            const modalImage = document.getElementById('modalImage');
             
             // 清空之前的内容
             modal.innerHTML = '';
             
-            if (mediaSrc.endsWith('.mp4')) {
-                // 视频
-                const video = document.createElement('video');
-                video.src = mediaSrc;
-                video.className = 'modal-image';
-                video.autoplay = true;
-                video.loop = true;
-                video.muted = false; // 允许播放声音
-                video.playsinline = true;
-                modal.appendChild(video);
+            // 检查是否是免费宠物图片，如果是则使用gif格式
+            if (mediaSrc.includes('cat.jpg') || mediaSrc.includes('parrot.jpg')) {
+                // 替换为gif格式
+                const gifSrc = mediaSrc.replace('.jpg', '.gif');
+                const img = document.createElement('img');
+                img.src = gifSrc;
+                img.className = 'modal-image';
+                modal.appendChild(img);
             } else {
-                // 图片
+                // 其他图片直接使用
                 const img = document.createElement('img');
                 img.src = mediaSrc;
                 img.className = 'modal-image';

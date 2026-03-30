@@ -42,6 +42,28 @@
                 </div>
             </div>
             
+            <!-- 每日学习目标 -->
+            <div class="goals-card">
+                <h2><span class="icon">⏰</span> 每日学习目标</h2>
+                <div class="goal-item">
+                    <div class="goal-info">
+                        <span class="goal-label">今日目标</span>
+                        <span class="goal-progress" id="dailyProgress">0/15</span>
+                    </div>
+                    <div class="progress-bar-container">
+                        <div class="progress-bar" id="dailyProgressBar" style="width: 0%"></div>
+                    </div>
+                </div>
+                <div class="goal-info" style="margin-top: 10px;">
+                    <span class="goal-label">今日日期</span>
+                    <span id="currentDate"></span>
+                </div>
+                <div class="goal-info" style="margin-top: 10px;">
+                    <span class="goal-label">完成奖励</span>
+                    <span class="goal-reward">2 积分</span>
+                </div>
+            </div>
+            
             <!-- 每周学习目标 -->
             <div class="goals-card">
                 <h2><span class="icon">📅</span> 每周学习目标</h2>
@@ -164,6 +186,16 @@
                 if (typeof DataManager !== 'undefined') {
                     const userData = DataManager.getUserData(user);
                     console.log('用户数据:', userData);
+                    
+                    // 更新每日目标
+                    const today = DataManager.getLocalDateString();
+                    document.getElementById('currentDate').textContent = today;
+                    
+                    const dailyTarget = 15; // 每日目标15个单词
+                    const todayLearning = userData.today.learning || 0;
+                    document.getElementById('dailyProgress').textContent = `${todayLearning}/${dailyTarget}`;
+                    const dailyProgressPercent = Math.min((todayLearning / dailyTarget) * 100, 100);
+                    document.getElementById('dailyProgressBar').style.width = `${dailyProgressPercent}%`;
                     
                     if (userData && userData.goals) {
                         // 更新每周目标

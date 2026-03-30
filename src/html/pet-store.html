@@ -240,10 +240,8 @@
             let selectedImage;
             
             if (petType === 'cat') {
-                // 随机选择一张猫咪图片
-                const catImages = ['cat.jpg', 'cat1.jpg', 'cat2.jpg'];
-                const randomIndex = Math.floor(Math.random() * catImages.length);
-                selectedImage = catImages[randomIndex];
+                // 固定使用一张猫咪图片
+                selectedImage = 'cat.jpg';
                 imageSrc = `../../assets/pets/${selectedImage}`;
             } else if (petType === 'parrot') {
                 selectedImage = 'parrot.jpg';
@@ -260,7 +258,9 @@
             
             // 添加点击事件
             img.onclick = function() {
-                openImageModal(this.src);
+                // 点击放大时使用gif格式
+                const gifSrc = this.src.replace('.jpg', '.gif');
+                openImageModal(gifSrc);
             };
             
             // 替换占位符

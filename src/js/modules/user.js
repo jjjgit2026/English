@@ -27,10 +27,13 @@ export function checkUserInfo() {
         
         return true;
     } else {
-        // 显示用户选择弹窗
-        document.getElementById('userModal').classList.add('active');
-        return false;
-    }
+            // 显示用户选择弹窗（如果元素存在）
+            const userModalElement = document.getElementById('userModal');
+            if (userModalElement) {
+                userModalElement.classList.add('active');
+            }
+            return false;
+        }
 }
 
 // 带用户检查的函数包装器

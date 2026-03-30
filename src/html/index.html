@@ -112,6 +112,26 @@
         
         <!-- 消消乐悬浮入口 -->
         <div class="game-floating-entry" onclick="withUserCheck(openGamePage)()">消消乐</div>
+        
+        <!-- 每日目标浮动条 -->
+        <div class="daily-goal-bar hidden" id="dailyGoalBar">
+            <div class="daily-goal-content">
+                <div class="daily-goal-icon">🎯</div>
+                <div class="daily-goal-text">
+                    <div class="daily-goal-title">今日学习目标</div>
+                    <div class="daily-goal-progress" id="dailyGoalProgress">0/15 个单词</div>
+                </div>
+                <button class="daily-goal-btn" onclick="withUserCheck(startLearning)()">去学习</button>
+            </div>
+        </div>
+        
+        <!-- 今日目标已完成提示 -->
+        <div class="daily-goal-completed hidden" id="dailyGoalCompleted">
+            <div class="daily-goal-completed-content">
+                <div class="daily-goal-completed-icon">🎉</div>
+                <div class="daily-goal-completed-text">今日目标已完成！</div>
+            </div>
+        </div>
     </div>
     
     <!-- 积分获取提示弹窗 -->
@@ -248,6 +268,48 @@
         window.closePointsTips = function() {
             document.getElementById('pointsTipsModal').classList.add('hidden');
         };
+        
+        // 检查每日目标完成情况
+        window.checkDailyGoal = function() {
+            try {
+                const user = window.currentUser || 'youyou';
+                if (typeof DataManager !== 'undefined') {
+                    const userData = DataManager.getUserData(user);
+                    if (userData) {
+                        const dailyTarget = 15; // 每日目标15个单词
+                        const todayLearning = userData.today.learning || 0;
+                        
+                        const dailyGoalBar = document.getElementById('dailyGoalBar');
+                        const dailyGoalCompleted = document.getElementById('dailyGoalCompleted');
+                        const dailyGoalProgress = document.getElementById('dailyGoalProgress');
+                        
+                        if (dailyGoalProgress) {
+                            dailyGoalProgress.textContent = `${todayLearning}/${dailyTarget} 个单词`;
+                        }
+                        
+                        if (todayLearning >= dailyTarget) {
+                            // 今日目标已完成
+                            if (dailyGoalBar) dailyGoalBar.classList.add('hidden');
+                            if (dailyGoalCompleted) dailyGoalCompleted.classList.remove('hidden');
+                        } else {
+                            // 今日目标未完成
+                            if (dailyGoalBar) dailyGoalBar.classList.remove('hidden');
+                            if (dailyGoalCompleted) dailyGoalCompleted.classList.add('hidden');
+                        }
+                    }
+                }
+            } catch (error) {
+                console.error('检查每日目标失败:', error);
+            }
+        };
+        
+        // 页面加载完成后检查每日目标
+        document.addEventListener('DOMContentLoaded', function() {
+            setTimeout(checkDailyGoal, 1000); // 延迟检查，确保DataManager已加载
+        });
+        
+        // 定期检查每日目标
+        setInterval(checkDailyGoal, 30000); // 每30秒检查一次
     </script>
     
     <script type="module" src="../js/main.js"></script>
