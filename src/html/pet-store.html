@@ -271,12 +271,15 @@
             img.onclick = function() {
                 // 点击放大时使用gif格式
                 let originalSrc = this.src;
-                // 如果当前是webp格式，先转换为jpg格式再转换为gif
+                // 直接从webp格式转换为gif格式
                 if (originalSrc.includes('.webp')) {
-                    originalSrc = originalSrc.replace('.webp', '.jpg');
+                    const gifSrc = originalSrc.replace('.webp', '.gif');
+                    openImageModal(gifSrc);
+                } else {
+                    // 从jpg格式转换为gif格式
+                    const gifSrc = originalSrc.replace('.jpg', '.gif');
+                    openImageModal(gifSrc);
                 }
-                const gifSrc = originalSrc.replace('.jpg', '.gif');
-                openImageModal(gifSrc);
             };
             
             // 替换占位符
@@ -369,10 +372,7 @@
             // 添加点击事件
             img.onclick = function() {
                 let imageSrc = this.src;
-                // 如果当前是webp格式，先转换为JPG格式再打开
-                if (imageSrc.includes('.webp')) {
-                    imageSrc = imageSrc.replace('.webp', '.JPG');
-                }
+                // 直接使用当前格式打开
                 openImageModal(imageSrc);
             };
             

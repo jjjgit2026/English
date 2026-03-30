@@ -407,9 +407,16 @@
             modal.innerHTML = '';
             
             // 检查是否是免费宠物图片，如果是则使用gif格式
-            if (mediaSrc.includes('cat.jpg') || mediaSrc.includes('parrot.jpg')) {
+            if (mediaSrc.includes('cat.') || mediaSrc.includes('parrot.')) {
                 // 替换为gif格式
-                const gifSrc = mediaSrc.replace('.jpg', '.gif');
+                let gifSrc;
+                if (mediaSrc.includes('.webp')) {
+                    gifSrc = mediaSrc.replace('.webp', '.gif');
+                } else if (mediaSrc.includes('.jpg')) {
+                    gifSrc = mediaSrc.replace('.jpg', '.gif');
+                } else {
+                    gifSrc = mediaSrc;
+                }
                 const img = document.createElement('img');
                 img.src = gifSrc;
                 img.className = 'modal-image';
