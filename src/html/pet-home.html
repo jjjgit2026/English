@@ -101,16 +101,29 @@
         // 检查图片是否存在
         function checkImageExists(url) {
             return new Promise((resolve) => {
-                // 免费宠物图片直接返回存在（假设图片都存在）
-                if (url.includes('cat.jpg') || url.includes('parrot.jpg')) {
-                    resolve(true);
-                    return;
-                }
-                
                 // 直接加载图片检查是否存在
                 const img = new Image();
                 img.onload = () => resolve(true);
-                img.onerror = () => resolve(false);
+                img.onerror = () => {
+                    // webp加载失败，尝试jpg格式
+                    let jpgUrl;
+                    if (url.includes('.webp')) {
+                        // 替换为jpg格式
+                        if (url.includes('cat.webp') || url.includes('parrot.webp')) {
+                            jpgUrl = url.replace('.webp', '.jpg');
+                        } else {
+                            jpgUrl = url.replace('.webp', '.JPG');
+                        }
+                        
+                        // 尝试加载jpg格式
+                        const jpgImg = new Image();
+                        jpgImg.onload = () => resolve(true);
+                        jpgImg.onerror = () => resolve(false);
+                        jpgImg.src = jpgUrl;
+                    } else {
+                        resolve(false);
+                    }
+                };
                 img.src = url;
             });
         }
@@ -145,11 +158,24 @@
                 petList.innerHTML = '';
                 
                 for (const pet of pets) {
-                    // 获取宠物图片
-                    const petImage = getPetImage(pet.type, pet.adoptionDate, pet.selectedImage);
+                    // 获取宠物图片（优先webp格式）
+                    let petImage = getPetImage(pet.type, pet.adoptionDate, pet.selectedImage);
                     
                     // 检查图片是否存在
-                    const imageExists = await checkImageExists(petImage);
+                    let imageExists = await checkImageExists(petImage);
+                    
+                    // 如果webp加载失败，尝试jpg格式
+                    if (!imageExists && petImage.includes('.webp')) {
+                        // 替换为jpg格式
+                        if (petImage.includes('cat.webp') || petImage.includes('parrot.webp')) {
+                            petImage = petImage.replace('.webp', '.jpg');
+                        } else {
+                            petImage = petImage.replace('.webp', '.JPG');
+                        }
+                        // 再次检查jpg格式是否存在
+                        imageExists = await checkImageExists(petImage);
+                    }
+                    
                     if (!imageExists) {
                         continue; // 跳过没有图片的宠物
                     }
@@ -302,7 +328,8 @@
                     // 根据选中的图片返回对应的图片
                     return `../../assets/pets/${selectedImage}`;
                 }
-                return `../../assets/pets/${type}.jpg`;
+                // 优先返回webp格式
+                return `../../assets/pets/${type}.webp`;
             }
             
             // 计算宠物年龄（以月为单位）
@@ -316,8 +343,8 @@
                 month = Math.min(month, 6);
             }
             
-            // 构建图片路径
-            return `../../assets/pets/${type}/${month}.JPG`;
+            // 优先返回webp格式
+            return `../../assets/pets/${type}/${month}.webp`;
         }
         
         // 喂食宠物
