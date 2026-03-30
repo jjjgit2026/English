@@ -242,10 +242,12 @@
             if (petType === 'cat') {
                 // 固定使用一张猫咪图片
                 selectedImage = 'cat.jpg';
-                imageSrc = `../../assets/pets/${selectedImage}`;
+                // 优先使用webp格式
+                imageSrc = `../../assets/pets/cat.webp`;
             } else if (petType === 'parrot') {
                 selectedImage = 'parrot.jpg';
-                imageSrc = `../../assets/pets/parrot.jpg`;
+                // 优先使用webp格式
+                imageSrc = `../../assets/pets/parrot.webp`;
             }
             
             // 创建img元素
@@ -256,10 +258,24 @@
             // 存储选中的图片信息
             img.dataset.selectedImage = selectedImage;
             
+            // 图片加载失败时回退到jpg格式
+            img.onerror = function() {
+                if (petType === 'cat') {
+                    this.src = `../../assets/pets/cat.jpg`;
+                } else if (petType === 'parrot') {
+                    this.src = `../../assets/pets/parrot.jpg`;
+                }
+            };
+            
             // 添加点击事件
             img.onclick = function() {
                 // 点击放大时使用gif格式
-                const gifSrc = this.src.replace('.jpg', '.gif');
+                let originalSrc = this.src;
+                // 如果当前是webp格式，先转换为jpg格式再转换为gif
+                if (originalSrc.includes('.webp')) {
+                    originalSrc = originalSrc.replace('.webp', '.jpg');
+                }
+                const gifSrc = originalSrc.replace('.jpg', '.gif');
                 openImageModal(gifSrc);
             };
             
@@ -334,22 +350,30 @@
         
         // 加载宠物图片
         function loadPetImage(petType, element) {
-            const originalImageUrl = `../../assets/pets/${petType}/1.JPG`;
+            // 优先使用webp格式
+            const webpImageUrl = `../../assets/pets/${petType}/1.webp`;
+            const jpgImageUrl = `../../assets/pets/${petType}/1.JPG`;
             
             // 创建img元素
             const img = document.createElement('img');
-            img.src = originalImageUrl;
+            img.src = webpImageUrl;
             img.alt = petType;
             img.className = 'pet-image';
             
-            // 图片加载失败时的处理
+            // 图片加载失败时回退到JPG格式
             img.onerror = function() {
-                console.error('图片加载失败:', originalImageUrl);
+                this.src = jpgImageUrl;
+                console.error('WebP图片加载失败，尝试加载JPG格式:', jpgImageUrl);
             };
             
             // 添加点击事件
             img.onclick = function() {
-                openImageModal(this.src);
+                let imageSrc = this.src;
+                // 如果当前是webp格式，先转换为JPG格式再打开
+                if (imageSrc.includes('.webp')) {
+                    imageSrc = imageSrc.replace('.webp', '.JPG');
+                }
+                openImageModal(imageSrc);
             };
             
             // 替换占位符
