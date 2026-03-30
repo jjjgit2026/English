@@ -406,28 +406,11 @@
             // 清空之前的内容
             modal.innerHTML = '';
             
-            // 检查是否是免费宠物图片，如果是则使用gif格式
-            if (mediaSrc.includes('cat.') || mediaSrc.includes('parrot.')) {
-                // 替换为gif格式
-                let gifSrc;
-                if (mediaSrc.includes('.webp')) {
-                    gifSrc = mediaSrc.replace('.webp', '.gif');
-                } else if (mediaSrc.includes('.jpg')) {
-                    gifSrc = mediaSrc.replace('.jpg', '.gif');
-                } else {
-                    gifSrc = mediaSrc;
-                }
-                const img = document.createElement('img');
-                img.src = gifSrc;
-                img.className = 'modal-image';
-                modal.appendChild(img);
-            } else {
-                // 其他图片直接使用
-                const img = document.createElement('img');
-                img.src = mediaSrc;
-                img.className = 'modal-image';
-                modal.appendChild(img);
-            }
+            // 直接使用原始格式，不再转换为gif
+            const img = document.createElement('img');
+            img.src = mediaSrc;
+            img.className = 'modal-image';
+            modal.appendChild(img);
             
             modal.classList.add('active');
         }

@@ -269,17 +269,8 @@
             
             // 添加点击事件
             img.onclick = function() {
-                // 点击放大时使用gif格式
-                let originalSrc = this.src;
-                // 直接从webp格式转换为gif格式
-                if (originalSrc.includes('.webp')) {
-                    const gifSrc = originalSrc.replace('.webp', '.gif');
-                    openImageModal(gifSrc);
-                } else {
-                    // 从jpg格式转换为gif格式
-                    const gifSrc = originalSrc.replace('.jpg', '.gif');
-                    openImageModal(gifSrc);
-                }
+                // 点击放大时直接使用webp格式
+                openImageModal(this.src);
             };
             
             // 替换占位符
