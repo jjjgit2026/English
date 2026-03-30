@@ -99,6 +99,18 @@ export default class DataManager {
 
     // 更新学习进度并检查目标完成情况
     static updateLearningProgress(userData, wordsCount) {
+        // 检查每日目标完成情况
+        const dailyTarget = 15; // 每日目标15个单词
+        if (userData.today.learning >= dailyTarget && !userData.today.goalCompleted) {
+            userData.today.goalCompleted = true;
+            // 给予每日目标奖励
+            const rewardPoints = 2;
+            userData.total.points = (parseFloat(userData.total.points) || 0) + rewardPoints;
+            this.addPointsHistory(userData, 'income', rewardPoints, '每日学习目标完成奖励');
+            // 显示奖励提示
+            alert(`恭喜你完成每日学习目标！获得 ${rewardPoints} 积分奖励！`);
+        }
+        
         // 更新每周目标进度
         userData.goals.weekly.current += wordsCount;
         if (userData.goals.weekly.current >= userData.goals.weekly.target && !userData.goals.weekly.completed) {
@@ -210,7 +222,8 @@ export default class DataManager {
                             testing: 0,
                             correct: 0,
                             error: 0,
-                            checkedIn: false
+                            checkedIn: false,
+                            goalCompleted: false
                         };
                     } else {
                         // 补全 today 字段，确保所有字段都存在
@@ -221,6 +234,7 @@ export default class DataManager {
                         userData.today.correct = parseInt(userData.today.correct) || 0;
                         userData.today.error = parseInt(userData.today.error) || 0;
                         userData.today.checkedIn = userData.today.checkedIn || false;
+                        userData.today.goalCompleted = userData.today.goalCompleted || false;
                     }
                     
                     // 确保 total 对象存在且字段完整
@@ -363,6 +377,7 @@ export default class DataManager {
                         userData.today.correct = parseInt(userData.today.correct) || 0;
                         userData.today.error = parseInt(userData.today.error) || 0;
                         userData.today.checkedIn = userData.today.checkedIn || false;
+                        userData.today.goalCompleted = userData.today.goalCompleted || false;
                     }
                 
                 // 确保 total 对象存在且字段完整
@@ -819,7 +834,8 @@ export default class DataManager {
                     testing: 0,
                     correct: 0,
                     error: 0,
-                    checkedIn: false
+                    checkedIn: false,
+                    goalCompleted: false
                 };
             } else {
                 // 补全 today 字段，确保所有字段都存在
@@ -893,7 +909,8 @@ export default class DataManager {
                     testing: 0,
                     correct: 0,
                     error: 0,
-                    checkedIn: false
+                    checkedIn: false,
+                    goalCompleted: false
                 };
             }
             if (!userData.total) {
@@ -1154,7 +1171,8 @@ export default class DataManager {
                         testing: 0,
                         correct: 0,
                         error: 0,
-                        checkedIn: false
+                        checkedIn: false,
+                        goalCompleted: false
                     };
                 }
                 
