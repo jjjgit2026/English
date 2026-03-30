@@ -17,6 +17,7 @@ let gameCorrectCount = 0; // 当前分组的正确数量
 let totalCorrectCount = 0; // 全局的正确数量
 let gameStartTime = 0;
 let gameTimerInterval = null;
+let currentGameMode = 'english'; // 默认模式：english（英文选义），audio（听音选义）
 
 // 初始化游戏
 export function initGame() {
@@ -79,9 +80,37 @@ export function generateGameContent() {
     shuffledWords.forEach((word, index) => {
         const wordItem = document.createElement('div');
         wordItem.className = 'game-item';
-        wordItem.textContent = word.word;
+        
+        if (currentGameMode === 'english') {
+            // 英文选义模式：显示单词
+            wordItem.textContent = word.word;
+        } else {
+            // 听音选义模式：显示发音按钮
+            wordItem.innerHTML = '<span class="audio-icon">🔊</span>';
+            // 添加点击发音功能
+            wordItem.onclick = (e) => {
+                // 防止触发选择事件
+                e.stopPropagation();
+                // 播放单词发音
+                if (typeof AudioManager !== 'undefined') {
+                    AudioManager.playWordAudio(word.word);
+                }
+            };
+        }
+        
         wordItem.dataset.word = word.word;
-        wordItem.onclick = () => selectGameItem('word', wordItem, word.word);
+        wordItem.onclick = (e) => {
+            if (currentGameMode === 'audio') {
+                // 听音选义模式：先播放发音，然后选择单词
+                if (typeof AudioManager !== 'undefined') {
+                    AudioManager.playWordAudio(word.word);
+                }
+                selectGameItem('word', wordItem, word.word);
+            } else {
+                // 英文选义模式：选择单词
+                selectGameItem('word', wordItem, word.word);
+            }
+        };
         wordColumn.appendChild(wordItem);
     });
     
@@ -203,6 +232,19 @@ export function endGame() {
     }
     
     gameResult.classList.remove('hidden');
+}
+
+// 切换游戏模式
+export function switchGameMode(mode) {
+    currentGameMode = mode;
+    
+    // 更新模式按钮状态
+    document.getElementById('modeEnglish').classList.remove('active');
+    document.getElementById('modeAudio').classList.remove('active');
+    document.getElementById(`mode${mode === 'english' ? 'English' : 'Audio'}`).classList.add('active');
+    
+    // 重新生成游戏内容
+    generateGameContent();
 }
 
 // 重新开始游戏

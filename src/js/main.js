@@ -19,7 +19,7 @@ import { loadPDF, renderWordList, generateWordChain, updateLearningContent, upda
 import { initEventListeners, startLearning, startDetailedLearning, openArticleListPage, openModelEssayListPage, backToHome, generateUnitTabs, resetRecordingState, toggleRecording, startRecording, analyzeRecording, calculateScore, calculateSimilarity, playbackRecording, openErrorBookPage, openStatsPage, openPetHomePage, openCheckinHistoryPage, openPointsHistoryPage, openGamePage } from './modules/utils.js';
 
 // 导入游戏模块
-import { initGame, loadNextGameGroup, generateGameContent, selectGameItem, updateGameTimer, endGame, restartGame, backToErrorBook } from './modules/game.js';
+import { initGame, loadNextGameGroup, generateGameContent, selectGameItem, updateGameTimer, endGame, restartGame, backToErrorBook, switchGameMode } from './modules/game.js';
 
 // 全局定义withUserCheck函数，确保页面加载时立即可用
 function withUserCheck(callback) {
@@ -276,6 +276,7 @@ window.updateGameTimer = updateGameTimer;
 window.endGame = endGame;
 window.restartGame = restartGame;
 window.backToErrorBook = backToErrorBook;
+window.switchGameMode = switchGameMode;
 
 // 初始化应用
 initApp();
