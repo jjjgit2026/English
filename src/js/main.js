@@ -10,10 +10,10 @@ import AudioManager from './audioManager.js';
 import { initApp, currentUser, currentUserName, currentFile, currentBookName, words, currentUnit, maskMode, errorBookMaskMode, userStats, currentWordIndex, currentStep, isErrorBookMode, errorWords } from './modules/init.js';
 
 // 导入用户模块
-import { checkUserInfo, loadUserBook, saveUserBook, loadUserStats, updateCheckInStatus, updateBookDisplay, showBookModal, closeBookModal, showUserModal, closeUserModal, updateStatsDisplay, checkIn } from './modules/user.js';
+import { checkUserInfo, loadUserBook, saveUserBook, loadUserStats, updateCheckInStatus, updateBookDisplay, showBookModal, closeBookModal, showUserModal, closeUserModal, updateStatsDisplay, checkIn, updateDailyTaskProgress } from './modules/user.js';
 
 // 导入单词模块
-import { loadPDF, renderWordList, generateWordChain, updateLearningContent, updateNavigationButtons, resetLearningSteps, switchStep, isStepCompleted, nextStep, goToPrevWord, goToNextWord, backToWordList, generatePracticeQuestion, checkPracticeAnswer, addLetter, removeLetter, checkSpelling, checkWriting, clearWriteInput, generateErrorWordChain, updateErrorWordLearningContent, updateErrorWordNavigationButtons, renderErrorWordList, startErrorWordLearning, openWordLinkPage, openErrorWordLinkPage, updateStatsPage, getPhoneticColor, initCheckinHistoryPage, changeMonth, initPointsHistoryPage } from './modules/word.js';
+import { loadPDF, renderWordList, generateWordChain, updateLearningContent, updateNavigationButtons, resetLearningSteps, switchStep, isStepCompleted, nextStep, goToPrevWord, goToNextWord, backToWordList, generatePracticeQuestion, checkPracticeAnswer, addLetter, removeLetter, checkSpelling, checkWriting, clearWriteInput, generateErrorWordChain, updateErrorWordLearningContent, updateErrorWordNavigationButtons, renderErrorWordList, startErrorWordLearning, openWordLinkPage, openErrorWordLinkPage, updateStatsPage, getPhoneticColor, initCheckinHistoryPage, changeMonth, initPointsHistoryPage, markAsLearned } from './modules/word.js';
 
 // 导入工具模块
 import { initEventListeners, startLearning, startDetailedLearning, openArticleListPage, openModelEssayListPage, backToHome, generateUnitTabs, resetRecordingState, toggleRecording, startRecording, analyzeRecording, calculateScore, calculateSimilarity, playbackRecording, openErrorBookPage, openStatsPage, openPetHomePage, openCheckinHistoryPage, openPointsHistoryPage, openGamePage } from './modules/utils.js';
@@ -205,6 +205,7 @@ window.loadUserBook = loadUserBook;
 window.saveUserBook = saveUserBook;
 window.loadUserStats = loadUserStats;
 window.updateCheckInStatus = updateCheckInStatus;
+window.updateDailyTaskProgress = updateDailyTaskProgress;
 window.updateBookDisplay = updateBookDisplay;
 window.showBookModal = showBookModal;
 window.closeBookModal = closeBookModal;
@@ -244,6 +245,7 @@ window.getPhoneticColor = getPhoneticColor;
 window.initCheckinHistoryPage = initCheckinHistoryPage;
 window.changeMonth = changeMonth;
 window.initPointsHistoryPage = initPointsHistoryPage;
+window.markAsLearned = markAsLearned;
 window.restartGame = restartGame;
 window.backToErrorBook = backToErrorBook;
 

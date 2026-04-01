@@ -74,6 +74,35 @@
                         <div class="checkin-label">总积分</div>
                     </div>
                 </div>
+                
+                <!-- 每日任务进度 -->
+                <div class="daily-tasks">
+                    <div class="task-item">
+                        <div class="task-header">
+                            <div class="task-label">新学任务</div>
+                            <button class="task-btn" onclick="withUserCheck(startLearning)()">去学习</button>
+                        </div>
+                        <div class="task-progress">
+                            <div class="task-progress-bar">
+                                <div class="task-progress-fill" id="newTaskProgress"></div>
+                            </div>
+                            <div class="task-progress-text" id="newTaskText">进行中</div>
+                        </div>
+                    </div>
+                    <div class="task-item">
+                        <div class="task-header">
+                            <div class="task-label">复习任务</div>
+                            <button class="task-btn" onclick="withUserCheck(openGamePage)()">去复习</button>
+                        </div>
+                        <div class="task-progress">
+                            <div class="task-progress-bar">
+                                <div class="task-progress-fill" id="reviewTaskProgress"></div>
+                            </div>
+                            <div class="task-progress-text" id="reviewTaskText">进行中</div>
+                        </div>
+                    </div>
+                </div>
+                
                 <button class="checkin-btn" id="checkinBtn" onclick="withUserCheck(checkIn)()">
                     立即打卡
                 </button>
@@ -113,25 +142,7 @@
         <!-- 消消乐悬浮入口 -->
         <div class="game-floating-entry" onclick="withUserCheck(openGamePage)()">消消乐</div>
         
-        <!-- 每日目标浮动条 -->
-        <div class="daily-goal-bar hidden" id="dailyGoalBar">
-            <div class="daily-goal-content">
-                <div class="daily-goal-icon">🎯</div>
-                <div class="daily-goal-text">
-                    <div class="daily-goal-title">今日学习目标</div>
-                    <div class="daily-goal-progress" id="dailyGoalProgress">0/15 个单词</div>
-                </div>
-                <button class="daily-goal-btn" onclick="withUserCheck(startLearning)()">去学习</button>
-            </div>
-        </div>
-        
-        <!-- 今日目标已完成提示 -->
-        <div class="daily-goal-completed hidden" id="dailyGoalCompleted">
-            <div class="daily-goal-completed-content">
-                <div class="daily-goal-completed-icon">🎉</div>
-                <div class="daily-goal-completed-text">今日目标已完成！</div>
-            </div>
-        </div>
+
     </div>
     
     <!-- 积分获取提示弹窗 -->

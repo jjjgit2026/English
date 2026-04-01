@@ -856,6 +856,23 @@ body {
     color: #4CAF50;
 }
 
+.action-btn.mastered-btn {
+    width: auto;
+    height: auto;
+    border-radius: 12px;
+    background: #4CAF50;
+    border-color: #4CAF50;
+    color: white;
+    font-size: 12px;
+    padding: 4px 8px;
+    margin-left: 8px;
+}
+
+.action-btn.mastered-btn:hover {
+    background: #45a049;
+    border-color: #45a049;
+}
+
 .action-btn.master-btn {
     transition: all 0.3s;
 }
@@ -2168,19 +2185,46 @@ body {
     font-size: 20px;
 }
 
-.next-btn {
+.next-btn, .learned-btn, .review-btn {
     padding: 12px 24px;
     border: none;
     border-radius: 24px;
-    background: #4CAF50;
-    color: white;
     font-size: 16px;
     font-weight: 600;
     cursor: pointer;
 }
 
+.next-btn {
+    background: #4CAF50;
+    color: white;
+}
+
 .next-btn:hover {
     background: #45a049;
+}
+
+.learned-btn {
+    background: #2196F3;
+    color: white;
+    margin-right: 10px;
+}
+
+.learned-btn:hover {
+    background: #1976D2;
+}
+
+.learned-btn:disabled {
+    background: #BDBDBD;
+    cursor: not-allowed;
+}
+
+.review-btn {
+    background: #FF9800;
+    color: white;
+}
+
+.review-btn:hover {
+    background: #F57C00;
 }
 
 /* 读 - 页面 */
@@ -2798,6 +2842,82 @@ body {
     color: #999;
     box-shadow: none;
     cursor: not-allowed;
+}
+
+/* 每日任务进度样式 */
+.daily-tasks {
+    margin: 16px 0;
+    padding: 16px;
+    background: rgba(255, 255, 255, 0.9);
+    border-radius: 12px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+.task-item {
+    margin-bottom: 12px;
+}
+
+.task-item:last-child {
+    margin-bottom: 0;
+}
+
+.task-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 6px;
+}
+
+.task-label {
+    font-size: 14px;
+    font-weight: 600;
+    color: #333;
+}
+
+.task-btn {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+    border: none;
+    padding: 6px 12px;
+    border-radius: 15px;
+    font-size: 12px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.3s ease;
+}
+
+.task-btn:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 2px 8px rgba(102, 126, 234, 0.4);
+}
+
+.task-progress {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.task-progress-bar {
+    flex: 1;
+    height: 8px;
+    background: #e0e0e0;
+    border-radius: 4px;
+    overflow: hidden;
+}
+
+.task-progress-fill {
+    height: 100%;
+    background: linear-gradient(90deg, #4CAF50, #45a049);
+    border-radius: 4px;
+    transition: width 0.3s ease;
+}
+
+.task-progress-text {
+    font-size: 12px;
+    font-weight: 600;
+    color: #666;
+    min-width: 40px;
+    text-align: right;
 }
 
 .checkin-history-btn {

@@ -324,6 +324,89 @@ export function checkIn() {
     }
 }
 
+// 更新每日任务进度
+export function updateDailyTaskProgress() {
+    const dailyTask = DataManager.getDailyTask(currentUser);
+    const userData = DataManager.getUserData(currentUser);
+    
+    // 检查是否有复习任务
+    const hasReviewTask = hasWordsToReview(userData);
+    
+    // 显示或隐藏复习任务
+    const reviewTaskElement = document.querySelector('.task-item:nth-child(2)');
+    if (reviewTaskElement) {
+        reviewTaskElement.style.display = hasReviewTask ? 'block' : 'none';
+    }
+    
+    // 更新新学任务进度
+    const newTaskProgress = document.getElementById('newTaskProgress');
+    const newTaskText = document.getElementById('newTaskText');
+    if (newTaskProgress && newTaskText) {
+        // 新学任务进度：每天学习5个单词
+        const newProgress = (dailyTask.completedNewWords / 5) * 100;
+        newTaskProgress.style.width = `${Math.min(newProgress, 100)}%`;
+        
+        if (dailyTask.completedNewWords >= 5) {
+            newTaskText.textContent = '已完成';
+        } else {
+            newTaskText.textContent = `进行中 (${dailyTask.completedNewWords}/5)`;
+        }
+    }
+    
+    // 更新复习任务进度
+    if (hasReviewTask) {
+        const reviewTaskProgress = document.getElementById('reviewTaskProgress');
+        const reviewTaskText = document.getElementById('reviewTaskText');
+        if (reviewTaskProgress && reviewTaskText) {
+            // 复习任务进度：完成消消乐游戏
+            const reviewProgress = dailyTask.completedReviewWords > 0 ? 100 : 0;
+            reviewTaskProgress.style.width = `${reviewProgress}%`;
+            
+            if (dailyTask.completedReviewWords > 0) {
+                reviewTaskText.textContent = '已完成';
+            } else {
+                reviewTaskText.textContent = '进行中';
+            }
+        }
+    }
+    
+    // 检查任务是否完成，更新打卡按钮状态
+    const checkinBtnElement = document.getElementById('checkinBtn');
+    if (checkinBtnElement && !DataManager.getCheckInStatus(currentUser).checkedIn) {
+        const taskCompleted = dailyTask.completedNewWords >= 5 && (!hasReviewTask || dailyTask.completedReviewWords > 0);
+        checkinBtnElement.disabled = !taskCompleted;
+        if (!taskCompleted) {
+            checkinBtnElement.textContent = '任务未完成';
+        } else {
+            checkinBtnElement.textContent = '立即打卡';
+        }
+    }
+}
+
+// 检查是否有单词需要复习
+function hasWordsToReview(userData) {
+    // 检查错词本是否有单词
+    if (userData.errorWords && userData.errorWords.length > 0) {
+        return true;
+    }
+    
+    // 检查是否有学习记录
+    if (userData.wordLearningRecords && Object.keys(userData.wordLearningRecords).length > 0) {
+        const today = new Date();
+        for (const wordId in userData.wordLearningRecords) {
+            const record = userData.wordLearningRecords[wordId];
+            if (record.nextReviewAt) {
+                const nextReviewAt = new Date(record.nextReviewAt);
+                if (nextReviewAt <= today) {
+                    return true;
+                }
+            }
+        }
+    }
+    
+    return false;
+}
+
 // 更新打卡状态
 export function updateCheckInStatus() {
     const status = DataManager.getCheckInStatus(currentUser);
@@ -350,4 +433,7 @@ export function updateCheckInStatus() {
         const points = DataManager.getUserPoints(currentUser);
         userPointsElement.textContent = points;
     }
+    
+    // 更新每日任务进度
+    updateDailyTaskProgress();
 }

@@ -180,8 +180,93 @@
                     
                     <!-- 操作按钮 -->
                     <div class="action-buttons">
-                        <button class="next-btn" onclick="nextStep()">下一步</button>
+                        <button class="learned-btn" id="learnedBtn" onclick="validateAndMarkAsLearned()">学会了</button>
+                        <button class="review-btn" onclick="validateAndNextStep()">待复习</button>
                     </div>
+                    
+                    <script>
+                        // 检查单词是否在错词列表中，如果是则禁用"学会了"按钮
+                        function checkErrorWordStatus() {
+                            const currentWord = window.isErrorBookMode ? window.errorWords[window.currentWordIndex] : window.words[window.currentWordIndex];
+                            if (currentWord && currentWord.word) {
+                                const userData = window.DataManager.getUserData(window.currentUser);
+                                const isErrorWord = userData.errorWords && userData.errorWords.some(word => word.word === currentWord.word);
+                                const learnedBtn = document.getElementById('learnedBtn');
+                                if (learnedBtn) {
+                                    learnedBtn.disabled = isErrorWord;
+                                    if (isErrorWord) {
+                                        learnedBtn.title = '该单词有错误记录，不能标记为学会了';
+                                    } else {
+                                        learnedBtn.title = '';
+                                    }
+                                }
+                            }
+                        }
+                        
+                        // 验证当前步骤的输入内容
+                        function validateCurrentStep() {
+                            const currentWord = window.isErrorBookMode ? window.errorWords[window.currentWordIndex] : window.words[window.currentWordIndex];
+                            
+                            if (window.currentStep === 'write') {
+                                // 验证书写步骤
+                                const input = document.getElementById('writeInput');
+                                if (input && input.value.trim() !== currentWord.word) {
+                                    // 添加到错词本
+                                    window.DataManager.addErrorWord(window.currentUser, currentWord);
+                                    // 检查错误状态，禁用"学会了"按钮
+                                    checkErrorWordStatus();
+                                    alert('书写内容不正确，请重试！');
+                                    return false;
+                                }
+                            } else if (window.currentStep === 'spell') {
+                                // 验证拼写步骤
+                                const inputBoxes = document.querySelectorAll('.spell-input-box');
+                                let userInput = '';
+                                inputBoxes.forEach(box => {
+                                    userInput += box.textContent;
+                                });
+                                if (userInput !== currentWord.word) {
+                                    // 添加到错词本
+                                    window.DataManager.addErrorWord(window.currentUser, currentWord);
+                                    // 检查错误状态，禁用"学会了"按钮
+                                    checkErrorWordStatus();
+                                    alert('拼写内容不正确，请重试！');
+                                    return false;
+                                }
+                            } else if (window.currentStep === 'practice') {
+                                // 验证练习步骤
+                                const practiceOptions = document.querySelectorAll('.practice-option');
+                                const correctOption = Array.from(practiceOptions).find(option => option.classList.contains('correct'));
+                                if (!correctOption) {
+                                    alert('请完成练习步骤！');
+                                    return false;
+                                }
+                            }
+                            return true;
+                        }
+                        
+                        // 验证并标记为学会了
+                        function validateAndMarkAsLearned() {
+                            if (validateCurrentStep()) {
+                                window.markAsLearned();
+                            }
+                        }
+                        
+                        // 验证并进入下一步
+                        function validateAndNextStep() {
+                            if (validateCurrentStep()) {
+                                window.nextStep();
+                            }
+                        }
+                        
+                        // 页面加载时检查
+                        window.onload = function() {
+                            checkErrorWordStatus();
+                        };
+                        
+                        // 当步骤完成时检查
+                        window.checkErrorWordStatus = checkErrorWordStatus;
+                    </script>
                 </div>
             </div>
         </div>

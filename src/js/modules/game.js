@@ -21,13 +21,17 @@ let currentGameMode = 'english'; // 默认模式：english（英文选义），a
 
 // 初始化游戏
 export function initGame() {
-    allErrorWords = DataManager.getErrorWords(currentUser);
+    // 获取所有单词（假设words是全局变量）
+    const allWords = window.words || [];
+    
+    // 生成复习计划
+    allErrorWords = DataManager.generateDailyReviewPlan(currentUser, allWords);
     currentGroupIndex = 0;
     selectedWord = null;
     selectedMeaning = null;
     totalCorrectCount = 0;
     
-    // 设置总数为所有错误单词的数量
+    // 设置总数为所有复习单词的数量
     document.getElementById('gameTotalCount').textContent = allErrorWords.length;
     
     // 加载第一组单词
@@ -166,6 +170,19 @@ export function selectGameItem(type, element, word) {
             
             // 播放成功音效
             AudioManager.playSuccessSound();
+            
+            // 更新复习任务进度
+            DataManager.updateTaskProgress(currentUser, 'review');
+            
+            // 查找单词的释义
+            let wordMeaning = '';
+            const wordObj = gameWords.find(w => w.word === selectedWord || w === selectedWord);
+            if (wordObj && wordObj.meaning) {
+                wordMeaning = wordObj.meaning;
+            }
+            
+            // 保存单词学习记录
+            DataManager.saveWordLearningRecord(currentUser, selectedWord, wordMeaning);
             
             // 检查是否完成当前组
             if (gameCorrectCount === gameWords.length) {

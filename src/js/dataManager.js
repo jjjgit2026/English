@@ -9,6 +9,18 @@ export default class DataManager {
         return `${year}-${month}-${day}`;
     }
 
+    // 获取本地时间的ISO字符串
+    static getLocalISOString(date) {
+        // 创建一个新的日期对象，以确保不修改原始日期
+        const localDate = new Date(date);
+        // 获取本地时间与UTC时间的偏移量（毫秒）
+        const offset = localDate.getTimezoneOffset() * 60000;
+        // 调整为本地时间
+        const localTime = localDate.getTime() - offset;
+        // 创建新的日期对象并返回ISO字符串
+        return new Date(localTime).toISOString();
+    }
+
     // 获取本周开始日期（周一）
     static getWeekStartDate() {
         const date = new Date();
@@ -345,6 +357,16 @@ export default class DataManager {
                         }
                     }
                     
+                    // 确保 wordLearningRecords 对象存在
+                    if (!userData.wordLearningRecords || typeof userData.wordLearningRecords !== 'object') {
+                        userData.wordLearningRecords = {};
+                    }
+                    
+                    // 确保 dailyTasks 对象存在
+                    if (!userData.dailyTasks || typeof userData.dailyTasks !== 'object') {
+                        userData.dailyTasks = {};
+                    }
+                    
                     // 检查并更新学习目标
                     DataManager.checkAndUpdateGoals(userData);
                     
@@ -450,6 +472,31 @@ export default class DataManager {
                 // 确保 errorWords 数组存在
                 if (!userData.errorWords || !Array.isArray(userData.errorWords)) {
                     userData.errorWords = [];
+                }
+                
+                // 确保 wordLearningRecords 对象存在
+                if (!userData.wordLearningRecords || typeof userData.wordLearningRecords !== 'object') {
+                    userData.wordLearningRecords = {};
+                }
+                
+                // 确保 dailyTasks 对象存在
+                if (!userData.dailyTasks || typeof userData.dailyTasks !== 'object') {
+                    userData.dailyTasks = {};
+                }
+                
+                // 确保 today 对象存在
+                if (!userData.today || typeof userData.today !== 'object') {
+                    userData.today = {
+                        date: this.getLocalDateString(),
+                        learning: 0,
+                        testing: 0,
+                        correct: 0,
+                        error: 0,
+                        checkedIn: false,
+                        goalCompleted: false,
+                        newWordsLearned: 0,
+                        reviewWordsCompleted: 0
+                    };
                 }
                 
                 // 确保 goals 对象存在且字段完整
@@ -617,20 +664,28 @@ export default class DataManager {
             const safeData = {
                 version: DataManager.DATA_VERSION,
                 errorWords: Array.isArray(data.errorWords) ? data.errorWords : [],
+                wordLearningRecords: typeof data.wordLearningRecords === 'object' && data.wordLearningRecords !== null ? data.wordLearningRecords : {},
+                dailyTasks: typeof data.dailyTasks === 'object' && data.dailyTasks !== null ? data.dailyTasks : {},
                 today: typeof data.today === 'object' && data.today !== null ? {
                     date: data.today.date || DataManager.getLocalDateString(),
                     learning: data.today.learning || 0,
                     testing: data.today.testing || 0,
                     correct: data.today.correct || 0,
                     error: data.today.error || 0,
-                    checkedIn: data.today.checkedIn || false
+                    checkedIn: data.today.checkedIn || false,
+                    goalCompleted: data.today.goalCompleted || false,
+                    newWordsLearned: data.today.newWordsLearned || 0,
+                    reviewWordsCompleted: data.today.reviewWordsCompleted || 0
                 } : {
                     date: DataManager.getLocalDateString(),
                     learning: 0,
                     testing: 0,
                     correct: 0,
                     error: 0,
-                    checkedIn: false
+                    checkedIn: false,
+                    goalCompleted: false,
+                    newWordsLearned: 0,
+                    reviewWordsCompleted: 0
                 },
                 total: typeof data.total === 'object' && data.total !== null ? {
                     learning: parseInt(data.total.learning) || 0,
@@ -910,8 +965,14 @@ export default class DataManager {
                     correct: 0,
                     error: 0,
                     checkedIn: false,
-                    goalCompleted: false
+                    goalCompleted: false,
+                    newWordsLearned: 0,
+                    reviewWordsCompleted: 0
                 };
+            } else {
+                // 补全 today 字段
+                userData.today.newWordsLearned = parseInt(userData.today.newWordsLearned) || 0;
+                userData.today.reviewWordsCompleted = parseInt(userData.today.reviewWordsCompleted) || 0;
             }
             if (!userData.total) {
                 userData.total = {
@@ -933,12 +994,13 @@ export default class DataManager {
             console.log('[DataManager] 今日学习次数:', userData.today.learning);
             console.log('[DataManager] 累计学习次数:', userData.total.learning);
             
-            // 保存数据到 localStorage
-            console.log('[DataManager] 保存数据到 localStorage');
-            console.log('[DataManager] 保存前的 userData:', userData);
+            // 更新新学任务进度
+            this.updateTaskProgress(user, 'new');
             
-            // 使用 saveUserData 函数来保存数据，确保数据结构完整
-            DataManager.saveUserData(user, userData);
+            // 保存单词学习记录
+            this.saveWordLearningRecord(user, word.word, word.meaning, true);
+            
+            // 注意：saveWordLearningRecord 方法已经调用了 saveUserData，所以这里不需要再调用
             console.log('[DataManager] 保存成功');
             
             // 验证保存结果
@@ -1024,6 +1086,19 @@ export default class DataManager {
             if (userData.today.date === today && userData.today.checkedIn) {
                 console.log('[DataManager] 今天已经打卡过了');
                 return { success: false, message: '今天已经打卡过了' };
+            }
+            
+            // 检查任务是否完成
+            const dailyTask = this.getDailyTask(user);
+            
+            // 检查是否有复习任务
+            const hasReviewTask = this.hasWordsToReview(userData);
+            
+            // 任务完成条件：新学任务完成 + (没有复习任务 或 复习任务完成)
+            const taskCompleted = dailyTask.completedNewWords >= 5 && (!hasReviewTask || dailyTask.completedReviewWords > 0);
+            if (!taskCompleted) {
+                console.log('[DataManager] 任务未完成，不能打卡');
+                return { success: false, message: '任务未完成，不能打卡' };
             }
             
             // 更新今日数据
@@ -1334,6 +1409,293 @@ export default class DataManager {
             console.error('获取打卡历史失败:', error);
             return [];
         }
+    }
+    
+    // 保存单词学习记录
+    static saveWordLearningRecord(user, word, meaning, isLearned = true) {
+        try {
+            console.log('[DataManager] saveWordLearningRecord 开始');
+            console.log('[DataManager] user:', user);
+            console.log('[DataManager] word:', word);
+            console.log('[DataManager] meaning:', meaning);
+            console.log('[DataManager] isLearned:', isLearned);
+            
+            const userData = this.getUserData(user);
+            console.log('[DataManager] 获取到的 userData:', userData);
+            
+            const wordId = word.toLowerCase();
+            console.log('[DataManager] wordId:', wordId);
+            
+            // 确保 wordLearningRecords 对象存在
+            if (!userData.wordLearningRecords) {
+                userData.wordLearningRecords = {};
+                console.log('[DataManager] 创建 wordLearningRecords 对象');
+            }
+            
+            // 获取现有记录或创建新记录
+            const record = userData.wordLearningRecords[wordId] || {
+                word: word,
+                meaning: meaning || '',
+                lastLearnedAt: null,
+                reviewCount: 0,
+                nextReviewAt: null,
+                difficulty: 1,
+                reviewHistory: []
+            };
+            console.log('[DataManager] 现有记录:', userData.wordLearningRecords[wordId]);
+            console.log('[DataManager] 新记录:', record);
+            
+            // 获取今天的日期
+            const today = this.getLocalDateString();
+            console.log('[DataManager] 今天的日期:', today);
+            
+            // 检查今天是否已经复习过该单词
+            const hasReviewedToday = record.reviewHistory.some(item => {
+                // 从ISO字符串中提取日期部分
+                const reviewDate = item.date.split('T')[0];
+                return reviewDate === today;
+            });
+            console.log('[DataManager] 今天是否已经复习过:', hasReviewedToday);
+            
+            // 更新记录
+            record.lastLearnedAt = today;
+            console.log('[DataManager] 更新学习日期:', record.lastLearnedAt);
+            
+            // 如果提供了新的释义，更新释义
+            if (meaning) {
+                record.meaning = meaning;
+                console.log('[DataManager] 更新释义:', record.meaning);
+            }
+            
+            if (isLearned && !hasReviewedToday) {
+                // 只有在今天没有复习过的情况下才增加复习次数
+                record.reviewCount += 1;
+                console.log('[DataManager] 更新复习次数:', record.reviewCount);
+                
+                // 计算下次复习时间（基于艾宾浩斯遗忘曲线）
+                const now = new Date();
+                const nextReviewDate = this.calculateNextReviewTime(now, record.reviewCount);
+                // 只保存日期部分
+                record.nextReviewAt = this.getLocalDateStringFromDate(nextReviewDate);
+                console.log('[DataManager] 下次复习日期:', record.nextReviewAt);
+                
+                // 添加复习历史（只记录日期）
+                record.reviewHistory.push({
+                    date: today,
+                    difficulty: record.difficulty
+                });
+                console.log('[DataManager] 添加复习历史:', record.reviewHistory);
+            }
+            
+            userData.wordLearningRecords[wordId] = record;
+            console.log('[DataManager] 保存记录到 wordLearningRecords:', userData.wordLearningRecords);
+            
+            // 更新今日学习数据
+            if (!userData.today) {
+                userData.today = {
+                    date: today,
+                    learning: 0,
+                    testing: 0,
+                    correct: 0,
+                    error: 0,
+                    checkedIn: false,
+                    goalCompleted: false,
+                    newWordsLearned: 0,
+                    reviewWordsCompleted: 0
+                };
+                console.log('[DataManager] 创建 today 对象');
+            }
+            
+            if (userData.today.date === today) {
+                if (!record.reviewHistory || record.reviewHistory.length === 1) {
+                    // 新学单词
+                    userData.today.newWordsLearned += 1;
+                    console.log('[DataManager] 更新新学单词数量:', userData.today.newWordsLearned);
+                } else if (!hasReviewedToday) {
+                    // 复习单词（只在今天第一次复习时增加计数）
+                    userData.today.reviewWordsCompleted += 1;
+                    console.log('[DataManager] 更新复习单词数量:', userData.today.reviewWordsCompleted);
+                }
+            }
+            
+            console.log('[DataManager] 保存前的完整 userData:', userData);
+            
+            const saveResult = this.saveUserData(user, userData);
+            console.log('[DataManager] 保存结果:', saveResult);
+            
+            // 验证保存结果
+            const savedData = localStorage.getItem(`userStats_${user}`);
+            console.log('[DataManager] 保存后的数据:', savedData);
+            
+            console.log('[DataManager] saveWordLearningRecord 结束');
+            return true;
+        } catch (error) {
+            console.error('保存单词学习记录失败:', error);
+            return false;
+        }
+    }
+    
+    // 计算下次复习时间（基于艾宾浩斯遗忘曲线）
+    static calculateNextReviewTime(lastLearnedAt, reviewCount) {
+        // 复习间隔（天）
+        const intervals = [1, 2, 4, 7, 15, 30];
+        // 根据复习次数选择间隔
+        const intervalIndex = Math.min(reviewCount, intervals.length - 1);
+        const daysToAdd = intervals[intervalIndex];
+        const nextReviewAt = new Date(lastLearnedAt);
+        nextReviewAt.setDate(nextReviewAt.getDate() + daysToAdd);
+        return nextReviewAt;
+    }
+    
+    // 生成每日复习计划
+    static generateDailyReviewPlan(user, allWords) {
+        try {
+            const userData = this.getUserData(user);
+            const today = this.getLocalDateString();
+            const reviewWords = [];
+            
+            // 检查所有单词的学习记录
+            for (const word of allWords) {
+                const wordId = word.word.toLowerCase();
+                const record = userData.wordLearningRecords[wordId];
+                
+                if (record && record.nextReviewAt) {
+                    // 直接比较日期字符串
+                    if (record.nextReviewAt <= today) {
+                        reviewWords.push(word);
+                    }
+                }
+            }
+            
+            // 添加错词本中的单词
+            if (userData.errorWords && userData.errorWords.length > 0) {
+                for (const errorWord of userData.errorWords) {
+                    if (!reviewWords.some(word => word.word.toLowerCase() === errorWord.word.toLowerCase())) {
+                        reviewWords.push(errorWord);
+                    }
+                }
+            }
+            
+            // 限制复习单词数量
+            const maxReviewWords = 10;
+            return reviewWords.slice(0, maxReviewWords);
+        } catch (error) {
+            console.error('生成复习计划失败:', error);
+            return [];
+        }
+    }
+    
+    // 获取今日任务
+    static getDailyTask(user) {
+        try {
+            const userData = this.getUserData(user);
+            const today = this.getLocalDateString();
+            
+            // 确保 dailyTasks 对象存在
+            if (!userData.dailyTasks) {
+                userData.dailyTasks = {};
+            }
+            
+            // 获取今日任务或创建新任务
+            if (!userData.dailyTasks[today]) {
+                userData.dailyTasks[today] = {
+                    date: today,
+                    newWords: 5, // 每日新学单词数量
+                    reviewWords: 10, // 每日复习单词数量
+                    completedNewWords: 0,
+                    completedReviewWords: 0,
+                    isCheckedIn: false
+                };
+                this.saveUserData(user, userData);
+            }
+            
+            return userData.dailyTasks[today];
+        } catch (error) {
+            console.error('获取每日任务失败:', error);
+            return {
+                date: this.getLocalDateString(),
+                newWords: 5,
+                reviewWords: 10,
+                completedNewWords: 0,
+                completedReviewWords: 0,
+                isCheckedIn: false
+            };
+        }
+    }
+    
+    // 更新任务完成情况
+    static updateTaskProgress(user, taskType) {
+        try {
+            const userData = this.getUserData(user);
+            const today = this.getLocalDateString();
+            
+            // 确保 dailyTasks 对象存在
+            if (!userData.dailyTasks) {
+                userData.dailyTasks = {};
+            }
+            
+            // 确保今日任务存在
+            if (!userData.dailyTasks[today]) {
+                userData.dailyTasks[today] = {
+                    date: today,
+                    newWords: 5,
+                    reviewWords: 10,
+                    completedNewWords: 0,
+                    completedReviewWords: 0,
+                    isCheckedIn: false
+                };
+            }
+            
+            // 更新任务进度
+            if (taskType === 'new') {
+                userData.dailyTasks[today].completedNewWords += 1;
+            } else if (taskType === 'review') {
+                userData.dailyTasks[today].completedReviewWords += 1;
+            }
+            
+            this.saveUserData(user, userData);
+            return true;
+        } catch (error) {
+            console.error('更新任务进度失败:', error);
+            return false;
+        }
+    }
+    
+    // 检查任务是否完成
+    static isTaskCompleted(user) {
+        try {
+            const dailyTask = this.getDailyTask(user);
+            const userData = this.getUserData(user);
+            const hasReviewTask = this.hasWordsToReview(userData);
+            return dailyTask.completedNewWords >= 5 && (!hasReviewTask || dailyTask.completedReviewWords > 0);
+        } catch (error) {
+            console.error('检查任务完成情况失败:', error);
+            return false;
+        }
+    }
+    
+    // 检查是否有单词需要复习
+    static hasWordsToReview(userData) {
+        // 检查错词本是否有单词
+        if (userData.errorWords && userData.errorWords.length > 0) {
+            return true;
+        }
+        
+        // 检查是否有学习记录
+        if (userData.wordLearningRecords && Object.keys(userData.wordLearningRecords).length > 0) {
+            const today = this.getLocalDateString();
+            for (const wordId in userData.wordLearningRecords) {
+                const record = userData.wordLearningRecords[wordId];
+                if (record.nextReviewAt) {
+                    // 直接比较日期字符串
+                    if (record.nextReviewAt <= today) {
+                        return true;
+                    }
+                }
+            }
+        }
+        
+        return false;
     }
 
     static addPointsHistory(userData, type, amount, description) {

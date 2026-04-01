@@ -331,10 +331,22 @@
                     const completeSentence = sentence + (sentence.endsWith('.') || sentence.endsWith('!') || sentence.endsWith('?') ? '' : '.');
                     const sentenceId = `${currentArticleIndex}-${index}`;
                     // 转义单引号和双引号，避免HTML语法错误
-                    const escapedSentence = completeSentence.replace(/'/g, "\\'").replace(/"/g, "\\&");
+                    const escapedSentence = completeSentence.replace(/'/g, "\\'").replace(/"/g, "&quot;");
                     return `<span class="sentence" data-sentence-id="${sentenceId}" onclick="selectSentence(this, '${escapedSentence}', '${sentenceId}')">${completeSentence}</span>`;
                 }).join(' ')}</div>`;
             }).join('');
+            
+            // 更新中文大意
+            document.getElementById('articleTranslation').textContent = article.translation;
+            
+            // 更新语法点
+            const grammarElement = document.getElementById('articleGrammar');
+            if (article.grammar) {
+                const grammarPoints = article.grammar.split(' - ').filter(g => g.trim());
+                grammarElement.innerHTML = '<ul>' + grammarPoints.map(point => `<li>${point}</li>`).join('') + '</ul>';
+            } else {
+                grammarElement.textContent = '暂无语法点';
+            }
         }
         
         // 改进的句子分割函数
@@ -368,18 +380,6 @@
             return result;
         }
         
-        // 更新中文大意
-        document.getElementById('articleTranslation').textContent = article.translation;
-            
-            // 更新语法点
-            const grammarElement = document.getElementById('articleGrammar');
-            if (article.grammar) {
-                const grammarPoints = article.grammar.split(' - ').filter(g => g.trim());
-                grammarElement.innerHTML = '<ul>' + grammarPoints.map(point => `<li>${point}</li>`).join('') + '</ul>';
-            } else {
-                grammarElement.textContent = '暂无语法点';
-            }
-        }
         
         // 选择句子并播放发音
         function selectSentence(element, sentence, sentenceId) {

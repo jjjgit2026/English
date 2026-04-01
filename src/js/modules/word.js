@@ -394,6 +394,7 @@ export function renderWordList() {
             <div class="word-meaning ${maskMode === 'meaning' ? 'masked' : ''}">${word.meaning}</div>
             <div class="word-actions">
                 <button class="action-btn">🔊</button>
+                <button class="action-btn mastered-btn" data-word="${word.word}">已掌握</button>
             </div>
         `;
         
@@ -414,11 +415,40 @@ export function renderWordList() {
             };
         }
         
-        const actionBtn = wordItem.querySelector('.action-btn');
-        actionBtn.onclick = (e) => {
-            AudioManager.playWordAudio(word.word, false);
-            e.stopPropagation();
-        };
+        // 处理发音按钮点击事件
+        const actionBtns = wordItem.querySelectorAll('.action-btn');
+        actionBtns.forEach(btn => {
+            if (!btn.classList.contains('mastered-btn')) {
+                btn.onclick = (e) => {
+                    AudioManager.playWordAudio(word.word, false);
+                    e.stopPropagation();
+                };
+            }
+        });
+        
+        // 处理已掌握按钮点击事件
+        const masteredBtn = wordItem.querySelector('.mastered-btn');
+        if (masteredBtn) {
+            masteredBtn.onclick = (e) => {
+                const wordToRemove = masteredBtn.dataset.word;
+                const userData = DataManager.getUserData(currentUser);
+                
+                // 从wordLearningRecords中删除该单词
+                if (userData.wordLearningRecords && userData.wordLearningRecords[wordToRemove]) {
+                    delete userData.wordLearningRecords[wordToRemove];
+                    // 保存数据
+                    DataManager.saveUserData(currentUser, userData);
+                    // 重新渲染单词列表
+                    renderWordList();
+                    // 显示成功提示
+                    alert('单词已从待复习列表中删除');
+                } else {
+                    // 如果单词不在待复习列表中，也显示提示
+                    alert('该单词可能还没有学习哦');
+                }
+                e.stopPropagation();
+            };
+        }
         
         fragment.appendChild(wordItem);
     });
@@ -1020,6 +1050,133 @@ export function goToNextWord() {
     }
 }
 
+// 标记单词为学会了
+export function markAsLearned() {
+    console.group('[markAsLearned]');
+    console.log('开始');
+    try {
+        console.log('currentUser:', currentUser);
+        console.log('currentFile:', currentFile);
+        console.log('currentWordIndex:', currentWordIndex);
+        
+        // 获取当前单词
+        const currentWord = isErrorBookMode ? errorWords[currentWordIndex] : words[currentWordIndex];
+        console.log('当前单词:', currentWord);
+        
+        if (currentWord && currentWord.word) {
+            console.log('标记单词为学会了:', currentWord.word);
+            console.log('[markAsLearned] 当前课本:', currentFile);
+            
+            // 检查是否有错误（单词是否在错词本中）
+            const userData = DataManager.getUserData(currentUser);
+            const isErrorWord = userData.errorWords && userData.errorWords.some(word => word.word === currentWord.word);
+            console.log('单词是否在错词本中:', isErrorWord);
+            
+            // 如果是错词本模式，从错词本中删除该单词
+            if (isErrorBookMode) {
+                DataManager.removeErrorWord(currentUser, currentWord);
+                console.log('[markAsLearned] 从错词本中删除单词成功');
+            }
+            
+            // 直接增加books中的单词学习数量，不添加到wordLearningRecords
+            const userData2 = DataManager.getUserData(currentUser);
+            if (!userData2.books) userData2.books = {};
+            if (!userData2.books[currentFile]) {
+                userData2.books[currentFile] = {
+                    totalWords: words.length,
+                    learnedCount: 0
+                };
+            }
+            userData2.books[currentFile].learnedCount = (parseInt(userData2.books[currentFile].learnedCount) || 0) + 1;
+            console.log('[markAsLearned] 更新已学数量:', userData2.books[currentFile].learnedCount);
+            
+            // 更新今日学习数据
+            if (!userData2.today) {
+                userData2.today = {
+                    date: DataManager.getLocalDateString(),
+                    learning: 0,
+                    testing: 0,
+                    correct: 0,
+                    error: 0,
+                    checkedIn: false,
+                    goalCompleted: false,
+                    newWordsLearned: 0,
+                    reviewWordsCompleted: 0
+                };
+            }
+            userData2.today.learning = (parseInt(userData2.today.learning) || 0) + 1;
+            userData2.today.newWordsLearned = (parseInt(userData2.today.newWordsLearned) || 0) + 1;
+            
+            // 使用DataManager添加积分
+            DataManager.addPoints(currentUser, 1);
+            console.log('[markAsLearned] 添加积分成功');
+            
+            // 保存数据
+            DataManager.saveUserData(currentUser, userData2);
+            console.log('[markAsLearned] 保存数据成功');
+            
+            // 更新统计显示
+            updateStatsDisplay();
+            console.log('学会了标记和积分添加完成');
+            
+            // 执行页面重定向
+            setTimeout(() => {
+                console.log('延迟后执行页面重定向');
+                if (isErrorBookMode) {
+                    if (currentWordIndex < errorWords.length - 1) {
+                        console.log('进入下一个错词:', currentWordIndex + 1);
+                        openErrorWordLinkPage(currentWordIndex + 1);
+                    } else {
+                        console.log('最后一个错词，返回错词本页');
+                        window.location.href = 'error-book.html';
+                    }
+                } else {
+                    if (currentWordIndex < words.length - 1) {
+                        console.log('进入下一个单词:', currentWordIndex + 1);
+                        openWordLinkPage(currentWordIndex + 1);
+                    } else {
+                        console.log('最后一个单词，返回单词列表页');
+                        backToWordList();
+                    }
+                }
+            }, 500); // 增加延迟时间，确保数据完全保存
+        } else {
+            // 没有单词，直接进行页面重定向
+            console.log('没有当前单词，直接进行页面重定向');
+            setTimeout(() => {
+                if (isErrorBookMode) {
+                    window.location.href = 'error-book.html';
+                } else {
+                    if (currentWordIndex < words.length - 1) {
+                        console.log('进入下一个单词:', currentWordIndex + 1);
+                        openWordLinkPage(currentWordIndex + 1);
+                    } else {
+                        console.log('最后一个单词，返回单词列表页');
+                        backToWordList();
+                    }
+                }
+            }, 500);
+        }
+    } catch (error) {
+        console.error('错误:', error);
+        // 即使出错也要确保用户能够继续操作
+        setTimeout(() => {
+            if (isErrorBookMode) {
+                window.location.href = 'error-book.html';
+            } else {
+                if (currentWordIndex < words.length - 1) {
+                    openWordLinkPage(currentWordIndex + 1);
+                } else {
+                    backToWordList();
+                }
+            }
+        }, 500);
+    } finally {
+        console.log('结束');
+        console.groupEnd();
+    }
+}
+
 // 返回单词列表页
 export function backToWordList() {
     if (isErrorBookMode) {
@@ -1160,6 +1317,11 @@ export function checkPracticeAnswer(selected, correct) {
         // 保存数据
         DataManager.saveUserData(currentUser, userData);
         console.log('[checkPracticeAnswer] 练习错误，更新测试数量');
+        
+        // 检查错误状态，禁用"学会了"按钮
+        if (typeof window.checkErrorWordStatus === 'function') {
+            window.checkErrorWordStatus();
+        }
     }
     
     // 延迟进入下一步
@@ -1211,6 +1373,11 @@ export function checkSpelling() {
         AudioManager.playErrorSound();
         // 添加到错词本
         DataManager.addErrorWord(currentUser, currentWord);
+        
+        // 检查错误状态，禁用"学会了"按钮
+        if (typeof window.checkErrorWordStatus === 'function') {
+            window.checkErrorWordStatus();
+        }
     }
 }
 
@@ -1232,6 +1399,11 @@ export function checkWriting() {
         AudioManager.playErrorSound();
         // 添加到错词本
         DataManager.addErrorWord(currentUser, currentWord);
+        
+        // 检查错误状态，禁用"学会了"按钮
+        if (typeof window.checkErrorWordStatus === 'function') {
+            window.checkErrorWordStatus();
+        }
     }
 }
 

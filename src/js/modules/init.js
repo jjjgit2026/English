@@ -148,6 +148,12 @@ export async function commonInit() {
 export function initIndexPage() {
     console.log('[首页初始化] 开始');
     // 首页特定初始化逻辑
+    // 导入updateDailyTaskProgress函数
+    import('./user.js').then(({ updateDailyTaskProgress }) => {
+        // 更新每日任务进度
+        console.log('[首页初始化] 更新每日任务进度');
+        updateDailyTaskProgress();
+    });
     console.log('[首页初始化] 结束');
 }
 
