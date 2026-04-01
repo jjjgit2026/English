@@ -323,21 +323,53 @@
             const paragraphs = article.body.split('\n').filter(p => p.trim());
             
             bodyElement.innerHTML = paragraphs.map(paragraph => {
-                // 对每个段落，按句子分割
-                const sentences = paragraph.split('. ').filter(s => s.trim());
+                // 对每个段落，按句子分割（改进的分割逻辑，处理引号和感叹号）
+                const sentences = splitSentences(paragraph);
                 totalSentences += sentences.length;
                 return `<div class="paragraph">${sentences.map((sentence, index) => {
                     // 确保句子以句号结尾
-                    const completeSentence = sentence + (sentence.endsWith('.') ? '' : '.');
+                    const completeSentence = sentence + (sentence.endsWith('.') || sentence.endsWith('!') || sentence.endsWith('?') ? '' : '.');
                     const sentenceId = `${currentArticleIndex}-${index}`;
-                    // 转义单引号，避免HTML语法错误
-                    const escapedSentence = completeSentence.replace(/'/g, "\\'");
+                    // 转义单引号和双引号，避免HTML语法错误
+                    const escapedSentence = completeSentence.replace(/'/g, "\\'").replace(/"/g, "\\&");
                     return `<span class="sentence" data-sentence-id="${sentenceId}" onclick="selectSentence(this, '${escapedSentence}', '${sentenceId}')">${completeSentence}</span>`;
                 }).join(' ')}</div>`;
             }).join('');
+        }
+        
+        // 改进的句子分割函数
+        function splitSentences(text) {
+            // 使用正则表达式分割句子，处理引号、感叹号等情况
+            // 匹配句号、感叹号或问号，后面跟空格或换行
+            const sentences = text.split(/[.!?]\s+/).filter(s => s.trim());
             
-            // 更新中文大意
-            document.getElementById('articleTranslation').textContent = article.translation;
+            // 为每个句子添加正确的结束符
+            const result = [];
+            let lastIndex = 0;
+            
+            sentences.forEach(sentence => {
+                // 找到句子在原文本中的位置
+                const startIndex = text.indexOf(sentence, lastIndex);
+                const endIndex = startIndex + sentence.length;
+                
+                // 查找句子的结束符
+                let endChar = '';
+                if (endIndex < text.length) {
+                    const char = text[endIndex];
+                    if (char === '.' || char === '!' || char === '?') {
+                        endChar = char;
+                    }
+                }
+                
+                result.push(sentence + endChar);
+                lastIndex = endIndex + (endChar ? 1 : 0);
+            });
+            
+            return result;
+        }
+        
+        // 更新中文大意
+        document.getElementById('articleTranslation').textContent = article.translation;
             
             // 更新语法点
             const grammarElement = document.getElementById('articleGrammar');
