@@ -1,0 +1,39 @@
+{
+  "name": "english",
+  "version": "1.0.0",
+  "description": "基于外研版Join In教材的交互式英语学习应用",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "build": "babel src/js --out-dir dist/js --copy-files",
+    "build:watch": "babel src/js --out-dir dist/js --copy-files --watch"
+  },
+  "browserslist": [
+    "> 1%",
+    "last 2 versions",
+    "not dead",
+    "iOS >= 9",
+    "Safari >= 9",
+    "Android >= 6.0",
+    "ChromeAndroid >= 60"
+  ],
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/jjjgit2026/English.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/jjjgit2026/English/issues"
+  },
+  "homepage": "https://github.com/jjjgit2026/English#readme",
+  "devDependencies": {
+    "@babel/cli": "^7.28.6",
+    "@babel/core": "^7.29.0",
+    "@babel/preset-env": "^7.29.2"
+  },
+  "dependencies": {
+    "core-js": "^3.49.0"
+  }
+}

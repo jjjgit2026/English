@@ -323,6 +323,10 @@
         setInterval(checkDailyGoal, 30000); // 每30秒检查一次
     </script>
     
+    <!-- 现代浏览器使用ES6模块 -->
     <script type="module" src="../js/main.js"></script>
+    
+    <!-- 旧浏览器使用转译后的ES5代码 -->
+    <script nomodule src="../dist/js/main.js"></script>
 </body>
 </html>

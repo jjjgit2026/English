@@ -39,7 +39,11 @@
         <img id="modalImage" class="modal-image" src="" alt="宠物图片">
     </div>
     
+    <!-- 现代浏览器使用ES6模块 -->
     <script type="module" src="../js/main.js"></script>
+    
+    <!-- 旧浏览器使用转译后的ES5代码 -->
+    <script nomodule src="../dist/js/main.js"></script>
     <script>
         // 页面加载时初始化
         document.addEventListener('DOMContentLoaded', function() {
