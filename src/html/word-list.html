@@ -18,11 +18,21 @@
             
         </div>
         
-        <!-- 遮罩模式 -->
-        <div class="mask-modes">
-            <button class="mask-mode active" data-mode="none">无遮盖</button>
-            <button class="mask-mode" data-mode="word">遮单词</button>
-            <button class="mask-mode" data-mode="meaning">遮中文</button>
+        <!-- 筛选和遮罩模式 -->
+        <div class="filter-container">
+            <div class="filter-dropdown">
+                <select id="statusFilter" class="filter-select">
+                    <option value="all">全部</option>
+                    <option value="unlearned">未学</option>
+                    <option value="learned">已学</option>
+                    <option value="mastered">掌握</option>
+                </select>
+            </div>
+            <div class="mask-modes">
+                <button class="mask-mode active" data-mode="none">无遮盖</button>
+                <button class="mask-mode" data-mode="word">遮单词</button>
+                <button class="mask-mode" data-mode="meaning">遮中文</button>
+            </div>
         </div>
         
         <!-- 单词列表 -->
@@ -54,5 +64,14 @@
     </script>
     
     <script type="module" src="../js/main.js"></script>
+    <script>
+        // 页面加载完成后初始化
+        document.addEventListener('DOMContentLoaded', function() {
+            // 初始化单词列表页面
+            if (typeof initWordListPage === 'function') {
+                initWordListPage();
+            }
+        });
+    </script>
 </body>
 </html>

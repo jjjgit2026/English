@@ -358,14 +358,19 @@ export default class DataManager {
                     }
                     
                     // 确保 wordLearningRecords 对象存在
-                    if (!userData.wordLearningRecords || typeof userData.wordLearningRecords !== 'object') {
-                        userData.wordLearningRecords = {};
-                    }
-                    
-                    // 确保 dailyTasks 对象存在
-                    if (!userData.dailyTasks || typeof userData.dailyTasks !== 'object') {
-                        userData.dailyTasks = {};
-                    }
+            if (!userData.wordLearningRecords || typeof userData.wordLearningRecords !== 'object') {
+                userData.wordLearningRecords = {};
+            }
+            
+            // 确保 masteredWords 对象存在
+            if (!userData.masteredWords || typeof userData.masteredWords !== 'object') {
+                userData.masteredWords = {};
+            }
+            
+            // 确保 dailyTasks 对象存在
+            if (!userData.dailyTasks || typeof userData.dailyTasks !== 'object') {
+                userData.dailyTasks = {};
+            }
                     
                     // 检查并更新学习目标
                     DataManager.checkAndUpdateGoals(userData);
@@ -477,6 +482,11 @@ export default class DataManager {
                 // 确保 wordLearningRecords 对象存在
                 if (!userData.wordLearningRecords || typeof userData.wordLearningRecords !== 'object') {
                     userData.wordLearningRecords = {};
+                }
+                
+                // 确保 masteredWords 对象存在
+                if (!userData.masteredWords || typeof userData.masteredWords !== 'object') {
+                    userData.masteredWords = {};
                 }
                 
                 // 确保 dailyTasks 对象存在
@@ -665,6 +675,7 @@ export default class DataManager {
                 version: DataManager.DATA_VERSION,
                 errorWords: Array.isArray(data.errorWords) ? data.errorWords : [],
                 wordLearningRecords: typeof data.wordLearningRecords === 'object' && data.wordLearningRecords !== null ? data.wordLearningRecords : {},
+                masteredWords: typeof data.masteredWords === 'object' && data.masteredWords !== null ? data.masteredWords : {},
                 dailyTasks: typeof data.dailyTasks === 'object' && data.dailyTasks !== null ? data.dailyTasks : {},
                 today: typeof data.today === 'object' && data.today !== null ? {
                     date: data.today.date || DataManager.getLocalDateString(),

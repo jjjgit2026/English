@@ -2,6 +2,9 @@
 
 import { currentUser, currentFile, currentWordIndex, currentStep, isErrorBookMode, errorWords, words, setWords, setCurrentWordIndex, setCurrentStep, setErrorWords, maskMode, errorBookMaskMode, setMaskMode, setErrorBookMaskMode, currentUnit, setCurrentUnit } from './init.js';
 
+// 当前筛选状态
+let currentFilter = 'all';
+
 // 缓存对象
 const wordCache = {};
 
@@ -369,11 +372,33 @@ export function renderWordList() {
     const listContainer = document.getElementById('wordList');
     if (!listContainer) return;
     
+    // 获取用户数据
+    const userData = DataManager.getUserData(currentUser);
+    const wordLearningRecords = userData.wordLearningRecords || {};
+    const masteredWords = userData.masteredWords || {};
+    
     let filteredWords = words;
     
     // 按单元筛选
     if (currentUnit !== 'all') {
         filteredWords = filteredWords.filter(w => w.unit === currentUnit);
+    }
+    
+    // 按状态筛选
+    if (currentFilter !== 'all') {
+        filteredWords = filteredWords.filter(word => {
+            const wordKey = word.word;
+            switch (currentFilter) {
+                case 'unlearned':
+                    return !wordLearningRecords[wordKey] && !masteredWords[wordKey];
+                case 'learned':
+                    return wordLearningRecords[wordKey] && !masteredWords[wordKey];
+                case 'mastered':
+                    return masteredWords[wordKey];
+                default:
+                    return true;
+            }
+        });
     }
     
     // 使用文档片段批量更新
@@ -382,8 +407,10 @@ export function renderWordList() {
     filteredWords.forEach((word, index) => {
         const wordItem = document.createElement('div');
         wordItem.className = 'word-item';
-        wordItem.dataset.index = index;
-        wordItem.onclick = () => openWordLinkPage(index);
+        // 找到单词在原始列表中的索引
+        const originalIndex = words.findIndex(w => w.word === word.word);
+        wordItem.dataset.index = originalIndex;
+        wordItem.onclick = () => openWordLinkPage(originalIndex);
         
         wordItem.innerHTML = `
             <div class="word-index">${index + 1}</div>
@@ -394,7 +421,6 @@ export function renderWordList() {
             <div class="word-meaning ${maskMode === 'meaning' ? 'masked' : ''}">${word.meaning}</div>
             <div class="word-actions">
                 <button class="action-btn">🔊</button>
-                <button class="action-btn mastered-btn" data-word="${word.word}">已掌握</button>
             </div>
         `;
         
@@ -416,39 +442,11 @@ export function renderWordList() {
         }
         
         // 处理发音按钮点击事件
-        const actionBtns = wordItem.querySelectorAll('.action-btn');
-        actionBtns.forEach(btn => {
-            if (!btn.classList.contains('mastered-btn')) {
-                btn.onclick = (e) => {
-                    AudioManager.playWordAudio(word.word, false);
-                    e.stopPropagation();
-                };
-            }
-        });
-        
-        // 处理已掌握按钮点击事件
-        const masteredBtn = wordItem.querySelector('.mastered-btn');
-        if (masteredBtn) {
-            masteredBtn.onclick = (e) => {
-                const wordToRemove = masteredBtn.dataset.word;
-                const userData = DataManager.getUserData(currentUser);
-                
-                // 从wordLearningRecords中删除该单词
-                if (userData.wordLearningRecords && userData.wordLearningRecords[wordToRemove]) {
-                    delete userData.wordLearningRecords[wordToRemove];
-                    // 保存数据
-                    DataManager.saveUserData(currentUser, userData);
-                    // 重新渲染单词列表
-                    renderWordList();
-                    // 显示成功提示
-                    alert('单词已从待复习列表中删除');
-                } else {
-                    // 如果单词不在待复习列表中，也显示提示
-                    alert('该单词可能还没有学习哦');
-                }
-                e.stopPropagation();
-            };
-        }
+        const actionBtn = wordItem.querySelector('.action-btn');
+        actionBtn.onclick = (e) => {
+            AudioManager.playWordAudio(word.word, false);
+            e.stopPropagation();
+        };
         
         fragment.appendChild(wordItem);
     });
@@ -496,6 +494,19 @@ export function renderWordList() {
         // 清空容器并添加文档片段
         errorListContainer.innerHTML = '';
         errorListContainer.appendChild(errorFragment);
+    }
+}
+
+// 初始化筛选下拉框事件
+export function initFilterButtons() {
+    const filterSelect = document.getElementById('statusFilter');
+    if (filterSelect) {
+        filterSelect.addEventListener('change', () => {
+            // 更新当前筛选状态
+            currentFilter = filterSelect.value;
+            // 重新渲染单词列表
+            renderWordList();
+        });
     }
 }
 
@@ -971,7 +982,7 @@ export function goToNextWord() {
         console.log('当前单词:', currentWord);
         
         if (currentWord && currentWord.word) {
-            console.log('标记单词为已学:', currentWord.word);
+            console.log('标记单词为已学（待复习）:', currentWord.word);
             console.log('[goToNextWord] 当前课本:', currentFile);
             
             // 如果是错词本模式，从错词本中删除该单词
@@ -980,12 +991,50 @@ export function goToNextWord() {
                 console.log('[goToNextWord] 从错词本中删除单词成功');
             }
             
-            // 使用DataManager标记单词为已学
-            const bookData = DataManager.markWordAsLearned(currentUser, currentFile, currentWord);
-            console.log('[goToNextWord] 标记单词为已学成功，已学数量:', bookData.learnedCount);
+            // 标记单词为已学（待复习），记入wordLearningRecords
+            const userData = DataManager.getUserData(currentUser);
+            if (!userData.wordLearningRecords) userData.wordLearningRecords = {};
+            userData.wordLearningRecords[currentWord.word] = {
+                learnedDate: new Date().toISOString(),
+                meaning: currentWord.meaning
+            };
+            
+            // 更新课本已完成学习数量
+            if (!userData.books) userData.books = {};
+            if (!userData.books[currentFile]) {
+                userData.books[currentFile] = {
+                    totalWords: words.length,
+                    learnedCount: 0
+                };
+            }
+            userData.books[currentFile].learnedCount = (parseInt(userData.books[currentFile].learnedCount) || 0) + 1;
+            
+            // 更新今日学习数据
+            if (!userData.today) {
+                userData.today = {
+                    date: DataManager.getLocalDateString(),
+                    learning: 0,
+                    testing: 0,
+                    correct: 0,
+                    error: 0,
+                    checkedIn: false,
+                    goalCompleted: false,
+                    newWordsLearned: 0,
+                    reviewWordsCompleted: 0
+                };
+            }
+            userData.today.learning = (parseInt(userData.today.learning) || 0) + 1;
+            userData.today.newWordsLearned = (parseInt(userData.today.newWordsLearned) || 0) + 1;
+            
+            // 保存数据（先保存基础数据）
+            DataManager.saveUserData(currentUser, userData);
+            console.log('[goToNextWord] 保存基础数据成功');
+            
+            // 更新新学任务进度
+            DataManager.updateTaskProgress(currentUser, 'new');
             
             // 使用DataManager添加积分
-            DataManager.addPoints(currentUser, 1);
+            DataManager.addPoints(currentUser, 1, '学习单词');
             console.log('[goToNextWord] 添加积分成功');
             
             // 更新统计显示
@@ -1064,7 +1113,7 @@ export function markAsLearned() {
         console.log('当前单词:', currentWord);
         
         if (currentWord && currentWord.word) {
-            console.log('标记单词为学会了:', currentWord.word);
+            console.log('标记单词为掌握:', currentWord.word);
             console.log('[markAsLearned] 当前课本:', currentFile);
             
             // 检查是否有错误（单词是否在错词本中）
@@ -1078,8 +1127,17 @@ export function markAsLearned() {
                 console.log('[markAsLearned] 从错词本中删除单词成功');
             }
             
-            // 直接增加books中的单词学习数量，不添加到wordLearningRecords
+            // 标记单词为掌握
             const userData2 = DataManager.getUserData(currentUser);
+            if (!userData2.masteredWords) userData2.masteredWords = {};
+            userData2.masteredWords[currentWord.word] = true;
+            
+            // 从wordLearningRecords中删除该单词（如果存在）
+            if (userData2.wordLearningRecords && userData2.wordLearningRecords[currentWord.word]) {
+                delete userData2.wordLearningRecords[currentWord.word];
+            }
+            
+            // 更新课本已完成学习数量
             if (!userData2.books) userData2.books = {};
             if (!userData2.books[currentFile]) {
                 userData2.books[currentFile] = {
@@ -1088,7 +1146,6 @@ export function markAsLearned() {
                 };
             }
             userData2.books[currentFile].learnedCount = (parseInt(userData2.books[currentFile].learnedCount) || 0) + 1;
-            console.log('[markAsLearned] 更新已学数量:', userData2.books[currentFile].learnedCount);
             
             // 更新今日学习数据
             if (!userData2.today) {
@@ -1107,17 +1164,20 @@ export function markAsLearned() {
             userData2.today.learning = (parseInt(userData2.today.learning) || 0) + 1;
             userData2.today.newWordsLearned = (parseInt(userData2.today.newWordsLearned) || 0) + 1;
             
-            // 使用DataManager添加积分
-            DataManager.addPoints(currentUser, 1);
-            console.log('[markAsLearned] 添加积分成功');
-            
-            // 保存数据
+            // 保存数据（先保存基础数据）
             DataManager.saveUserData(currentUser, userData2);
-            console.log('[markAsLearned] 保存数据成功');
+            console.log('[markAsLearned] 保存基础数据成功');
+            
+            // 更新新学任务进度
+            DataManager.updateTaskProgress(currentUser, 'new');
+            
+            // 使用DataManager添加积分
+            DataManager.addPoints(currentUser, 1, '学习单词');
+            console.log('[markAsLearned] 添加积分成功');
             
             // 更新统计显示
             updateStatsDisplay();
-            console.log('学会了标记和积分添加完成');
+            console.log('掌握标记和积分添加完成');
             
             // 执行页面重定向
             setTimeout(() => {
@@ -1199,6 +1259,14 @@ export function updateNavigationButtons() {
     if (nextBtn) {
         nextBtn.disabled = currentWordIndex === wordListLength - 1;
     }
+}
+
+// 初始化单词列表页面
+export function initWordListPage() {
+    // 初始化筛选按钮
+    initFilterButtons();
+    // 渲染单词列表
+    renderWordList();
 }
 
 // 生成练习问题

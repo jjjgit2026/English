@@ -13,7 +13,7 @@ import { initApp, currentUser, currentUserName, currentFile, currentBookName, wo
 import { checkUserInfo, loadUserBook, saveUserBook, loadUserStats, updateCheckInStatus, updateBookDisplay, showBookModal, closeBookModal, showUserModal, closeUserModal, updateStatsDisplay, checkIn, updateDailyTaskProgress } from './modules/user.js';
 
 // 导入单词模块
-import { loadPDF, renderWordList, generateWordChain, updateLearningContent, updateNavigationButtons, resetLearningSteps, switchStep, isStepCompleted, nextStep, goToPrevWord, goToNextWord, backToWordList, generatePracticeQuestion, checkPracticeAnswer, addLetter, removeLetter, checkSpelling, checkWriting, clearWriteInput, generateErrorWordChain, updateErrorWordLearningContent, updateErrorWordNavigationButtons, renderErrorWordList, startErrorWordLearning, openWordLinkPage, openErrorWordLinkPage, updateStatsPage, getPhoneticColor, initCheckinHistoryPage, changeMonth, initPointsHistoryPage, markAsLearned } from './modules/word.js';
+import { loadPDF, renderWordList, generateWordChain, updateLearningContent, updateNavigationButtons, resetLearningSteps, switchStep, isStepCompleted, nextStep, goToPrevWord, goToNextWord, backToWordList, generatePracticeQuestion, checkPracticeAnswer, addLetter, removeLetter, checkSpelling, checkWriting, clearWriteInput, generateErrorWordChain, updateErrorWordLearningContent, updateErrorWordNavigationButtons, renderErrorWordList, startErrorWordLearning, openWordLinkPage, openErrorWordLinkPage, updateStatsPage, getPhoneticColor, initCheckinHistoryPage, changeMonth, initPointsHistoryPage, markAsLearned, initWordListPage } from './modules/word.js';
 
 // 导入工具模块
 import { initEventListeners, startLearning, startDetailedLearning, openArticleListPage, openModelEssayListPage, backToHome, generateUnitTabs, resetRecordingState, toggleRecording, startRecording, analyzeRecording, calculateScore, calculateSimilarity, playbackRecording, openErrorBookPage, openStatsPage, openPetHomePage, openCheckinHistoryPage, openPointsHistoryPage, openGamePage } from './modules/utils.js';
@@ -246,6 +246,7 @@ window.initCheckinHistoryPage = initCheckinHistoryPage;
 window.changeMonth = changeMonth;
 window.initPointsHistoryPage = initPointsHistoryPage;
 window.markAsLearned = markAsLearned;
+window.initWordListPage = initWordListPage;
 window.restartGame = restartGame;
 window.backToErrorBook = backToErrorBook;
 
