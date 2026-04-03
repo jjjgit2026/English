@@ -5,19 +5,19 @@ on:
 jobs:
   build:
     runs-on: ubuntu-latest
+    permissions:
+      contents: write  # 授予写入权限
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
         with:
-          node-version: '14'  # 使用更稳定的 Node.js 版本
+          node-version: '14'
           cache: 'npm'
       - run: npm install
-        continue-on-error: false
       - run: npm run build
-        continue-on-error: false
       - name: Deploy to GitHub Pages
-        uses: peaceiris/actions-gh-pages@v3  # 使用更稳定的版本
+        uses: peaceiris/actions-gh-pages@v4  # 使用最新版本
         with:
           github_token: ${{ secrets.GITHUB_TOKEN }}
-          publish_dir: ./  # 直接部署根目录
+          publish_dir: ./src  # 部署 src 目录
           force_orphan: true
