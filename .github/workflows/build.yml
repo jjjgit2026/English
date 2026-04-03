@@ -6,7 +6,7 @@ jobs:
   build:
     runs-on: ubuntu-latest
     permissions:
-      contents: write  # 授予写入权限
+      contents: write
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
@@ -14,10 +14,10 @@ jobs:
           node-version: '14'
           cache: 'npm'
       - run: npm install
-      - run: npm run build
+      - run: npm run build  # 生成 dist 文件夹
       - name: Deploy to GitHub Pages
-        uses: peaceiris/actions-gh-pages@v4  # 使用最新版本
+        uses: peaceiris/actions-gh-pages@v4
         with:
           github_token: ${{ secrets.GITHUB_TOKEN }}
-          publish_dir: ./src  # 部署 src 目录
+          publish_dir: ./  # 部署根目录，包含 src 和 dist
           force_orphan: true
