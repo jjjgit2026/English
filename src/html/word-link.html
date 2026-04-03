@@ -185,20 +185,90 @@
                     </div>
                     
                     <script>
-                        // 检查单词是否在错词列表中，如果是则禁用"学会了"按钮
-                        function checkErrorWordStatus() {
-                            const currentWord = window.isErrorBookMode ? window.errorWords[window.currentWordIndex] : window.words[window.currentWordIndex];
-                            if (currentWord && currentWord.word) {
-                                const userData = window.DataManager.getUserData(window.currentUser);
-                                const isErrorWord = userData.errorWords && userData.errorWords.some(word => word.word === currentWord.word);
-                                const learnedBtn = document.getElementById('learnedBtn');
-                                if (learnedBtn) {
-                                    learnedBtn.disabled = isErrorWord;
-                                    if (isErrorWord) {
-                                        learnedBtn.title = '该单词有错误记录，不能标记为学会了';
-                                    } else {
-                                        learnedBtn.title = '';
-                                    }
+                        // 跟踪是否有过错误提交，使用本地存储保存状态
+                        function getHasAnyError() {
+                            if (window.isErrorBookMode) {
+                                if (!window.errorWords || window.currentWordIndex === undefined || !window.errorWords[window.currentWordIndex]) {
+                                    return false;
+                                }
+                                const currentWord = window.errorWords[window.currentWordIndex];
+                                if (!currentWord || !currentWord.word) return false;
+                                const key = `hasAnyError_${currentWord.word.toLowerCase()}`;
+                                return localStorage.getItem(key) === 'true';
+                            } else {
+                                if (!window.words || window.currentWordIndex === undefined || !window.words[window.currentWordIndex]) {
+                                    return false;
+                                }
+                                const currentWord = window.words[window.currentWordIndex];
+                                if (!currentWord || !currentWord.word) return false;
+                                const key = `hasAnyError_${currentWord.word.toLowerCase()}`;
+                                return localStorage.getItem(key) === 'true';
+                            }
+                        }
+                        
+                        function setHasAnyError(value) {
+                            if (window.isErrorBookMode) {
+                                if (!window.errorWords || window.currentWordIndex === undefined || !window.errorWords[window.currentWordIndex]) {
+                                    return;
+                                }
+                                const currentWord = window.errorWords[window.currentWordIndex];
+                                if (!currentWord || !currentWord.word) return;
+                                const key = `hasAnyError_${currentWord.word.toLowerCase()}`;
+                                localStorage.setItem(key, value.toString());
+                            } else {
+                                if (!window.words || window.currentWordIndex === undefined || !window.words[window.currentWordIndex]) {
+                                    return;
+                                }
+                                const currentWord = window.words[window.currentWordIndex];
+                                if (!currentWord || !currentWord.word) return;
+                                const key = `hasAnyError_${currentWord.word.toLowerCase()}`;
+                                localStorage.setItem(key, value.toString());
+                            }
+                        }
+                        
+                        // 初始化错误标记
+                        setHasAnyError(false);
+                        
+                        // 检查当前学习步骤中是否存在错误的步骤，如果有则禁用"学会了"按钮
+                        function checkErrorStepStatus() {
+                            const learnedBtn = document.getElementById('learnedBtn');
+                            if (learnedBtn) {
+                                // 检查练习步骤是否有错误
+                                const practiceOptions = document.querySelectorAll('.practice-option');
+                                const hasPracticeError = practiceOptions.length > 0 && !Array.from(practiceOptions).find(option => option.classList.contains('correct'));
+                                
+                                // 检查拼写步骤是否有错误
+                                const spellResult = document.getElementById('spellResult');
+                                const hasSpellError = spellResult && spellResult.classList.contains('incorrect');
+                                
+                                // 检查书写步骤是否有错误
+                                const writeResult = document.getElementById('writeResult');
+                                const hasWriteError = writeResult && writeResult.classList.contains('incorrect');
+                                
+                                // 检查读步骤是否有错误（得分低于60分）
+                                const scoreValue = document.getElementById('scoreValue');
+                                const hasReadError = scoreValue && scoreValue.textContent !== '-' && parseInt(scoreValue.textContent) < 60;
+                                
+                                // 如果有任何步骤有错误，设置错误标记
+                                if (hasPracticeError || hasSpellError || hasWriteError || hasReadError) {
+                                    setHasAnyError(true);
+                                }
+                                
+                                // 如果有过任何错误，禁用"学会了"按钮
+                                const hasError = getHasAnyError();
+                                learnedBtn.disabled = hasError;
+                                if (hasError) {
+                                    learnedBtn.title = '当前学习步骤有错误，不能标记为学会了';
+                                    // 确保按钮样式显示为禁用状态
+                                    learnedBtn.style.opacity = '0.6';
+                                    learnedBtn.style.cursor = 'not-allowed';
+                                    learnedBtn.style.pointerEvents = 'none';
+                                } else {
+                                    learnedBtn.title = '';
+                                    // 确保按钮样式显示为启用状态
+                                    learnedBtn.style.opacity = '1';
+                                    learnedBtn.style.cursor = 'pointer';
+                                    learnedBtn.style.pointerEvents = 'auto';
                                 }
                             }
                         }
@@ -211,10 +281,10 @@
                                 // 验证书写步骤
                                 const input = document.getElementById('writeInput');
                                 if (input && input.value.trim() !== currentWord.word) {
-                                    // 添加到错词本
-                                    window.DataManager.addErrorWord(window.currentUser, currentWord);
+                                    // 设置错误标记
+                                    setHasAnyError(true);
                                     // 检查错误状态，禁用"学会了"按钮
-                                    checkErrorWordStatus();
+                                    checkErrorStepStatus();
                                     alert('书写内容不正确，请重试！');
                                     return false;
                                 }
@@ -226,10 +296,10 @@
                                     userInput += box.textContent;
                                 });
                                 if (userInput !== currentWord.word) {
-                                    // 添加到错词本
-                                    window.DataManager.addErrorWord(window.currentUser, currentWord);
+                                    // 设置错误标记
+                                    setHasAnyError(true);
                                     // 检查错误状态，禁用"学会了"按钮
-                                    checkErrorWordStatus();
+                                    checkErrorStepStatus();
                                     alert('拼写内容不正确，请重试！');
                                     return false;
                                 }
@@ -238,10 +308,34 @@
                                 const practiceOptions = document.querySelectorAll('.practice-option');
                                 const correctOption = Array.from(practiceOptions).find(option => option.classList.contains('correct'));
                                 if (!correctOption) {
+                                    // 设置错误标记
+                                    setHasAnyError(true);
+                                    // 检查错误状态，禁用"学会了"按钮
+                                    checkErrorStepStatus();
                                     alert('请完成练习步骤！');
                                     return false;
                                 }
+                            } else if (window.currentStep === 'read') {
+                                // 验证读步骤
+                                const scoreValue = document.getElementById('scoreValue');
+                                if (scoreValue && scoreValue.textContent === '-') {
+                                    // 设置错误标记
+                                    setHasAnyError(true);
+                                    // 检查错误状态，禁用"学会了"按钮
+                                    checkErrorStepStatus();
+                                    alert('请完成录音步骤！');
+                                    return false;
+                                } else if (scoreValue && parseInt(scoreValue.textContent) < 60) {
+                                    // 设置错误标记
+                                    setHasAnyError(true);
+                                    // 检查错误状态，禁用"学会了"按钮
+                                    checkErrorStepStatus();
+                                    alert('发音得分过低，请重试！');
+                                    return false;
+                                }
                             }
+                            // 验证通过，检查错误状态
+                            checkErrorStepStatus();
                             return true;
                         }
                         
@@ -254,18 +348,19 @@
                         
                         // 验证并进入下一步
                         function validateAndNextStep() {
-                            if (validateCurrentStep()) {
-                                window.nextStep();
-                            }
+                            // 清除错误标记
+                            setHasAnyError(false);
+                            // 即使当前步骤出错，也调用nextStep函数，将单词添加到已学列表中
+                            window.nextStep();
                         }
                         
                         // 页面加载时检查
                         window.onload = function() {
-                            checkErrorWordStatus();
+                            checkErrorStepStatus();
                         };
                         
                         // 当步骤完成时检查
-                        window.checkErrorWordStatus = checkErrorWordStatus;
+                        window.checkErrorWordStatus = checkErrorStepStatus;
                     </script>
                 </div>
             </div>

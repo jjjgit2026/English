@@ -174,7 +174,6 @@ export default class DataManager {
                     alert('用户数据解析失败，正在重置数据...');
                     userData = {
                         version: DataManager.DATA_VERSION,
-                        errorWords: [],
                         today: {
                             date: DataManager.getLocalDateString(),
                             learning: 0,
@@ -474,10 +473,7 @@ export default class DataManager {
                     }
                 }
                 
-                // 确保 errorWords 数组存在
-                if (!userData.errorWords || !Array.isArray(userData.errorWords)) {
-                    userData.errorWords = [];
-                }
+    
                 
                 // 确保 wordLearningRecords 对象存在
                 if (!userData.wordLearningRecords || typeof userData.wordLearningRecords !== 'object') {
@@ -552,7 +548,6 @@ export default class DataManager {
                 // 返回默认数据结构
                 const defaultData = {
                     version: DataManager.DATA_VERSION,
-                    errorWords: [],
                     today: {
                         date: DataManager.getLocalDateString(),
                         learning: 0,
@@ -613,7 +608,6 @@ export default class DataManager {
             console.error('[DataManager] getUserData - 获取用户数据失败:', error);
             const errorData = {
                 version: DataManager.DATA_VERSION,
-                errorWords: [],
                 today: {
                     date: DataManager.getLocalDateString(),
                     learning: 0,
@@ -673,7 +667,6 @@ export default class DataManager {
             // 确保数据结构完整
             const safeData = {
                 version: DataManager.DATA_VERSION,
-                errorWords: Array.isArray(data.errorWords) ? data.errorWords : [],
                 wordLearningRecords: typeof data.wordLearningRecords === 'object' && data.wordLearningRecords !== null ? data.wordLearningRecords : {},
                 masteredWords: typeof data.masteredWords === 'object' && data.masteredWords !== null ? data.masteredWords : {},
                 dailyTasks: typeof data.dailyTasks === 'object' && data.dailyTasks !== null ? data.dailyTasks : {},
@@ -817,46 +810,7 @@ export default class DataManager {
         }
     }
 
-    static getErrorWords(user) {
-        try {
-            const userData = this.getUserData(user);
-            return userData.errorWords || [];
-        } catch (error) {
-            console.error('获取错词本失败:', error);
-            return [];
-        }
-    }
 
-    static addErrorWord(user, word) {
-        try {
-            // 使用 getUserData 获取数据，确保数据结构完整和版本一致
-            const userData = this.getUserData(user);
-            const errorWords = userData.errorWords || [];
-            
-            // 检查单词是否已存在
-            const exists = errorWords.some(w => w.word === word.word);
-            if (!exists) {
-                errorWords.push(word);
-                userData.errorWords = errorWords;
-                userData.today.error = (userData.today.error || 0) + 1;
-                userData.total.error = (userData.total.error || 0) + 1;
-                this.saveUserData(user, userData);
-            }
-        } catch (error) {
-            console.error('添加错词失败:', error);
-        }
-    }
-
-    static removeErrorWord(user, word) {
-        try {
-            const userData = this.getUserData(user);
-            const errorWords = userData.errorWords || [];
-            userData.errorWords = errorWords.filter(w => w.word !== word.word);
-            this.saveUserData(user, userData);
-        } catch (error) {
-            console.error('移除错词失败:', error);
-        }
-    }
 
     static initBookData(user, bookFile, totalWords) {
         console.log('[DataManager] initBookData 开始');
@@ -1422,6 +1376,66 @@ export default class DataManager {
         }
     }
     
+    // 记录步骤错误
+    static recordStepError(user, word, step) {
+        try {
+            const userData = this.getUserData(user);
+            const wordId = word.toLowerCase();
+            let record = userData.wordLearningRecords[wordId];
+            
+            // 如果单词记录不存在，创建一个新记录
+            if (!record) {
+                record = {
+                    word: word,
+                    meaning: '',
+                    lastLearnedAt: null,
+                    reviewCount: 0,
+                    nextReviewAt: null,
+                    difficulty: 1,
+                    reviewHistory: [],
+                    steps: {
+                        read: { errorCount: 0, mastery: 1.0 },
+                        practice: { errorCount: 0, mastery: 1.0 },
+                        spell: { errorCount: 0, mastery: 1.0 },
+                        write: { errorCount: 0, mastery: 1.0 }
+                    }
+                };
+                userData.wordLearningRecords[wordId] = record;
+            }
+            
+            // 确保 steps 对象存在
+            if (!record.steps) {
+                record.steps = {
+                    read: { errorCount: 0, mastery: 1.0 },
+                    practice: { errorCount: 0, mastery: 1.0 },
+                    spell: { errorCount: 0, mastery: 1.0 },
+                    write: { errorCount: 0, mastery: 1.0 }
+                };
+            }
+            
+            // 确保步骤对象存在
+            if (!record.steps[step]) {
+                record.steps[step] = { errorCount: 0, mastery: 1.0 };
+            }
+            
+            // 增加错误次数
+            record.steps[step].errorCount = (record.steps[step].errorCount || 0) + 1;
+            
+            // 更新掌握程度
+            // 掌握程度 = 1 - (错误次数 / (错误次数 + 正确次数)) * 0.8
+            // 简化计算，假设每次错误都会降低掌握程度
+            record.steps[step].mastery = Math.max(0, parseFloat((record.steps[step].mastery - 0.1).toFixed(2)));
+            
+            // 保存数据
+            this.saveUserData(user, userData);
+            console.log(`[DataManager] 记录步骤错误成功: ${word} - ${step}`);
+            return true;
+        } catch (error) {
+            console.error('记录步骤错误失败:', error);
+            return false;
+        }
+    }
+    
     // 保存单词学习记录
     static saveWordLearningRecord(user, word, meaning, isLearned = true) {
         try {
@@ -1451,14 +1465,48 @@ export default class DataManager {
                 reviewCount: 0,
                 nextReviewAt: null,
                 difficulty: 1,
-                reviewHistory: []
+                reviewHistory: [],
+                steps: {
+                    read: { // 读
+                        errorCount: 0,
+                        mastery: 1.0 // 0-1之间的数值，表示掌握程度
+                    },
+                    practice: { // 练
+                        errorCount: 0,
+                        mastery: 1.0
+                    },
+                    spell: { // 拼
+                        errorCount: 0,
+                        mastery: 1.0
+                    },
+                    write: { // 写
+                        errorCount: 0,
+                        mastery: 1.0
+                    }
+                }
             };
+            
+            // 确保 steps 对象存在
+            if (!record.steps) {
+                record.steps = {
+                    read: { errorCount: 0, mastery: 1.0 },
+                    practice: { errorCount: 0, mastery: 1.0 },
+                    spell: { errorCount: 0, mastery: 1.0 },
+                    write: { errorCount: 0, mastery: 1.0 }
+                };
+            }
             console.log('[DataManager] 现有记录:', userData.wordLearningRecords[wordId]);
             console.log('[DataManager] 新记录:', record);
             
             // 获取今天的日期
             const today = this.getLocalDateString();
             console.log('[DataManager] 今天的日期:', today);
+            
+            // 确保 reviewHistory 存在
+            if (!record.reviewHistory) {
+                record.reviewHistory = [];
+                console.log('[DataManager] 创建 reviewHistory 数组');
+            }
             
             // 检查今天是否已经复习过该单词
             const hasReviewedToday = record.reviewHistory.some(item => {
@@ -1559,7 +1607,7 @@ export default class DataManager {
     }
     
     // 生成每日复习计划
-    static generateDailyReviewPlan(user, allWords) {
+    static generateDailyReviewPlan(user, allWords, gameType = 'all') {
         try {
             const userData = this.getUserData(user);
             const today = this.getLocalDateString();
@@ -1573,23 +1621,42 @@ export default class DataManager {
                 if (record && record.nextReviewAt) {
                     // 直接比较日期字符串
                     if (record.nextReviewAt <= today) {
-                        reviewWords.push(word);
-                    }
-                }
-            }
-            
-            // 添加错词本中的单词
-            if (userData.errorWords && userData.errorWords.length > 0) {
-                for (const errorWord of userData.errorWords) {
-                    if (!reviewWords.some(word => word.word.toLowerCase() === errorWord.word.toLowerCase())) {
-                        reviewWords.push(errorWord);
+                        // 根据游戏类型和步骤掌握程度筛选单词
+                        let shouldInclude = false;
+                        switch (gameType) {
+                            case 'match': // 消消乐 - 对应释义错误
+                                shouldInclude = record.steps && record.steps.practice && record.steps.practice.mastery < 1;
+                                break;
+                            case 'memory': // 记忆卡片 - 对应释义错误
+                                shouldInclude = record.steps && record.steps.practice && record.steps.practice.mastery < 1;
+                                break;
+                            case 'spelling': // 拼写挑战 - 对应拼写错误
+                                shouldInclude = record.steps && (record.steps.spell && record.steps.spell.mastery < 1 || record.steps.write && record.steps.write.mastery < 1);
+                                break;
+                            case 'audio': // 听音辨词 - 对应发音错误
+                                shouldInclude = record.steps && record.steps.read && record.steps.read.mastery < 1;
+                                break;
+                            default: // 所有游戏
+                                shouldInclude = true;
+                        }
+                        
+                        if (shouldInclude) {
+                            reviewWords.push(word);
+                        }
                     }
                 }
             }
             
             // 限制复习单词数量
             const maxReviewWords = 10;
-            return reviewWords.slice(0, maxReviewWords);
+            if (reviewWords.length > maxReviewWords) {
+                // 随机选择10个单词
+                const shuffled = reviewWords.sort(() => 0.5 - Math.random());
+                return shuffled.slice(0, maxReviewWords);
+            } else {
+                // 单词数量不足10个，返回所有单词
+                return reviewWords;
+            }
         } catch (error) {
             console.error('生成复习计划失败:', error);
             return [];
@@ -1687,11 +1754,6 @@ export default class DataManager {
     
     // 检查是否有单词需要复习
     static hasWordsToReview(userData) {
-        // 检查错词本是否有单词
-        if (userData.errorWords && userData.errorWords.length > 0) {
-            return true;
-        }
-        
         // 检查是否有学习记录
         if (userData.wordLearningRecords && Object.keys(userData.wordLearningRecords).length > 0) {
             const today = this.getLocalDateString();

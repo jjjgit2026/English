@@ -111,10 +111,10 @@
 
         <!-- 功能卡片和统计信息 -->
         <div class="feature-cards">
-            <div class="feature-card error-book" onclick="withUserCheck(openErrorBookPage)()">
-                <div class="feature-title">错词本</div>
-                <div class="feature-subtitle">Error Notebook</div>
-                <div class="feature-icon">📓</div>
+            <div class="feature-card error-book" onclick="withUserCheck(function() { window.location.href='games-center.html'; })()">
+                <div class="feature-title">游戏中心</div>
+                <div class="feature-subtitle">Games Center</div>
+                <div class="feature-icon">🎮</div>
             </div>
             <div class="feature-card" style="background: linear-gradient(135deg, #a8edea 0%, #fed6e3 100%);" onclick="withUserCheck(openPetHomePage)()">
                 <div class="feature-title">宠物窝</div>
@@ -139,8 +139,7 @@
             <div class="tips-text">如何获取积分</div>
         </div>
         
-        <!-- 消消乐悬浮入口 -->
-        <div class="game-floating-entry" onclick="withUserCheck(openGamePage)()">消消乐</div>
+
         
 
     </div>

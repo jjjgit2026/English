@@ -285,6 +285,24 @@ export function initApp() {
             case 'game.html':
                 initGamePage();
                 break;
+            case 'audio-game.html':
+                // 初始化听音辨词游戏
+                if (typeof initAudioGame === 'function') {
+                    initAudioGame();
+                }
+                break;
+            case 'spelling-game.html':
+                // 初始化拼写挑战游戏
+                if (typeof initSpellingGame === 'function') {
+                    initSpellingGame();
+                }
+                break;
+            case 'memory-game.html':
+                // 初始化记忆卡片游戏
+                if (typeof initMemoryGame === 'function') {
+                    initMemoryGame();
+                }
+                break;
             case 'checkin-history.html':
                 initCheckinHistoryPage();
                 break;

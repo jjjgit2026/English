@@ -34,6 +34,46 @@ export function initGame() {
     // 设置总数为所有复习单词的数量
     document.getElementById('gameTotalCount').textContent = allErrorWords.length;
     
+    // 检查是否有单词
+    if (allErrorWords.length === 0) {
+        alert('当前没有待复习的单词');
+        // 定义 goBack 函数
+        function goBack() {
+            try {
+                // 获取上一页的URL
+                const referrer = document.referrer;
+                console.log('Referrer:', referrer);
+                
+                // 检查是否来自游戏中心页面
+                if (referrer && referrer.includes('games-center.html')) {
+                    console.log('返回游戏中心页面');
+                    window.location.href = 'games-center.html';
+                } 
+                // 检查是否来自首页
+                else if (referrer && referrer.includes('index.html')) {
+                    console.log('返回首页');
+                    window.location.href = 'index.html';
+                } 
+                // 否则返回上一页
+                else if (window.history.length > 1) {
+                    console.log('返回上一页');
+                    window.history.back();
+                } 
+                // 如果没有上一页，返回首页
+                else {
+                    console.log('返回首页');
+                    window.location.href = 'index.html';
+                }
+            } catch (error) {
+                console.error('返回操作失败:', error);
+                // 出错时返回首页
+                window.location.href = 'index.html';
+            }
+        }
+        goBack();
+        return;
+    }
+    
     // 加载第一组单词
     loadNextGameGroup();
     

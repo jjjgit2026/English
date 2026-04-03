@@ -20,6 +20,7 @@ import { initEventListeners, startLearning, startDetailedLearning, openArticleLi
 
 // 导入游戏模块
 import { initGame, loadNextGameGroup, generateGameContent, selectGameItem, updateGameTimer, endGame, restartGame, backToErrorBook, switchGameMode } from './modules/game.js';
+import { initAudioGame, restartAudioGame, initSpellingGame, restartSpellingGame, initMemoryGame, restartMemoryGame } from './modules/games.js';
 
 // 全局定义withUserCheck函数，确保页面加载时立即可用
 function withUserCheck(callback) {
@@ -280,6 +281,48 @@ window.endGame = endGame;
 window.restartGame = restartGame;
 window.backToErrorBook = backToErrorBook;
 window.switchGameMode = switchGameMode;
+
+// 新游戏函数
+window.initAudioGame = initAudioGame;
+window.restartAudioGame = restartAudioGame;
+window.initSpellingGame = initSpellingGame;
+window.restartSpellingGame = restartSpellingGame;
+window.initMemoryGame = initMemoryGame;
+window.restartMemoryGame = restartMemoryGame;
+
+// 智能返回函数
+window.goBack = function() {
+    try {
+        // 获取上一页的URL
+        const referrer = document.referrer;
+        console.log('Referrer:', referrer);
+        
+        // 检查是否来自游戏中心页面
+        if (referrer && referrer.includes('games-center.html')) {
+            console.log('返回游戏中心页面');
+            window.location.href = 'games-center.html';
+        } 
+        // 检查是否来自首页
+        else if (referrer && referrer.includes('index.html')) {
+            console.log('返回首页');
+            window.location.href = 'index.html';
+        } 
+        // 否则返回上一页
+        else if (window.history.length > 1) {
+            console.log('返回上一页');
+            window.history.back();
+        } 
+        // 如果没有上一页，返回首页
+        else {
+            console.log('返回首页');
+            window.location.href = 'index.html';
+        }
+    } catch (error) {
+        console.error('返回操作失败:', error);
+        // 出错时返回首页
+        window.location.href = 'index.html';
+    }
+};
 
 // 初始化应用
 initApp();

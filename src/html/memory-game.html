@@ -3,72 +3,66 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>单词消消乐 - 单词学习工具</title>
+    <title>记忆卡片 - 单词学习工具</title>
     <link rel="stylesheet" href="../style.css">
 </head>
 <body>
-    <!-- 消消乐页面 -->
-    <div class="game-page active" id="gamePage">
+    <!-- 记忆卡片页面 -->
+    <div class="game-page active" id="memoryGamePage">
         <div class="list-header">
             <div class="list-header-bar">
                 <button class="back-btn" onclick="goBack()">‹</button>
-                <div class="list-title">单词消消乐</div>
+                <div class="list-title">记忆卡片</div>
                 <div style="width: 36px;"></div>
             </div>
         </div>
         
-        <!-- 模式切换 -->
-        <div class="game-mode">
-            <button class="mode-btn active" id="modeEnglish" onclick="switchGameMode('english')">英文选义</button>
-            <button class="mode-btn" id="modeAudio" onclick="switchGameMode('audio')">听音选义</button>
+        <!-- 游戏说明 -->
+        <div class="game-description">
+            <p>翻转卡片，找到单词和对应释义的配对</p>
         </div>
         
         <!-- 进度条 -->
         <div class="game-progress">
             <div class="progress-info">
-                <span id="gameCorrectCount">0</span>/<span id="gameTotalCount">0</span>
+                <span id="memoryCorrectCount">0</span>/<span id="memoryTotalCount">0</span>
             </div>
             <div class="progress-bar">
-                <div class="progress-fill" id="gameProgressFill"></div>
+                <div class="progress-fill" id="memoryProgressFill"></div>
             </div>
         </div>
         
         <!-- 游戏区域 -->
-        <div class="game-area">
-            <div class="game-column" id="wordColumn">
-                <!-- 单词将动态生成 -->
-            </div>
-            <div class="game-column" id="meaningColumn">
-                <!-- 释义将动态生成 -->
+        <div class="memory-game-area">
+            <div class="memory-card-grid" id="memoryCardGrid">
+                <!-- 卡片将动态生成 -->
             </div>
         </div>
         
         <!-- 时间显示 -->
         <div class="game-timer">
-            用时: <span id="gameTimer">00:00</span>
+            用时: <span id="memoryTimer">00:00</span>
         </div>
         
         <!-- 游戏结果界面 -->
-        <div class="game-result hidden" id="gameResult">
+        <div class="game-result hidden" id="memoryGameResult">
             <div class="result-content">
                 <h2>游戏结束</h2>
                 <div class="result-item">
                     <span class="result-label">用时:</span>
-                    <span id="gameTime">00:00</span>
+                    <span id="memoryGameTime">00:00</span>
                 </div>
                 <div class="result-item">
                     <span class="result-label">得分:</span>
-                    <span id="gameScore">0</span>
+                    <span id="memoryGameScore">0</span>
                 </div>
                 <div class="result-buttons">
-                    <button class="result-btn" onclick="restartGame()">再玩一次</button>
+                    <button class="result-btn" onclick="restartMemoryGame()">再玩一次</button>
                     <button class="result-btn" onclick="goBack()">返回上一页</button>
                 </div>
             </div>
         </div>
     </div>
-    
-
     
     <!-- Loading 元素 -->
     <div class="loading-overlay hidden" id="loadingOverlay">

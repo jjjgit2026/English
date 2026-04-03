@@ -1,0 +1,120 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>游戏中心 - 单词学习工具</title>
+    <link rel="stylesheet" href="../style.css">
+</head>
+<body>
+    <!-- 游戏中心页面 -->
+    <div class="games-center-page active" id="gamesCenterPage">
+        <div class="list-header">
+            <div class="list-header-bar">
+                <button class="back-btn" onclick="backToHome()">←</button>
+                <div class="list-title">游戏中心</div>
+                <div style="width: 36px;"></div>
+            </div>
+        </div>
+        
+        <!-- 游戏说明 -->
+        <div class="games-description">
+            <p>通过游戏方式巩固单词记忆</p>
+        </div>
+        
+        <!-- 游戏列表 -->
+        <div class="games-list">
+            <!-- 消消乐游戏 -->
+            <div class="game-card" onclick="checkGameWords('game.html')">
+                <div class="game-icon">🎮</div>
+                <div class="game-info">
+                    <div class="game-title">消消乐</div>
+                    <div class="game-desc">匹配单词和释义，完成配对</div>
+                    <div class="game-points">积分: 1-2分</div>
+                </div>
+                <div class="game-arrow">›</div>
+            </div>
+            
+            <!-- 听音辨词游戏 -->
+            <div class="game-card" onclick="checkGameWords('audio-game.html')">
+                <div class="game-icon">🔊</div>
+                <div class="game-info">
+                    <div class="game-title">听音辨词</div>
+                    <div class="game-desc">听单词发音，选择正确的单词</div>
+                    <div class="game-points">积分: 2分</div>
+                </div>
+                <div class="game-arrow">›</div>
+            </div>
+            
+            <!-- 拼写挑战游戏 -->
+            <div class="game-card" onclick="checkGameWords('spelling-game.html')">
+                <div class="game-icon">✏️</div>
+                <div class="game-info">
+                    <div class="game-title">拼写挑战</div>
+                    <div class="game-desc">根据释义，输入正确的单词拼写</div>
+                    <div class="game-points">积分: 1分</div>
+                </div>
+                <div class="game-arrow">›</div>
+            </div>
+            
+            <!-- 记忆卡片游戏 -->
+            <div class="game-card" onclick="checkGameWords('memory-game.html')">
+                <div class="game-icon">🃏</div>
+                <div class="game-info">
+                    <div class="game-title">记忆卡片</div>
+                    <div class="game-desc">翻转卡片，找到单词和释义的配对</div>
+                    <div class="game-points">积分: 1分</div>
+                </div>
+                <div class="game-arrow">›</div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Loading 元素 -->
+    <div class="loading-overlay hidden" id="loadingOverlay">
+        <div class="loading-spinner"></div>
+        <div class="loading-text">加载中，请稍候...</div>
+    </div>
+    
+    <!-- 引入PDF.js库 -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.4.120/pdf.min.js"></script>
+    <script>
+        // 备用 CDN 加载
+        if (typeof pdfjsLib === 'undefined') {
+            document.write('<script src="https://cdn.jsdelivr.net/npm/pdfjs-dist@3.4.120/build/pdf.min.js"><\/script>');
+        }
+    </script>
+    
+    <!-- 检查游戏单词函数 -->
+    <script>
+        function checkGameWords(gamePath) {
+            // 检查 DataManager 是否加载
+            if (typeof DataManager === 'undefined') {
+                alert('应用正在加载，请稍候...');
+                return;
+            }
+            
+            // 获取所有单词
+            const allWords = window.words || [];
+            
+            // 生成复习计划
+            const reviewWords = DataManager.generateDailyReviewPlan(window.currentUser, allWords);
+            
+            // 检查是否有单词
+            if (reviewWords.length === 0) {
+                alert('当前没有待复习的单词');
+                return;
+            }
+            
+            // 跳转到游戏页面
+            window.location.href = gamePath;
+        }
+    </script>
+    
+    <!-- 现代浏览器使用ES6模块 -->
+    <script type="module" src="../js/main.js"></script>
+    
+    <!-- 旧浏览器使用转译后的ES5代码 -->
+    <script nomodule src="../dist/js/main.js"></script>
+</body>
+</html>
