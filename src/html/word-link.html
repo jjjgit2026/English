@@ -1,0 +1,399 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>单词学习 - 单词学习工具</title>
+    <link rel="stylesheet" href="../style.css">
+</head>
+<body>
+    <!-- 单词链路页面 -->
+    <div class="word-link-page active" id="wordLinkPage">
+        <div class="link-header">
+            <button class="back-btn" onclick="backToWordList()">‹</button>
+            <div class="link-title" id="linkTitle">外研版Join In-三年级下册</div>
+            <div style="width: 36px;"></div>
+        </div>
+        
+        <!-- 单词链条 -->
+        <div class="word-chain" id="wordChain">
+            <!-- 单词链条将动态生成 -->
+        </div>
+        
+        <!-- 学习步骤 -->
+        <div class="learning-steps">
+            <div class="step-item active" data-step="learn" id="stepLearn">
+                <div class="step-icon">学</div>
+            </div>
+            <div class="step-item" data-step="read" id="stepRead">
+                <div class="step-icon">读</div>
+            </div>
+            <div class="step-item" data-step="practice" id="stepPractice">
+                <div class="step-icon">练</div>
+            </div>
+            <div class="step-item" data-step="spell" id="stepSpell">
+                <div class="step-icon">拼</div>
+            </div>
+            <div class="step-item" data-step="write" id="stepWrite">
+                <div class="step-icon">写</div>
+            </div>
+        </div>
+        
+        <!-- 学习内容区域 -->
+        <div class="learning-content">
+            <!-- 学 - 页面 -->
+            <div class="step-content active" id="contentLearn">
+                <div class="learn-section">
+                    <!-- 1. 彩色标注的单词 -->
+                    <div class="word-display">
+                        <div class="word-text-big" id="learnWord">
+                            <div class="word-letters" id="wordLetters">word</div>
+                        </div>
+                    </div>
+                    
+                    <!-- 2. 带颜色的音标 -->
+                    <div class="phonetic-container">
+                        <div class="phonetic-text" id="learnPhonetic">
+                            <span class="phonetic-wrapper" id="phoneticWrapper">[wɜːd]</span>
+                            <button class="audio-btn small" onclick="AudioManager.playPhoneticAudio()">🔊</button>
+                        </div>
+                    </div>
+                    
+                    <!-- 3. 单词释义 -->
+                    <div class="meaning-display" id="learnMeaning">单词</div>
+                    
+                    <!-- 4. 例句和翻译 -->
+                    <div class="example-display">
+                        <div class="example-sentence" id="learnExample">例句</div>
+                        <div class="example-translation" id="learnExampleTranslation">例句翻译</div>
+                        <button class="audio-btn small" onclick="AudioManager.playExampleAudio()">🔊</button>
+                    </div>
+
+                
+                    <!-- 操作按钮 -->
+                    <div class="action-buttons">
+                        <button class="next-btn" onclick="nextStep()">下一步</button>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- 读 - 页面 -->
+            <div class="step-content" id="contentRead">
+                <div class="read-section">
+                    <!-- 第一行：单词 -->
+                    <div class="word-display">
+                        <div class="word-text-big" id="readWord">word</div>
+                    </div>
+                    
+                    <!-- 第二行：音标和发音按钮 -->
+                    <div class="read-phonetic">
+                        <div class="phonetic-text" id="readPhonetic">/wɜːd/</div>
+                        <button class="audio-btn" onclick="AudioManager.playCurrentWordAudio()">🔊</button>
+                    </div>
+                    
+                    <!-- 第三行：录音按钮和打分结果 -->
+                    <div class="read-recording">
+                        <button class="record-btn" id="recordBtn" onclick="toggleRecording()">🎤 开始录音</button>
+                        <button class="record-btn" id="playbackBtn" onclick="playbackRecording()" disabled>🔊 回放录音</button>
+                        <div class="score-display" id="scoreDisplay">
+                            <span class="score-label">得分：</span>
+                            <span class="score-value" id="scoreValue">-</span>
+                        </div>
+                    </div>
+                    
+                    <div class="read-instructions">
+                        <p>请跟着音频朗读单词</p>
+                        <p class="recording-status" id="recordingStatus"></p>
+                    </div>
+                    
+                    <div class="action-buttons">
+                        <button class="next-btn" onclick="nextStep()">下一步</button>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- 练 - 页面 -->
+            <div class="step-content" id="contentPractice">
+                <div class="practice-section">
+                    <div class="practice-question" id="practiceQuestion">
+                        <!-- 练习问题将动态生成 -->
+                    </div>
+                    <div class="practice-options" id="practiceOptions">
+                        <!-- 练习选项将动态生成 -->
+                    </div>
+                    <div class="action-buttons">
+                        <button class="next-btn" onclick="nextStep()">下一步</button>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- 拼 - 页面 -->
+            <div class="step-content" id="contentSpell">
+                <div class="spell-section">
+                    <div class="spell-instructions">
+                        <p>请拼写以下单词</p>
+                    </div>
+                    
+                    <!-- 第一行：输入框 -->
+                    <div class="spell-inputs" id="spellInputs">
+                        <!-- 动态生成输入框 -->
+                    </div>
+                    
+                    <!-- 第二行：音标和发音按钮 -->
+                    <div class="spell-phonetic">
+                        <div class="phonetic-text" id="spellPhonetic">/wɜːd/</div>
+                        <button class="audio-btn" onclick="AudioManager.playCurrentWordAudio()">🔊</button>
+                    </div>
+                    
+                    <!-- 第三行：打乱的字母 -->
+                    <div class="spell-letters" id="spellLetters">
+                        <!-- 动态生成字母 -->
+                    </div>
+                    
+                    <div class="spell-result" id="spellResult"></div>
+                    <div class="action-buttons">
+                        <button class="next-btn" onclick="nextStep()">下一步</button>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- 写 - 页面 -->
+            <div class="step-content" id="contentWrite">
+                <div class="write-section">
+                    <!-- 第一行：输入区域 -->
+                    <div class="write-input-area">
+                        <input type="text" class="write-input-text" id="writeInput" placeholder="">
+                        <button class="write-clear-btn" id="writeClearBtn" onclick="clearWriteInput()">×</button>
+                    </div>
+                    
+                    <!-- 第二行：音标和发音按钮 -->
+                    <div class="write-phonetic">
+                        <div class="phonetic-text" id="writePhonetic">/wɜːd/</div>
+                        <button class="audio-btn" onclick="AudioManager.playCurrentWordAudio()">🔊</button>
+                    </div>
+                    
+                    <!-- 第三行：单词释义 -->
+                    <div class="write-meaning" id="writeMeaning">单词释义</div>
+                    
+                    <!-- 检查结果 -->
+                    <div class="write-result" id="writeResult"></div>
+                    
+                    <!-- 操作按钮 -->
+                    <div class="action-buttons">
+                        <button class="learned-btn" id="learnedBtn" onclick="validateAndMarkAsLearned()">学会了</button>
+                        <button class="review-btn" onclick="validateAndNextStep()">待复习</button>
+                    </div>
+                    
+                    <script>
+                        // 跟踪是否有过错误提交，使用本地存储保存状态
+                        function getHasAnyError() {
+                            if (window.isErrorBookMode) {
+                                if (!window.errorWords || window.currentWordIndex === undefined || !window.errorWords[window.currentWordIndex]) {
+                                    return false;
+                                }
+                                const currentWord = window.errorWords[window.currentWordIndex];
+                                if (!currentWord || !currentWord.word) return false;
+                                const key = `hasAnyError_${currentWord.word.toLowerCase()}`;
+                                return localStorage.getItem(key) === 'true';
+                            } else {
+                                if (!window.words || window.currentWordIndex === undefined || !window.words[window.currentWordIndex]) {
+                                    return false;
+                                }
+                                const currentWord = window.words[window.currentWordIndex];
+                                if (!currentWord || !currentWord.word) return false;
+                                const key = `hasAnyError_${currentWord.word.toLowerCase()}`;
+                                return localStorage.getItem(key) === 'true';
+                            }
+                        }
+                        
+                        function setHasAnyError(value) {
+                            if (window.isErrorBookMode) {
+                                if (!window.errorWords || window.currentWordIndex === undefined || !window.errorWords[window.currentWordIndex]) {
+                                    return;
+                                }
+                                const currentWord = window.errorWords[window.currentWordIndex];
+                                if (!currentWord || !currentWord.word) return;
+                                const key = `hasAnyError_${currentWord.word.toLowerCase()}`;
+                                localStorage.setItem(key, value.toString());
+                            } else {
+                                if (!window.words || window.currentWordIndex === undefined || !window.words[window.currentWordIndex]) {
+                                    return;
+                                }
+                                const currentWord = window.words[window.currentWordIndex];
+                                if (!currentWord || !currentWord.word) return;
+                                const key = `hasAnyError_${currentWord.word.toLowerCase()}`;
+                                localStorage.setItem(key, value.toString());
+                            }
+                        }
+                        
+                        // 初始化错误标记
+                        setHasAnyError(false);
+                        
+                        // 检查当前学习步骤中是否存在错误的步骤，如果有则禁用"学会了"按钮
+                        function checkErrorStepStatus() {
+                            const learnedBtn = document.getElementById('learnedBtn');
+                            if (learnedBtn) {
+                                // 检查练习步骤是否有错误
+                                const practiceOptions = document.querySelectorAll('.practice-option');
+                                const hasPracticeError = practiceOptions.length > 0 && !Array.from(practiceOptions).find(option => option.classList.contains('correct'));
+                                
+                                // 检查拼写步骤是否有错误
+                                const spellResult = document.getElementById('spellResult');
+                                const hasSpellError = spellResult && spellResult.classList.contains('incorrect');
+                                
+                                // 检查书写步骤是否有错误
+                                const writeResult = document.getElementById('writeResult');
+                                const hasWriteError = writeResult && writeResult.classList.contains('incorrect');
+                                
+                                // 检查读步骤是否有错误（得分低于60分）
+                                const scoreValue = document.getElementById('scoreValue');
+                                const hasReadError = scoreValue && scoreValue.textContent !== '-' && parseInt(scoreValue.textContent) < 60;
+                                
+                                // 如果有任何步骤有错误，设置错误标记
+                                if (hasPracticeError || hasSpellError || hasWriteError || hasReadError) {
+                                    setHasAnyError(true);
+                                }
+                                
+                                // 如果有过任何错误，禁用"学会了"按钮
+                                const hasError = getHasAnyError();
+                                learnedBtn.disabled = hasError;
+                                if (hasError) {
+                                    learnedBtn.title = '当前学习步骤有错误，不能标记为学会了';
+                                    // 确保按钮样式显示为禁用状态
+                                    learnedBtn.style.opacity = '0.6';
+                                    learnedBtn.style.cursor = 'not-allowed';
+                                    learnedBtn.style.pointerEvents = 'none';
+                                } else {
+                                    learnedBtn.title = '';
+                                    // 确保按钮样式显示为启用状态
+                                    learnedBtn.style.opacity = '1';
+                                    learnedBtn.style.cursor = 'pointer';
+                                    learnedBtn.style.pointerEvents = 'auto';
+                                }
+                            }
+                        }
+                        
+                        // 验证当前步骤的输入内容
+                        function validateCurrentStep() {
+                            const currentWord = window.isErrorBookMode ? window.errorWords[window.currentWordIndex] : window.words[window.currentWordIndex];
+                            
+                            if (window.currentStep === 'write') {
+                                // 验证书写步骤
+                                const input = document.getElementById('writeInput');
+                                if (input && input.value.trim() !== currentWord.word) {
+                                    // 设置错误标记
+                                    setHasAnyError(true);
+                                    // 检查错误状态，禁用"学会了"按钮
+                                    checkErrorStepStatus();
+                                    alert('书写内容不正确，请重试！');
+                                    return false;
+                                }
+                            } else if (window.currentStep === 'spell') {
+                                // 验证拼写步骤
+                                const inputBoxes = document.querySelectorAll('.spell-input-box');
+                                let userInput = '';
+                                inputBoxes.forEach(box => {
+                                    userInput += box.textContent;
+                                });
+                                if (userInput !== currentWord.word) {
+                                    // 设置错误标记
+                                    setHasAnyError(true);
+                                    // 检查错误状态，禁用"学会了"按钮
+                                    checkErrorStepStatus();
+                                    alert('拼写内容不正确，请重试！');
+                                    return false;
+                                }
+                            } else if (window.currentStep === 'practice') {
+                                // 验证练习步骤
+                                const practiceOptions = document.querySelectorAll('.practice-option');
+                                const correctOption = Array.from(practiceOptions).find(option => option.classList.contains('correct'));
+                                if (!correctOption) {
+                                    // 设置错误标记
+                                    setHasAnyError(true);
+                                    // 检查错误状态，禁用"学会了"按钮
+                                    checkErrorStepStatus();
+                                    alert('请完成练习步骤！');
+                                    return false;
+                                }
+                            } else if (window.currentStep === 'read') {
+                                // 验证读步骤
+                                const scoreValue = document.getElementById('scoreValue');
+                                if (scoreValue && scoreValue.textContent === '-') {
+                                    // 设置错误标记
+                                    setHasAnyError(true);
+                                    // 检查错误状态，禁用"学会了"按钮
+                                    checkErrorStepStatus();
+                                    alert('请完成录音步骤！');
+                                    return false;
+                                } else if (scoreValue && parseInt(scoreValue.textContent) < 60) {
+                                    // 设置错误标记
+                                    setHasAnyError(true);
+                                    // 检查错误状态，禁用"学会了"按钮
+                                    checkErrorStepStatus();
+                                    alert('发音得分过低，请重试！');
+                                    return false;
+                                }
+                            }
+                            // 验证通过，检查错误状态
+                            checkErrorStepStatus();
+                            return true;
+                        }
+                        
+                        // 验证并标记为学会了
+                        function validateAndMarkAsLearned() {
+                            if (validateCurrentStep()) {
+                                window.markAsLearned();
+                            }
+                        }
+                        
+                        // 验证并进入下一步
+                        function validateAndNextStep() {
+                            // 清除错误标记
+                            setHasAnyError(false);
+                            // 即使当前步骤出错，也调用nextStep函数，将单词添加到已学列表中
+                            window.nextStep();
+                        }
+                        
+                        // 页面加载时检查
+                        window.onload = function() {
+                            checkErrorStepStatus();
+                        };
+                        
+                        // 当步骤完成时检查
+                        window.checkErrorWordStatus = checkErrorStepStatus;
+                    </script>
+                </div>
+            </div>
+        </div>
+        
+        <!-- 单词导航按钮 -->
+        <div class="word-navigation">
+            <button class="nav-btn prev-btn" id="prevWordBtn" onclick="goToPrevWord()">上一词</button>
+            <button class="nav-btn next-btn" id="nextWordBtn" onclick="goToNextWord()">下一词</button>
+        </div>
+    </div>
+    
+
+    
+    <!-- Loading 元素 -->
+    <div class="loading-overlay hidden" id="loadingOverlay">
+        <div class="loading-spinner"></div>
+        <div class="loading-text">加载中，请稍候...</div>
+    </div>
+    
+    <!-- 引入PDF.js库 -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.4.120/pdf.min.js"></script>
+    <script>
+        // 备用 CDN 加载
+        if (typeof pdfjsLib === 'undefined') {
+            document.write('<script src="https://cdn.jsdelivr.net/npm/pdfjs-dist@3.4.120/build/pdf.min.js"><\/script>');
+        }
+    </script>
+    
+    <!-- 现代浏览器使用ES6模块 -->
+    <script type="module" src="../js/main.js"></script>
+    
+    <!-- 旧浏览器使用转译后的ES5代码 -->
+    <script nomodule src="../dist/js/main.js"></script>
+</body>
+</html>

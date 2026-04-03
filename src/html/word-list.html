@@ -1,0 +1,81 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>单词列表 - 单词学习工具</title>
+    <link rel="stylesheet" href="../style.css">
+</head>
+<body>
+    <!-- 单词列表页 -->
+    <div class="word-list-page active" id="wordListPage">
+        <div class="list-header">
+            <div class="list-header-bar">
+                <button class="back-btn" onclick="backToHome()">‹</button>
+                <div class="list-title" id="listTitle">外研版Join In-三年级下册</div>
+                <div style="width: 16px;"></div>
+            </div>
+            
+        </div>
+        
+        <!-- 筛选和遮罩模式 -->
+        <div class="filter-container">
+            <div class="filter-dropdown">
+                <select id="statusFilter" class="filter-select">
+                    <option value="all">全部</option>
+                    <option value="unlearned">未学</option>
+                    <option value="learned">已学</option>
+                    <option value="mastered">掌握</option>
+                </select>
+            </div>
+            <div class="mask-modes">
+                <button class="mask-mode active" data-mode="none">无遮盖</button>
+                <button class="mask-mode" data-mode="word">遮单词</button>
+                <button class="mask-mode" data-mode="meaning">遮中文</button>
+            </div>
+        </div>
+        
+        <!-- 单词列表 -->
+        <div class="word-list" id="wordList">
+            <!-- 单词项将动态生成 -->
+        </div>
+        
+        <!-- 底部按钮 -->
+        <div class="list-footer">
+            <button class="study-action-btn" onclick="withUserCheck(startDetailedLearning)()">开始学习</button>
+        </div>
+    </div>
+    
+
+    
+    <!-- Loading 元素 -->
+    <div class="loading-overlay hidden" id="loadingOverlay">
+        <div class="loading-spinner"></div>
+        <div class="loading-text">加载中，请稍候...</div>
+    </div>
+    
+    <!-- 引入PDF.js库 -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.4.120/pdf.min.js"></script>
+    <script>
+        // 备用 CDN 加载
+        if (typeof pdfjsLib === 'undefined') {
+            document.write('<script src="https://cdn.jsdelivr.net/npm/pdfjs-dist@3.4.120/build/pdf.min.js"><\/script>');
+        }
+    </script>
+    
+    <!-- 现代浏览器使用ES6模块 -->
+    <script type="module" src="../js/main.js"></script>
+    
+    <!-- 旧浏览器使用转译后的ES5代码 -->
+    <script nomodule src="../dist/js/main.js"></script>
+    <script>
+        // 页面加载完成后初始化
+        document.addEventListener('DOMContentLoaded', function() {
+            // 初始化单词列表页面
+            if (typeof initWordListPage === 'function') {
+                initWordListPage();
+            }
+        });
+    </script>
+</body>
+</html>

@@ -1,0 +1,293 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>里程碑 - 单词学习工具</title>
+    <link rel="stylesheet" href="../style.css">
+</head>
+<body>
+    <!-- 里程碑页面 -->
+    <div class="stats-page active" id="statsPage">
+        <div class="list-header">
+            <div class="list-header-bar">
+                <button class="back-btn" onclick="backToHome()">‹</button>
+                <div class="list-title">里程碑</div>
+                <div style="width: 36px;"></div>
+            </div>
+        </div>
+        
+        <div class="stats-content">
+            <div class="stats-card">
+                <div class="stats-date" id="statsDate">2024-01-01</div>
+                <div class="stats-item">
+                    <div class="stats-label">今日完成单词</div>
+                    <div class="stats-value" id="todayCompleted">0</div>
+                </div>
+                <div class="stats-item">
+                    <div class="stats-label">今日新增错词</div>
+                    <div class="stats-value" id="todayError">0</div>
+                </div>
+            </div>
+            
+            <div class="stats-card">
+                <div class="stats-title">累计统计</div>
+                <div class="stats-item">
+                    <div class="stats-label">累计完成单词</div>
+                    <div class="stats-value" id="totalCompleted">0</div>
+                </div>
+                <div class="stats-item">
+                    <div class="stats-label">累计错词数</div>
+                    <div class="stats-value" id="totalError">0</div>
+                </div>
+            </div>
+            
+            <!-- 每日学习目标 -->
+            <div class="goals-card">
+                <h2><span class="icon">⏰</span> 每日学习目标</h2>
+                <div class="goal-item">
+                    <div class="goal-info">
+                        <span class="goal-label">今日目标</span>
+                        <span class="goal-progress" id="dailyProgress">0/15</span>
+                    </div>
+                    <div class="progress-bar-container">
+                        <div class="progress-bar" id="dailyProgressBar" style="width: 0%"></div>
+                    </div>
+                </div>
+                <div class="goal-info" style="margin-top: 10px;">
+                    <span class="goal-label">今日日期</span>
+                    <span id="currentDate"></span>
+                </div>
+                <div class="goal-info" style="margin-top: 10px;">
+                    <span class="goal-label">完成奖励</span>
+                    <span class="goal-reward">2 积分</span>
+                </div>
+            </div>
+            
+            <!-- 每周学习目标 -->
+            <div class="goals-card">
+                <h2><span class="icon">📅</span> 每周学习目标</h2>
+                <div class="goal-item">
+                    <div class="goal-info">
+                        <span class="goal-label">本周目标</span>
+                        <span class="goal-progress" id="weeklyProgress">0/100</span>
+                    </div>
+                    <div class="progress-bar-container">
+                        <div class="progress-bar" id="weeklyProgressBar" style="width: 0%"></div>
+                    </div>
+                </div>
+                <div class="goal-info" style="margin-top: 10px;">
+                    <span class="goal-label">本周开始日期</span>
+                    <span id="weekStartDate"></span>
+                </div>
+                <div class="goal-info" style="margin-top: 10px;">
+                    <span class="goal-label">完成奖励</span>
+                    <span class="goal-reward">10 积分</span>
+                </div>
+            </div>
+            
+            <!-- 每月学习目标 -->
+            <div class="goals-card">
+                <h2><span class="icon">📆</span> 每月学习目标</h2>
+                <div class="goal-item">
+                    <div class="goal-info">
+                        <span class="goal-label">本月目标</span>
+                        <span class="goal-progress" id="monthlyProgress">0/400</span>
+                    </div>
+                    <div class="progress-bar-container">
+                        <div class="progress-bar" id="monthlyProgressBar" style="width: 0%"></div>
+                    </div>
+                </div>
+                <div class="goal-info" style="margin-top: 10px;">
+                    <span class="goal-label">本月开始日期</span>
+                    <span id="monthStartDate"></span>
+                </div>
+                <div class="goal-info" style="margin-top: 10px;">
+                    <span class="goal-label">完成奖励</span>
+                    <span class="goal-reward">20 积分</span>
+                </div>
+            </div>
+            
+            <!-- 学习里程碑 -->
+            <div class="goals-card">
+                <h2><span class="icon">🏆</span> 学习里程碑</h2>
+                <div id="milestonesContainer">
+                    <!-- 里程碑项目将通过 JavaScript 动态生成 -->
+                </div>
+            </div>
+        </div>
+    </div>
+    
+
+    
+    <!-- Loading 元素 -->
+    <div class="loading-overlay hidden" id="loadingOverlay">
+        <div class="loading-spinner"></div>
+        <div class="loading-text">加载中，请稍候...</div>
+    </div>
+    
+    <!-- 引入PDF.js库 -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.4.120/pdf.min.js"></script>
+    <script>
+        // 备用 CDN 加载
+        if (typeof pdfjsLib === 'undefined') {
+            document.write('<script src="https://cdn.jsdelivr.net/npm/pdfjs-dist@3.4.120/build/pdf.min.js"><\/script>');
+        }
+    </script>
+    
+    <!-- 现代浏览器使用ES6模块 -->
+    <script type="module" src="../js/main.js"></script>
+    
+    <!-- 旧浏览器使用转译后的ES5代码 -->
+    <script nomodule src="../dist/js/main.js"></script>
+    <script>
+        // 页面加载完成后初始化
+        document.addEventListener('DOMContentLoaded', function() {
+            console.log('学习统计页面加载完成');
+            
+            // 加载学习统计数据
+            loadStats();
+            
+            // 等待 DataManager 加载
+            if (typeof DataManager !== 'undefined') {
+                loadGoals();
+            } else {
+                // 如果 DataManager 未加载，等待一段时间后重试
+                setTimeout(loadGoals, 1000);
+            }
+        });
+        
+        // 加载学习统计数据
+        function loadStats() {
+            try {
+                const user = window.currentUser || 'youyou';
+                if (typeof DataManager !== 'undefined') {
+                    const userData = DataManager.getUserData(user);
+                    if (userData) {
+                        // 更新日期
+                        document.getElementById('statsDate').textContent = DataManager.getLocalDateString();
+                        
+                        // 更新今日数据
+                        document.getElementById('todayCompleted').textContent = userData.today.learning || 0;
+                        document.getElementById('todayError').textContent = userData.today.error || 0;
+                        
+                        // 更新累计数据
+                        document.getElementById('totalCompleted').textContent = userData.total.learning || 0;
+                        document.getElementById('totalError').textContent = userData.total.error || 0;
+                    }
+                }
+            } catch (error) {
+                console.error('加载学习统计数据失败:', error);
+            }
+        }
+        
+        // 加载学习目标数据
+        function loadGoals() {
+            try {
+                const user = window.currentUser || 'youyou';
+                console.log('加载学习目标数据 - 用户:', user);
+                
+                if (typeof DataManager !== 'undefined') {
+                    const userData = DataManager.getUserData(user);
+                    console.log('用户数据:', userData);
+                    
+                    // 更新每日目标
+                    const today = DataManager.getLocalDateString();
+                    document.getElementById('currentDate').textContent = today;
+                    
+                    const dailyTarget = 15; // 每日目标15个单词
+                    const todayLearning = userData.today.learning || 0;
+                    document.getElementById('dailyProgress').textContent = `${todayLearning}/${dailyTarget}`;
+                    const dailyProgressPercent = Math.min((todayLearning / dailyTarget) * 100, 100);
+                    document.getElementById('dailyProgressBar').style.width = `${dailyProgressPercent}%`;
+                    
+                    if (userData && userData.goals) {
+                        // 更新每周目标
+                        const weeklyGoal = userData.goals.weekly;
+                        if (weeklyGoal) {
+                            document.getElementById('weeklyProgress').textContent = `${weeklyGoal.current}/${weeklyGoal.target}`;
+                            const weeklyProgressPercent = Math.min((weeklyGoal.current / weeklyGoal.target) * 100, 100);
+                            document.getElementById('weeklyProgressBar').style.width = `${weeklyProgressPercent}%`;
+                            document.getElementById('weekStartDate').textContent = weeklyGoal.weekStart;
+                        }
+                        
+                        // 更新每月目标
+                        const monthlyGoal = userData.goals.monthly;
+                        if (monthlyGoal) {
+                            document.getElementById('monthlyProgress').textContent = `${monthlyGoal.current}/${monthlyGoal.target}`;
+                            const monthlyProgressPercent = Math.min((monthlyGoal.current / monthlyGoal.target) * 100, 100);
+                            document.getElementById('monthlyProgressBar').style.width = `${monthlyProgressPercent}%`;
+                            document.getElementById('monthStartDate').textContent = monthlyGoal.monthStart;
+                        }
+                        
+                        // 更新里程碑
+                        const milestones = userData.goals.milestones;
+                        if (milestones && Array.isArray(milestones)) {
+                            const milestonesContainer = document.getElementById('milestonesContainer');
+                            milestonesContainer.innerHTML = '';
+                            
+                            milestones.forEach(milestone => {
+                                const milestoneItem = document.createElement('div');
+                                milestoneItem.className = 'milestone-item';
+                                
+                                const iconClass = milestone.completed ? 'milestone-icon completed' : 'milestone-icon';
+                                const icon = milestone.completed ? '✅' : '📚';
+                                
+                                const statusClass = milestone.completed ? 'milestone-status completed' : 'milestone-status pending';
+                                const statusText = milestone.completed ? '已完成' : '进行中';
+                                
+                                let rewardText = '';
+                                switch (milestone.target) {
+                                    case 100:
+                                        rewardText = '奖励 10 积分';
+                                        break;
+                                    case 500:
+                                        rewardText = '奖励 20 积分';
+                                        break;
+                                    case 1000:
+                                        rewardText = '奖励 50 积分';
+                                        break;
+                                    case 5000:
+                                        rewardText = '奖励 100 积分';
+                                        break;
+                                    case 10000:
+                                        rewardText = '奖励 200 积分';
+                                        break;
+                                }
+                                
+                                milestoneItem.innerHTML = `
+                                    <div class="milestone-info">
+                                        <div class="${iconClass}">${icon}</div>
+                                        <div class="milestone-text">
+                                            <div class="milestone-title">累计学习 ${milestone.target} 个单词</div>
+                                            <div class="milestone-reward">${rewardText}</div>
+                                        </div>
+                                    </div>
+                                    <div class="${statusClass}">${statusText}</div>
+                                `;
+                                
+                                milestonesContainer.appendChild(milestoneItem);
+                            });
+                        }
+                    }
+                } else {
+                    console.error('DataManager 未加载');
+                }
+            } catch (error) {
+                console.error('加载学习目标数据失败:', error);
+            }
+        }
+        
+        // 关闭奖励弹窗
+        function closeRewardPopup() {
+            document.getElementById('rewardPopup').classList.add('hidden');
+        }
+        
+        // 定期更新目标数据
+        setInterval(function() {
+            loadStats();
+            loadGoals();
+        }, 30000); // 每30秒更新一次
+    </script>
+</body>
+</html>

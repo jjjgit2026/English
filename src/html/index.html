@@ -1,0 +1,331 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>单词学习工具</title>
+    <link rel="stylesheet" href="../style.css">
+</head>
+<body>
+    <!-- 首页 -->
+    <div class="home-page active" id="homePage">
+        <!-- 顶部栏 -->
+        <div class="top-bar">
+            <div class="left-placeholder"></div>
+            <div class="user-info">
+                <div class="user-name" id="userName">快来学单词！</div>
+            </div>
+            <button class="switch-btn" onclick="showUserModal()">
+                <span id="currentUserDisplay">悠悠</span>
+                <span>👤</span>
+            </button>
+        </div>
+        
+        <!-- 教材卡片 -->
+        <div class="book-card">
+            <div class="book-title" id="bookTitle">外研版Join In-三年级下册</div>
+            
+            <div class="book-cover-section">
+                <div class="book-cover">
+                    <div class="subject">英语</div>
+                    <div class="grade" id="bookGrade">三年级 下册</div>
+                </div>
+                <button class="change-book-btn" onclick="withUserCheck(showBookModal)()">
+                    切换教材
+                    <span>›</span>
+                </button>
+            </div>
+            
+            <div class="stats-row">
+                <div class="stat-item">
+                    <div class="stat-value" id="totalWords">217</div>
+                    <div class="stat-label">单词总数</div>
+                </div>
+                <div class="stat-item">
+                    <div class="stat-value" id="learnedWords">0</div>
+                    <div class="stat-label">已完成学习</div>
+                </div>
+            </div>
+            
+            <button class="start-btn" onclick="withUserCheck(startLearning)()">开始学习</button>
+            <button class="start-btn" style="margin-top: 10px; background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);" onclick="withUserCheck(openArticleListPage)()">趣文阅读</button>
+            <button class="start-btn" style="margin-top: 10px; background: linear-gradient(135deg, #a8edea 0%, #fed6e3 100%);" onclick="withUserCheck(openModelEssayListPage)()">必背范文</button>
+        </div>
+        
+        <!-- 打卡和积分区域 -->
+        <div class="checkin-section">
+            <div class="checkin-card">
+                <div class="checkin-header">
+                    <div class="checkin-title">每日打卡</div>
+                    <div style="display: flex; align-items: center; gap: 10px;">
+                        <div class="checkin-status" id="checkinStatus">未打卡</div>
+                        <button class="checkin-history-btn" onclick="withUserCheck(openCheckinHistoryPage)()" title="查看打卡记录">
+                            📅
+                        </button>
+                    </div>
+                </div>
+                <div class="checkin-info">
+                    <div class="checkin-item">
+                        <div class="checkin-value" id="consecutiveDays">0</div>
+                        <div class="checkin-label">连续打卡</div>
+                    </div>
+                    <div class="checkin-item">
+                        <div class="checkin-value" id="userPoints">0</div>
+                        <div class="checkin-label">总积分</div>
+                    </div>
+                </div>
+                
+                <!-- 每日任务进度 -->
+                <div class="daily-tasks">
+                    <div class="task-item">
+                        <div class="task-header">
+                            <div class="task-label">新学任务</div>
+                            <button class="task-btn" onclick="withUserCheck(startLearning)()">去学习</button>
+                        </div>
+                        <div class="task-progress">
+                            <div class="task-progress-bar">
+                                <div class="task-progress-fill" id="newTaskProgress"></div>
+                            </div>
+                            <div class="task-progress-text" id="newTaskText">进行中</div>
+                        </div>
+                    </div>
+                    <div class="task-item">
+                        <div class="task-header">
+                            <div class="task-label">复习任务</div>
+                            <button class="task-btn" onclick="withUserCheck(openGamePage)()">去复习</button>
+                        </div>
+                        <div class="task-progress">
+                            <div class="task-progress-bar">
+                                <div class="task-progress-fill" id="reviewTaskProgress"></div>
+                            </div>
+                            <div class="task-progress-text" id="reviewTaskText">进行中</div>
+                        </div>
+                    </div>
+                </div>
+                
+                <button class="checkin-btn" id="checkinBtn" onclick="withUserCheck(checkIn)()">
+                    立即打卡
+                </button>
+            </div>
+        </div>
+
+        <!-- 功能卡片和统计信息 -->
+        <div class="feature-cards">
+            <div class="feature-card error-book" onclick="withUserCheck(function() { window.location.href='games-center.html'; })()">
+                <div class="feature-title">游戏中心</div>
+                <div class="feature-subtitle">Games Center</div>
+                <div class="feature-icon">🎮</div>
+            </div>
+            <div class="feature-card" style="background: linear-gradient(135deg, #a8edea 0%, #fed6e3 100%);" onclick="withUserCheck(openPetHomePage)()">
+                <div class="feature-title">宠物窝</div>
+                <div class="feature-subtitle">Pet Home</div>
+                <div class="feature-icon">🐶</div>
+            </div>
+            <div class="feature-card vocab-book" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);" onclick="withUserCheck(openStatsPage)()">
+                <div class="feature-title">里程碑</div>
+                <div class="feature-subtitle">Milestones</div>
+                <div class="feature-icon">🏆</div>
+            </div>
+            <div class="feature-card" style="background: linear-gradient(135deg, #fa709a 0%, #fee140 100%);" onclick="withUserCheck(openPointsHistoryPage)()">
+                <div class="feature-title">积分记录</div>
+                <div class="feature-subtitle">Points History</div>
+                <div class="feature-icon">💰</div>
+            </div>
+        </div>
+        
+        <!-- 积分获取提示 -->
+        <div class="tips-button" onclick="openPointsTips()">
+            <div class="tips-icon">💡</div>
+            <div class="tips-text">如何获取积分</div>
+        </div>
+        
+
+        
+
+    </div>
+    
+    <!-- 积分获取提示弹窗 -->
+    <div class="tips-modal hidden" id="pointsTipsModal">
+        <div class="tips-modal-content">
+            <div class="tips-modal-header">
+                <h3>如何获取积分</h3>
+                <button class="tips-modal-close" onclick="closePointsTips()">&times;</button>
+            </div>
+            <div class="tips-modal-body">
+                <div class="tips-item">
+                    <div class="tips-item-icon">📚</div>
+                    <div class="tips-item-content">
+                        <div class="tips-item-title">学习单词</div>
+                        <div class="tips-item-desc">每学习一个单词，获得 1 积分</div>
+                    </div>
+                </div>
+                <div class="tips-item">
+                    <div class="tips-item-icon">📅</div>
+                    <div class="tips-item-content">
+                        <div class="tips-item-title">每日打卡</div>
+                        <div class="tips-item-desc">每天打卡，获得 5 积分<br>连续打卡3天额外奖励 1 积分<br>连续打卡7天额外奖励 2 积分<br>连续打卡30天额外奖励 5 积分</div>
+                    </div>
+                </div>
+                <div class="tips-item">
+                    <div class="tips-item-icon">🎮</div>
+                    <div class="tips-item-content">
+                        <div class="tips-item-title">玩消消乐游戏</div>
+                        <div class="tips-item-desc">每玩一次游戏，获得 1 积分</div>
+                    </div>
+                </div>
+                <div class="tips-item">
+                    <div class="tips-item-icon">📖</div>
+                    <div class="tips-item-content">
+                        <div class="tips-item-title">阅读文章</div>
+                        <div class="tips-item-desc">完成文章点读，获得 5 积分</div>
+                    </div>
+                </div>
+                <div class="tips-item">
+                    <div class="tips-item-icon">📝</div>
+                    <div class="tips-item-content">
+                        <div class="tips-item-title">背诵必背文章</div>
+                        <div class="tips-item-desc">背诵一次，获得 5 积分</div>
+                    </div>
+                </div>
+                <div class="tips-item">
+                    <div class="tips-item-icon">🎯</div>
+                    <div class="tips-item-content">
+                        <div class="tips-item-title">完成学习目标</div>
+                        <div class="tips-item-desc">每日目标：2 积分<br>每周目标：10 积分<br>每月目标：20 积分</div>
+                    </div>
+                </div>
+                <div class="tips-item">
+                    <div class="tips-item-icon">🏆</div>
+                    <div class="tips-item-content">
+                        <div class="tips-item-title">达成学习里程碑</div>
+                        <div class="tips-item-desc">累计学习 100 个单词：10 积分<br>累计学习 500 个单词：20 积分<br>累计学习 1000 个单词：50 积分<br>累计学习 5000 个单词：100 积分<br>累计学习 10000 个单词：200 积分</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Loading 元素 -->
+    <div class="loading-overlay hidden" id="loadingOverlay">
+        <div class="loading-spinner"></div>
+        <div class="loading-text">加载中，请稍候...</div>
+    </div>
+    
+    <!-- 引入PDF.js库 -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.4.120/pdf.min.js"></script>
+    <script>
+        // 备用 CDN 加载
+        if (typeof pdfjsLib === 'undefined') {
+            document.write('<script src="https://cdn.jsdelivr.net/npm/pdfjs-dist@3.4.120/build/pdf.min.js"><\/script>');
+        }
+    </script>
+    
+    <!-- 临时函数，确保模块加载前所有函数都可用 -->
+    <script>
+        // 临时函数，在模块加载完成前提供基本功能
+        window.withUserCheck = function(callback) {
+            return function() {
+                // 检查模块是否已经加载
+                if (window.currentUser !== undefined) {
+                    callback();
+                } else {
+                    alert('应用正在加载1，请稍候...');
+                }
+            };
+        };
+        
+        // 临时的用户相关函数
+        window.showUserModal = function() {
+            alert('应用正在加载2，请稍候...');
+        };
+        window.showBookModal = function() {
+            alert('应用正在加载3，请稍候...');
+        };
+        window.startLearning = function() {
+            alert('应用正在加载4，请稍候...');
+        };
+        window.openArticleListPage = function() {
+            alert('应用正在加载5，请稍候...');
+        };
+        window.openModelEssayListPage = function() {
+            alert('应用正在加载12，请稍候...');
+        };
+        window.checkIn = function() {
+            alert('应用正在加载6，请稍候...');
+        };
+        window.openCheckinHistoryPage = function() {
+            alert('应用正在加载7，请稍候...');
+        };
+        window.openErrorBookPage = function() {
+            alert('应用正在加载8，请稍候...');
+        };
+        window.openStatsPage = function() {
+            alert('应用正在加载9，请稍候...');
+        };
+        window.openPetHomePage = function() {
+            alert('应用正在加载10，请稍候...');
+        };
+        window.openGamePage = function() {
+            alert('应用正在加载11，请稍候...');
+        };
+        
+        // 打开积分获取提示弹窗
+        window.openPointsTips = function() {
+            document.getElementById('pointsTipsModal').classList.remove('hidden');
+        };
+        
+        // 关闭积分获取提示弹窗
+        window.closePointsTips = function() {
+            document.getElementById('pointsTipsModal').classList.add('hidden');
+        };
+        
+        // 检查每日目标完成情况
+        window.checkDailyGoal = function() {
+            try {
+                const user = window.currentUser || 'youyou';
+                if (typeof DataManager !== 'undefined') {
+                    const userData = DataManager.getUserData(user);
+                    if (userData) {
+                        const dailyTarget = 15; // 每日目标15个单词
+                        const todayLearning = userData.today.learning || 0;
+                        
+                        const dailyGoalBar = document.getElementById('dailyGoalBar');
+                        const dailyGoalCompleted = document.getElementById('dailyGoalCompleted');
+                        const dailyGoalProgress = document.getElementById('dailyGoalProgress');
+                        
+                        if (dailyGoalProgress) {
+                            dailyGoalProgress.textContent = `${todayLearning}/${dailyTarget} 个单词`;
+                        }
+                        
+                        if (todayLearning >= dailyTarget) {
+                            // 今日目标已完成
+                            if (dailyGoalBar) dailyGoalBar.classList.add('hidden');
+                            if (dailyGoalCompleted) dailyGoalCompleted.classList.remove('hidden');
+                        } else {
+                            // 今日目标未完成
+                            if (dailyGoalBar) dailyGoalBar.classList.remove('hidden');
+                            if (dailyGoalCompleted) dailyGoalCompleted.classList.add('hidden');
+                        }
+                    }
+                }
+            } catch (error) {
+                console.error('检查每日目标失败:', error);
+            }
+        };
+        
+        // 页面加载完成后检查每日目标
+        document.addEventListener('DOMContentLoaded', function() {
+            setTimeout(checkDailyGoal, 1000); // 延迟检查，确保DataManager已加载
+        });
+        
+        // 定期检查每日目标
+        setInterval(checkDailyGoal, 30000); // 每30秒检查一次
+    </script>
+    
+    <!-- 现代浏览器使用ES6模块 -->
+    <script type="module" src="../js/main.js"></script>
+    
+    <!-- 旧浏览器使用转译后的ES5代码 -->
+    <script nomodule src="../dist/js/main.js"></script>
+</body>
+</html>
