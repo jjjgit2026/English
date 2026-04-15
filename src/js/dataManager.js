@@ -1647,16 +1647,8 @@ export default class DataManager {
                 }
             }
             
-            // 限制复习单词数量
-            const maxReviewWords = 10;
-            if (reviewWords.length > maxReviewWords) {
-                // 随机选择10个单词
-                const shuffled = reviewWords.sort(() => 0.5 - Math.random());
-                return shuffled.slice(0, maxReviewWords);
-            } else {
-                // 单词数量不足10个，返回所有单词
-                return reviewWords;
-            }
+            // 不再限制复习单词数量，返回所有满足条件的单词
+            return reviewWords;
         } catch (error) {
             console.error('生成复习计划失败:', error);
             return [];

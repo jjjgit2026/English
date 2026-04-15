@@ -4,7 +4,7 @@
 import DataManager from './dataManager.js';
 
 // 导入音频管理模块
-import AudioManager from './audioManager.js';
+import AudioManager from './audioManager.js?v=20260406';
 
 // 导入初始化模块
 import { initApp, currentUser, currentUserName, currentFile, currentBookName, words, currentUnit, maskMode, errorBookMaskMode, userStats, currentWordIndex, currentStep, isErrorBookMode, errorWords } from './modules/init.js';
@@ -70,32 +70,32 @@ window.exportData = function() {
             const key = localStorage.key(i);
             data[key] = localStorage.getItem(key);
         }
-        
+
         // 创建 JSON 字符串
         const jsonStr = JSON.stringify(data, null, 2);
-        
+
         // 创建 Blob 对象
         const blob = new Blob([jsonStr], { type: 'application/json' });
-        
+
         // 创建下载链接
         const url = URL.createObjectURL(blob);
         const a = document.createElement('a');
-        
+
         // 生成带有时分秒的文件名
         const now = new Date();
         const fileName = `vocabulary-app-data-${now.getFullYear()}${String(now.getMonth() + 1).padStart(2, '0')}${String(now.getDate()).padStart(2, '0')}${String(now.getHours()).padStart(2, '0')}${String(now.getMinutes()).padStart(2, '0')}${String(now.getSeconds()).padStart(2, '0')}.json`;
-        
+
         a.href = url;
         a.download = fileName;
-        
+
         // 触发下载
         document.body.appendChild(a);
         a.click();
         document.body.removeChild(a);
-        
+
         // 释放 URL 对象
         URL.revokeObjectURL(url);
-        
+
         alert('数据导出成功！');
     } catch (error) {
         console.error('导出数据失败:', error);
@@ -107,22 +107,22 @@ window.exportData = function() {
 window.importData = function() {
     const fileInput = document.getElementById('dataFileInput');
     fileInput.click();
-    
+
     fileInput.onchange = function(e) {
         const file = e.target.files[0];
         if (!file) return;
-        
+
         // 检查文件类型
         if (!file.name.endsWith('.json')) {
             alert('请选择JSON格式的文件');
             return;
         }
-        
+
         const reader = new FileReader();
         reader.onload = function(e) {
             try {
                 const jsonStr = e.target.result;
-                
+
                 // 验证JSON格式
                 let data;
                 try {
@@ -131,32 +131,32 @@ window.importData = function() {
                     alert('文件格式错误：不是有效的JSON格式');
                     return;
                 }
-                
+
                 // 验证数据结构
                 if (!data || typeof data !== 'object') {
                     alert('文件格式错误：数据结构不正确');
                     return;
                 }
-                
+
                 // 验证是否包含必要的数据字段
                 const requiredFields = ['currentUser', 'currentUserName'];
                 const hasRequiredFields = requiredFields.some(field => data.hasOwnProperty(field));
-                
+
                 if (!hasRequiredFields) {
                     alert('文件格式错误：缺少必要的数据字段');
                     return;
                 }
-                
+
                 // 清空现有数据
                 localStorage.clear();
-                
+
                 // 导入数据
                 for (const key in data) {
                     if (data.hasOwnProperty(key)) {
                         localStorage.setItem(key, data[key]);
                     }
                 }
-                
+
                 alert('数据导入成功！请刷新页面以应用更改。');
             } catch (error) {
                 console.error('导入数据失败:', error);
@@ -171,12 +171,12 @@ window.importData = function() {
 function bindDataManagementEvents() {
     const exportBtn = document.getElementById('exportDataBtn');
     const importBtn = document.getElementById('importDataBtn');
-    
+
     if (exportBtn) {
         exportBtn.addEventListener('click', window.exportData);
         console.log('已绑定导出按钮事件');
     }
-    
+
     if (importBtn) {
         importBtn.addEventListener('click', window.importData);
         console.log('已绑定导入按钮事件');
@@ -296,22 +296,22 @@ window.goBack = function() {
         // 获取上一页的URL
         const referrer = document.referrer;
         console.log('Referrer:', referrer);
-        
+
         // 检查是否来自游戏中心页面
         if (referrer && referrer.includes('games-center.html')) {
             console.log('返回游戏中心页面');
             window.location.href = 'games-center.html';
-        } 
+        }
         // 检查是否来自首页
         else if (referrer && referrer.includes('index.html')) {
             console.log('返回首页');
             window.location.href = 'index.html';
-        } 
+        }
         // 否则返回上一页
         else if (window.history.length > 1) {
             console.log('返回上一页');
             window.history.back();
-        } 
+        }
         // 如果没有上一页，返回首页
         else {
             console.log('返回首页');

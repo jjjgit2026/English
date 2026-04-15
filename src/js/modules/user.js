@@ -326,16 +326,24 @@ export function checkIn() {
 
 // 更新每日任务进度
 export function updateDailyTaskProgress() {
+    console.log('[更新每日任务进度] 开始');
+    console.log('[更新每日任务进度] currentUser:', currentUser);
+    
     const dailyTask = DataManager.getDailyTask(currentUser);
+    console.log('[更新每日任务进度] 每日任务:', dailyTask);
+    
     const userData = DataManager.getUserData(currentUser);
+    console.log('[更新每日任务进度] 用户数据:', userData);
     
     // 检查是否有复习任务
     const hasReviewTask = hasWordsToReview(userData);
+    console.log('[更新每日任务进度] 是否有复习任务:', hasReviewTask);
     
     // 显示或隐藏复习任务
     const reviewTaskElement = document.querySelector('.task-item:nth-child(2)');
     if (reviewTaskElement) {
         reviewTaskElement.style.display = hasReviewTask ? 'block' : 'none';
+        console.log('[更新每日任务进度] 复习任务显示状态:', hasReviewTask ? 'block' : 'none');
     }
     
     // 更新新学任务进度
@@ -345,12 +353,14 @@ export function updateDailyTaskProgress() {
         // 新学任务进度：每天学习5个单词
         const newProgress = (dailyTask.completedNewWords / 5) * 100;
         newTaskProgress.style.width = `${Math.min(newProgress, 100)}%`;
+        console.log('[更新每日任务进度] 新学任务进度:', newProgress);
         
         if (dailyTask.completedNewWords >= 5) {
             newTaskText.textContent = '已完成';
         } else {
             newTaskText.textContent = `进行中 (${dailyTask.completedNewWords}/5)`;
         }
+        console.log('[更新每日任务进度] 新学任务文本:', newTaskText.textContent);
     }
     
     // 更新复习任务进度
@@ -367,6 +377,7 @@ export function updateDailyTaskProgress() {
             } else {
                 reviewTaskText.textContent = '进行中';
             }
+            console.log('[更新每日任务进度] 复习任务进度:', reviewProgress);
         }
     }
     
@@ -380,7 +391,9 @@ export function updateDailyTaskProgress() {
         } else {
             checkinBtnElement.textContent = '立即打卡';
         }
+        console.log('[更新每日任务进度] 打卡按钮状态:', taskCompleted ? '可点击' : '禁用');
     }
+    console.log('[更新每日任务进度] 结束');
 }
 
 // 检查是否有单词需要复习

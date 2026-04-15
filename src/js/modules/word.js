@@ -2,7 +2,7 @@
 
 import { currentUser, currentFile, currentWordIndex, currentStep, isErrorBookMode, words, setWords, setCurrentWordIndex, setCurrentStep, maskMode, errorBookMaskMode, setMaskMode, setErrorBookMaskMode, currentUnit, setCurrentUnit } from './init.js';
 import DataManager from '../dataManager.js';
-import AudioManager from '../audioManager.js';
+import AudioManager from '../audioManager.js?v=20260406';
 
 // 当前筛选状态
 let currentFilter = 'all';
@@ -15,7 +15,7 @@ export async function loadPDF() {
     console.log('[加载单词数据] 开始');
     console.log('[加载单词数据] currentFile:', currentFile);
     console.log('[加载单词数据] currentUser:', currentUser);
-    
+
     // 检查缓存
     if (wordCache[currentFile]) {
         console.log('[加载单词数据] 从缓存加载数据');
@@ -29,13 +29,13 @@ export async function loadPDF() {
         console.log('[加载单词数据] 从缓存加载完成');
         return;
     }
-    
+
     showLoading('正在加载单词数据...');
     const pdfPath = `../../assets/PDF/${currentFile}`;
     const jsonPath = `../../data/${currentFile.replace('.pdf', '.json')}`;
     console.log('[加载单词数据] pdfPath:', pdfPath);
     console.log('[加载单词数据] jsonPath:', jsonPath);
-    
+
     try {
         // 尝试加载JSON文件
         const response = await fetch(jsonPath);
@@ -102,14 +102,14 @@ export async function loadPDFOriginal() {
         loadMockData();
         return;
     }
-    
+
     try {
-        const pdf = await pdfjsLib.getDocument({ 
-            url: `../../assets/PDF/${currentFile}`, 
+        const pdf = await pdfjsLib.getDocument({
+            url: `../../assets/PDF/${currentFile}`,
             cMapUrl: 'https://cdn.jsdelivr.net/npm/pdfjs-dist@3.4.120/cmaps/',
             cMapPacked: true
         }).promise;
-        
+
         // console.log('PDF加载成功，页数:', pdf.numPages);
         await processPDF(pdf);
     } catch (error) {
@@ -125,30 +125,30 @@ export async function loadPDFOriginal() {
 // 处理PDF文档
 export function processPDF(pdf) {
     let pages = [];
-    
+
     // 遍历所有页面
     for (let i = 1; i <= pdf.numPages; i++) {
         pages.push(pdf.getPage(i));
     }
-    
+
     Promise.all(pages).then(function(pageList) {
         // console.log('获取页面成功，页面数:', pageList.length);
         let contentPromises = pageList.map(page => page.getTextContent());
-        
+
         Promise.all(contentPromises).then(function(contentList) {
             // console.log('获取文本内容成功，页面数:', contentList.length);
             setWords([]);  // 重置单词列表
-            
+
             // 解析每个页面的内容
             contentList.forEach((content, pageIndex) => {
                 // console.log(`解析页面 ${pageIndex + 1} 的内容`);
                 // console.log('原始文本项:', content.items.length);
-                
+
                 // 按行组织文本
                 let lines = [];
                 let currentLine = [];
                 let lastY = null;
-                
+
                 // 按y坐标分组文本，使用更小的阈值确保同一行的文本被正确合并
                 content.items.forEach((item, index) => {
                     // 只输出前几个文本项的信息，避免日志过多
@@ -165,7 +165,7 @@ export function processPDF(pdf) {
                     }
                     currentLine.push(item);
                 });
-                
+
                 // 处理小方格，确保它单独作为一列
                 lines = lines.map(line => {
                     const newLine = [];
@@ -179,24 +179,24 @@ export function processPDF(pdf) {
                     });
                     return newLine;
                 });
-                
+
                 if (currentLine.length > 0) {
                     lines.push(currentLine);
                 }
-                
+
                 // console.log(`页面 ${pageIndex + 1} 行数:`, lines.length);
-                
+
                 // 按x坐标排序每行的文本
                 lines.forEach(line => {
                     line.sort((a, b) => a.transform[4] - b.transform[4]);
                 });
-                
+
                 // 打印每行内容
                 lines.forEach((line, lineIndex) => {
                     const lineText = line.map(item => item.str).join(' ');
                     // console.log(`页面 ${pageIndex + 1} 行 ${lineIndex + 1}:`, lineText);
                 });
-                
+
                 // 寻找表格开始位置 - 找到第一个以数字序号为第一列的行
                 let tableStartIndex = -1;
                 // console.log(`页面 ${pageIndex + 1} 开始寻找表格，共 ${lines.length} 行`);
@@ -205,7 +205,7 @@ export function processPDF(pdf) {
                     // 获取整行文本
                     const lineText = line.map(item => item.str).join(' ').trim();
                     // console.log(`页面 ${pageIndex + 1} 行 ${i + 1} 内容: "${lineText}"`);
-                    
+
                     // 检查行内容是否以数字序号开头（如"1", "250"）
                     // 匹配行首的数字，后面可以跟空格、字母或结束
                     const match = lineText.match(/^(\d+)(\s|$)/);
@@ -216,7 +216,7 @@ export function processPDF(pdf) {
                         break;
                     }
                 }
-                
+
                 // 从表格的第一行开始读取（包含序号行）
                 if (tableStartIndex !== -1) {
                     // console.log(`开始处理表格，表格开始行: ${tableStartIndex + 1}`);
@@ -225,18 +225,18 @@ export function processPDF(pdf) {
                     let currentPhonetic = null;
                     let currentMeaning = null;
                     let currentNumber = null;
-                    
+
                     // console.log(`开始遍历表格行，共 ${lines.length - tableStartIndex} 行`);
-                    
+
                     // 重新组织行数据，确保序号、单词、音标和释义正确对应
                     let wordLines = [];
                     let currentEntry = null;
-                    
+
                     for (let i = tableStartIndex; i < lines.length; i++) {
                         const line = lines[i];
                         const lineText = line.map(item => item.str).join(' ').trim();
                         // console.log(`处理行 ${i + 1}，内容: "${lineText}"`);
-                        
+
                         // 检查是否为数字序号行（匹配行首的数字）
                         const numberMatch = lineText.match(/^(\d+)(\s|$)/);
                         if (numberMatch) {
@@ -248,7 +248,7 @@ export function processPDF(pdf) {
                                 }
                                 currentEntry = { number: firstItem, word: '', phonetic: '', meaning: '' };
                                 // console.log(`识别到新单词序号: ${firstItem}`);
-                                
+
                                 // 检查当前行是否有单词（有些PDF序号和单词在同一行）
                                 if (line.length > 1) {
                                     const remainingText = line.slice(1).map(item => item.str).join(' ').trim();
@@ -262,7 +262,7 @@ export function processPDF(pdf) {
                             } else if (currentEntry && currentEntry.number) {
                                 // 这是当前单词的后续行
                                 // console.log(`处理单词 ${currentEntry.number} 的后续行`);
-                                
+
                                 // 检查是否为音标行
                                 if (lineText.includes('/') || lineText.includes('[')) {
                                     currentEntry.phonetic = lineText;
@@ -288,16 +288,16 @@ export function processPDF(pdf) {
                                 }
                             }
                     }
-                    
+
                     // 添加最后一个单词
                     if (currentEntry && currentEntry.number) {
                         wordLines.push(currentEntry);
                         // console.log(`保存最后一个单词条目:`, currentEntry);
                     }
-                    
+
                     // console.log(`识别到 ${wordLines.length} 个单词条目`);
                     // console.log(`单词条目:`, wordLines);
-                    
+
                     // 转换为单词列表并添加到总列表
                     wordLines.forEach((entry, index) => {
                         // 清理单词：区分单词内部空格和词组空格
@@ -307,34 +307,34 @@ export function processPDF(pdf) {
                             // 单词内部空格，移除空格
                             cleanWord = cleanWord.replace(/\s+/g, '');
                         }
-                        
+
                         const word = {
                             word: cleanWord,
                             phonetic: (entry.phonetic || '').trim(),
                             meaning: (entry.meaning || '').trim().replace(/□/g, '').trim(),
                             unit: 'all' // 默认单元
                         };
-                        
+
                         if (word.word) {
                             words.push(word);
                         }
                     });
                 }
             });
-            
+
             // 缓存数据
             wordCache[currentFile] = words;
             console.log('[处理PDF] 缓存单词数据');
-            
+
             // console.log('最终单词列表:', words);
             // console.log('单词数量:', words.length);
-            
+
             // 初始化课本数据
             DataManager.initBookData(currentUser, currentFile, words.length);
-            
+
             // 更新统计显示
             updateStatsDisplay();
-            
+
             // 渲染单词列表
             renderWordList();
         });
@@ -361,10 +361,10 @@ export function loadMockData() {
         { word: 'dog', phonetic: '/dɒɡ/', meaning: 'n. 狗' },
         { word: 'elephant', phonetic: '/ˈelɪfənt/', meaning: 'n. 大象' }
     ]);
-    
+
     // 更新统计显示
     updateStatsDisplay();
-    
+
     // 渲染单词列表
     renderWordList();
 }
@@ -373,19 +373,19 @@ export function loadMockData() {
 export function renderWordList() {
     const listContainer = document.getElementById('wordList');
     if (!listContainer) return;
-    
+
     // 获取用户数据
     const userData = DataManager.getUserData(currentUser);
     const wordLearningRecords = userData.wordLearningRecords || {};
     const masteredWords = userData.masteredWords || {};
-    
+
     let filteredWords = words;
-    
+
     // 按单元筛选
     if (currentUnit !== 'all') {
         filteredWords = filteredWords.filter(w => w.unit === currentUnit);
     }
-    
+
     // 按状态筛选
     if (currentFilter !== 'all') {
         filteredWords = filteredWords.filter(word => {
@@ -402,10 +402,10 @@ export function renderWordList() {
             }
         });
     }
-    
+
     // 使用文档片段批量更新
     const fragment = document.createDocumentFragment();
-    
+
     filteredWords.forEach((word, index) => {
         const wordItem = document.createElement('div');
         wordItem.className = 'word-item';
@@ -413,7 +413,7 @@ export function renderWordList() {
         const originalIndex = words.findIndex(w => w.word === word.word);
         wordItem.dataset.index = originalIndex;
         wordItem.onclick = () => openWordLinkPage(originalIndex);
-        
+
         wordItem.innerHTML = `
             <div class="word-index">${index + 1}</div>
             <div class="word-info">
@@ -425,7 +425,7 @@ export function renderWordList() {
                 <button class="action-btn">🔊</button>
             </div>
         `;
-        
+
         // 添加事件监听器
         const wordText = wordItem.querySelector('.word-text');
         if (maskMode === 'word') {
@@ -434,7 +434,7 @@ export function renderWordList() {
                 e.stopPropagation();
             };
         }
-        
+
         const wordMeaning = wordItem.querySelector('.word-meaning');
         if (maskMode === 'meaning') {
             wordMeaning.onclick = (e) => {
@@ -442,21 +442,21 @@ export function renderWordList() {
                 e.stopPropagation();
             };
         }
-        
+
         // 处理发音按钮点击事件
         const actionBtn = wordItem.querySelector('.action-btn');
         actionBtn.onclick = (e) => {
             AudioManager.playWordAudio(word.word, false);
             e.stopPropagation();
         };
-        
+
         fragment.appendChild(wordItem);
     });
-    
+
     // 清空容器并添加文档片段
     listContainer.innerHTML = '';
     listContainer.appendChild(fragment);
-    
+
 
 }
 
@@ -477,20 +477,20 @@ export function initFilterButtons() {
 export function generateWordChain() {
     const chainContainer = document.getElementById('wordChain');
     if (!chainContainer) return;
-    
+
     // 使用文档片段批量更新
     const fragment = document.createDocumentFragment();
-    
+
     const wordList = words;
-    
+
     wordList.forEach((word, index) => {
         const wordElement = document.createElement('div');
         wordElement.className = 'chain-word-item';
-        
+
         const wordText = document.createElement('div');
         wordText.className = 'chain-word';
         wordText.id = `chain-word-${index}`;
-        
+
         if (index === currentWordIndex) {
             wordText.classList.add('current');
         } else if (index < currentWordIndex) {
@@ -498,7 +498,7 @@ export function generateWordChain() {
         } else {
             wordText.classList.add('pending');
         }
-        
+
         // 在拼和写步骤中遮挡当前学习的单词
         if ((currentStep === 'spell' || currentStep === 'write') && index === currentWordIndex) {
             wordText.textContent = '**';
@@ -508,20 +508,20 @@ export function generateWordChain() {
         wordText.onclick = () => {
             openWordLinkPage(index);
         };
-        
+
         const wordIndex = document.createElement('div');
         wordIndex.className = 'chain-word-index';
         wordIndex.textContent = index + 1;
-        
+
         wordElement.appendChild(wordText);
         wordElement.appendChild(wordIndex);
         fragment.appendChild(wordElement);
     });
-    
+
     // 清空容器并添加文档片段
     chainContainer.innerHTML = '';
     chainContainer.appendChild(fragment);
-    
+
     // 滚动到当前单词位置
     setTimeout(() => {
         const currentElement = document.getElementById(`chain-word-${currentWordIndex}`);
@@ -535,21 +535,21 @@ export function generateWordChain() {
 export function updateLearningContent() {
     const currentWord = words[currentWordIndex];
     if (!currentWord) return;
-    
+
     // 更新学页面
     const wordLetters = document.getElementById('wordLetters');
     if (wordLetters) {
         wordLetters.innerHTML = '';
         // 将单词按空格分割成词组
         const wordsArray = currentWord.word.split(' ');
-        
+
         wordsArray.forEach((word, wordIndex) => {
             // 创建单词容器，确保单词作为一个整体
             const wordContainer = document.createElement('span');
             wordContainer.className = 'word-container';
             wordContainer.style.display = 'inline-block';
             wordContainer.style.whiteSpace = 'nowrap';
-            
+
             // 为单词中的每个字母创建元素
             for (let i = 0; i < word.length; i++) {
                 const char = word[i];
@@ -572,9 +572,9 @@ export function updateLearningContent() {
                 }
                 wordContainer.appendChild(letter);
             }
-            
+
             wordLetters.appendChild(wordContainer);
-            
+
             // 在单词之间添加空格（除了最后一个单词）
             if (wordIndex < wordsArray.length - 1) {
                 const space = document.createElement('span');
@@ -585,44 +585,44 @@ export function updateLearningContent() {
             }
         });
     }
-    
+
     const phoneticWrapper = document.getElementById('phoneticWrapper');
     if (phoneticWrapper) {
         phoneticWrapper.textContent = currentWord.phonetic || '';
     }
-    
+
     const learnMeaning = document.getElementById('learnMeaning');
     if (learnMeaning) {
         learnMeaning.textContent = currentWord.meaning;
     }
-    
+
     const learnExample = document.getElementById('learnExample');
     if (learnExample) {
         learnExample.textContent = currentWord.example || '例句';
     }
-    
+
     const learnExampleTranslation = document.getElementById('learnExampleTranslation');
     if (learnExampleTranslation) {
         learnExampleTranslation.textContent = currentWord.translation || '例句翻译';
     }
-    
+
     // 更新读页面
     const readWord = document.getElementById('readWord');
     if (readWord) {
         readWord.textContent = currentWord.word;
     }
-    
+
     const readPhonetic = document.getElementById('readPhonetic');
     if (readPhonetic) {
         readPhonetic.textContent = currentWord.phonetic || '';
     }
-    
+
     // 更新拼页面
     const spellWord = document.getElementById('spellWord');
     if (spellWord) {
         spellWord.textContent = currentWord.word;
     }
-    
+
     const spellInputs = document.getElementById('spellInputs');
     if (spellInputs) {
         spellInputs.innerHTML = '';
@@ -634,12 +634,12 @@ export function updateLearningContent() {
             spellInputs.appendChild(inputBox);
         }
     }
-    
+
     const spellPhonetic = document.getElementById('spellPhonetic');
     if (spellPhonetic) {
         spellPhonetic.textContent = currentWord.phonetic || '';
     }
-    
+
     const spellLetters = document.getElementById('spellLetters');
     if (spellLetters) {
         spellLetters.innerHTML = '';
@@ -656,34 +656,34 @@ export function updateLearningContent() {
             spellLetters.appendChild(letterButton);
         });
     }
-    
+
     // 更新写页面
     const writeWord = document.getElementById('writeWord');
     if (writeWord) {
         writeWord.textContent = currentWord.word;
     }
-    
+
     const writePhonetic = document.getElementById('writePhonetic');
     if (writePhonetic) {
         writePhonetic.textContent = currentWord.phonetic || '';
     }
-    
+
     const writeMeaning = document.getElementById('writeMeaning');
     if (writeMeaning) {
         writeMeaning.textContent = currentWord.meaning;
     }
-    
+
     const writeInput = document.getElementById('writeInput');
     if (writeInput) {
         writeInput.value = '';
     }
-    
+
     const writeResult = document.getElementById('writeResult');
     if (writeResult) {
         writeResult.textContent = '';
         writeResult.classList.remove('correct', 'incorrect');
     }
-    
+
     // 更新练习页面
     generatePracticeQuestion(currentWord);
 }
@@ -694,16 +694,16 @@ export function resetLearningSteps() {
     steps.forEach(step => {
         step.classList.remove('active', 'completed');
     });
-    
+
     // 设置第一个步骤为活动状态
     document.querySelector('.step-item[data-step="learn"]').classList.add('active');
-    
+
     // 隐藏所有内容区域
     const contentAreas = document.querySelectorAll('.step-content');
     contentAreas.forEach(content => {
         content.classList.remove('active');
     });
-    
+
     // 显示第一个内容区域
     document.getElementById('contentLearn').classList.add('active');
 }
@@ -711,7 +711,7 @@ export function resetLearningSteps() {
 // 切换学习步骤
 export function switchStep(step) {
     setCurrentStep(step);
-    
+
     // 更新步骤状态
     const steps = document.querySelectorAll('.step-item');
     steps.forEach(s => {
@@ -722,20 +722,20 @@ export function switchStep(step) {
             s.classList.add('completed');
         }
     });
-    
+
     // 更新内容区域
     const contentAreas = document.querySelectorAll('.step-content');
     contentAreas.forEach(content => {
         content.classList.remove('active');
     });
     document.getElementById(`content${step.charAt(0).toUpperCase() + step.slice(1)}`).classList.add('active');
-    
+
     // 自动播放单词发音
     const currentWord = isErrorBookMode ? errorWords[currentWordIndex] : words[currentWordIndex];
     if (currentWord && currentWord.word) {
         AudioManager.playWordAudio(currentWord.word, false);
     }
-    
+
     // 更新单词链条
     generateWordChain();
 }
@@ -782,7 +782,7 @@ export function nextStep() {
     console.log('开始');
     try {
         console.log('当前步骤:', currentStep);
-        
+
         // 处理拼写和书写步骤的特殊逻辑
         if (currentStep === 'spell') {
             console.log('处理拼写步骤');
@@ -791,17 +791,17 @@ export function nextStep() {
             inputBoxes.forEach(box => {
                 userInput += box.textContent;
             });
-            
+
             const currentWord = words[currentWordIndex];
             const resultElement = document.getElementById('spellResult');
-            
+
             if (userInput === currentWord.word) {
                 console.log('拼写正确');
                 resultElement.textContent = '正确！';
                 resultElement.classList.add('correct');
                 resultElement.classList.remove('incorrect');
                 AudioManager.playSuccessSound();
-                
+
                 // 停留1秒后进入下一步
                 setTimeout(() => {
                     console.log('拼写正确，进入下一步');
@@ -833,14 +833,14 @@ export function nextStep() {
             const input = document.getElementById('writeInput');
             const resultElement = document.getElementById('writeResult');
             const currentWord = words[currentWordIndex];
-            
+
             if (input.value.trim() === currentWord.word) {
                 console.log('书写正确');
                 resultElement.textContent = '正确！';
                 resultElement.classList.add('correct');
                 resultElement.classList.remove('incorrect');
                 AudioManager.playSuccessSound();
-                
+
                 // 停留1秒后进入下一步
                 setTimeout(() => {
                     console.log('书写正确，进入下一步');
@@ -872,18 +872,18 @@ export function nextStep() {
             // 检查当前步骤是否完成
             const completed = isStepCompleted(currentStep);
             console.log('当前步骤是否完成:', completed);
-            
+
             if (!completed) {
                 console.log('步骤未完成，显示提示');
                 alert('请完成当前步骤后再继续！');
                 return;
             }
-            
+
             const steps = ['learn', 'read', 'practice', 'spell', 'write'];
             const currentIndex = steps.indexOf(currentStep);
             console.log('当前步骤索引:', currentIndex);
             console.log('步骤总数:', steps.length);
-            
+
             if (currentIndex < steps.length - 1) {
                 const nextStepName = steps[currentIndex + 1];
                 console.log('进入下一步骤:', nextStepName);
@@ -934,33 +934,61 @@ export function goToNextWord() {
         console.log('currentWordIndex:', currentWordIndex);
         console.log('words.length:', words.length);
         console.log('isErrorBookMode:', isErrorBookMode);
-        
+
         // 标记当前单词为已学
         const currentWord = words[currentWordIndex];
         console.log('当前单词:', currentWord);
-        
+
         if (currentWord && currentWord.word) {
             console.log('标记单词为已学（待复习）:', currentWord.word);
             console.log('[goToNextWord] 当前课本:', currentFile);
-            
+
             // 标记单词为已学（待复习），使用saveWordLearningRecord函数保存完整记录
             // 该函数会处理：
             // 1. 保存完整的单词学习记录（包含所有必要字段）
             // 2. 更新今日学习数据
             // 3. 保存数据到localStorage
             DataManager.saveWordLearningRecord(currentUser, currentWord.word, currentWord.meaning, true);
-            
+
             // 更新新学任务进度
             DataManager.updateTaskProgress(currentUser, 'new');
-            
+
             // 使用DataManager添加积分
             DataManager.addPoints(currentUser, 1, '学习单词');
             console.log('[goToNextWord] 添加积分成功');
+
+            // 更新所有统计数据，确保里程碑、累计统计、每日学习目标、每周学习目标都同步+1
+            const userData = DataManager.getUserData(currentUser);
             
+            // 更新今日学习数据
+            userData.today.learning = (parseInt(userData.today.learning) || 0) + 1;
+            
+            // 更新累计学习次数
+            userData.total.learning = (parseInt(userData.total.learning) || 0) + 1;
+            
+            // 更新课本已完成学习数量
+            if (!userData.books) userData.books = {};
+            if (!userData.books[currentFile]) {
+                userData.books[currentFile] = {
+                    totalWords: words.length,
+                    learnedCount: 0
+                };
+            }
+            userData.books[currentFile].learnedCount = (parseInt(userData.books[currentFile].learnedCount) || 0) + 1;
+            
+            // 保存数据
+            DataManager.saveUserData(currentUser, userData);
+            console.log('[goToNextWord] 更新今日学习次数:', userData.today.learning);
+            console.log('[goToNextWord] 更新累计学习次数:', userData.total.learning);
+            console.log('[goToNextWord] 更新课本已完成学习数量:', userData.books[currentFile].learnedCount);
+            
+            // 更新学习进度并检查目标完成情况
+            DataManager.updateLearningProgress(userData, 1);
+
             // 更新统计显示
             updateStatsDisplay();
             console.log('已学标记和积分添加完成');
-            
+
             // 执行页面重定向
             setTimeout(() => {
                 console.log('延迟后执行页面重定向');
@@ -1013,31 +1041,45 @@ export function markAsLearned() {
         console.log('currentUser:', currentUser);
         console.log('currentFile:', currentFile);
         console.log('currentWordIndex:', currentWordIndex);
-        
+
         // 获取当前单词
         const currentWord = words[currentWordIndex];
         console.log('当前单词:', currentWord);
-        
+
         if (currentWord && currentWord.word) {
             console.log('标记单词为掌握:', currentWord.word);
             console.log('[markAsLearned] 当前课本:', currentFile);
+
+            // 获取用户数据
+            let userData2 = DataManager.getUserData(currentUser);
+            
+            // 检查是否已经学过该单词
+            const wordId = currentWord.word.toLowerCase();
+            const isNewWord = !userData2.wordLearningRecords || !userData2.wordLearningRecords[wordId];
+            
+            // 保存单词学习记录，确保newWordsLearned被更新
+            DataManager.saveWordLearningRecord(currentUser, currentWord.word, currentWord.meaning, true);
+
+            // 获取更新后的用户数据
+            userData2 = DataManager.getUserData(currentUser);
             
             // 标记单词为掌握
-            const userData2 = DataManager.getUserData(currentUser);
             if (!userData2.masteredWords) userData2.masteredWords = {};
             userData2.masteredWords[currentWord.word] = true;
-            
+
             // 从wordLearningRecords中删除该单词（如果存在）
-            if (userData2.wordLearningRecords && userData2.wordLearningRecords[currentWord.word]) {
-                delete userData2.wordLearningRecords[currentWord.word];
+            if (userData2.wordLearningRecords && userData2.wordLearningRecords[wordId]) {
+                delete userData2.wordLearningRecords[wordId];
             }
-            
+
             // 清除错误标记
-            const errorKey = `hasAnyError_${currentWord.word.toLowerCase()}`;
+            const errorKey = `hasAnyError_${wordId}`;
             localStorage.removeItem(errorKey);
-            
+
             // 更新课本已完成学习数量
-            if (!userData2.books) userData2.books = {};
+            if (!userData2.books) {
+                userData2.books = {};
+            }
             if (!userData2.books[currentFile]) {
                 userData2.books[currentFile] = {
                     totalWords: words.length,
@@ -1045,8 +1087,8 @@ export function markAsLearned() {
                 };
             }
             userData2.books[currentFile].learnedCount = (parseInt(userData2.books[currentFile].learnedCount) || 0) + 1;
-            
-            // 更新今日学习数据
+
+            // 确保today对象存在
             if (!userData2.today) {
                 userData2.today = {
                     date: DataManager.getLocalDateString(),
@@ -1060,24 +1102,53 @@ export function markAsLearned() {
                     reviewWordsCompleted: 0
                 };
             }
+            
+            // 确保日期正确
+            const today = DataManager.getLocalDateString();
+            if (userData2.today.date !== today) {
+                userData2.today = {
+                    date: today,
+                    learning: 0,
+                    testing: 0,
+                    correct: 0,
+                    error: 0,
+                    checkedIn: false,
+                    goalCompleted: false,
+                    newWordsLearned: 0,
+                    reviewWordsCompleted: 0
+                };
+            }
+
+            // 更新今日学习数据
             userData2.today.learning = (parseInt(userData2.today.learning) || 0) + 1;
-            userData2.today.newWordsLearned = (parseInt(userData2.today.newWordsLearned) || 0) + 1;
-            
-            // 保存数据（先保存基础数据）
-            DataManager.saveUserData(currentUser, userData2);
-            console.log('[markAsLearned] 保存基础数据成功');
-            
+            if (isNewWord) {
+                userData2.today.newWordsLearned = (parseInt(userData2.today.newWordsLearned) || 0) + 1;
+            }
+
+            // 更新累计学习次数
+            userData2.total.learning = (parseInt(userData2.total.learning) || 0) + 1;
+            console.log('[markAsLearned] 更新累计学习次数:', userData2.total.learning);
+
+            // 保存数据，确保所有更新都被保存
+            const saveResult = DataManager.saveUserData(currentUser, userData2);
+            console.log('[markAsLearned] 保存所有数据成功:', saveResult);
+
             // 更新新学任务进度
-            DataManager.updateTaskProgress(currentUser, 'new');
-            
+            const updateTaskResult = DataManager.updateTaskProgress(currentUser, 'new');
+            console.log('[markAsLearned] 更新新学任务进度成功:', updateTaskResult);
+
             // 使用DataManager添加积分
-            DataManager.addPoints(currentUser, 1, '学习单词');
-            console.log('[markAsLearned] 添加积分成功');
-            
-            // 更新统计显示
+            const addPointsResult = DataManager.addPoints(currentUser, 1, '学习单词');
+            console.log('[markAsLearned] 添加积分成功:', addPointsResult);
+
+            // 验证保存结果
+            const savedData = localStorage.getItem(`userStats_${currentUser}`);
+            console.log('[markAsLearned] 保存后的数据:', savedData);
+
+            // 强制更新统计显示
             updateStatsDisplay();
             console.log('掌握标记和积分添加完成');
-            
+
             // 执行页面重定向
             setTimeout(() => {
                 console.log('延迟后执行页面重定向');
@@ -1088,7 +1159,7 @@ export function markAsLearned() {
                     console.log('最后一个单词，返回单词列表页');
                     backToWordList();
                 }
-            }, 500); // 增加延迟时间，确保数据完全保存
+            }, 1000); // 增加延迟时间，确保数据完全保存
         } else {
             // 没有单词，直接进行页面重定向
             console.log('没有当前单词，直接进行页面重定向');
@@ -1136,11 +1207,11 @@ export function updateNavigationButtons() {
     const prevBtn = document.getElementById('prevWordBtn');
     const nextBtn = document.getElementById('nextWordBtn');
     const wordListLength = words.length;
-    
+
     if (prevBtn) {
         prevBtn.disabled = currentWordIndex === 0;
     }
-    
+
     if (nextBtn) {
         nextBtn.disabled = currentWordIndex === wordListLength - 1;
     }
@@ -1158,20 +1229,20 @@ export function initWordListPage() {
 export function generatePracticeQuestion(word) {
     const questionElement = document.getElementById('practiceQuestion');
     const optionsElement = document.getElementById('practiceOptions');
-    
+
     if (!questionElement || !optionsElement) return;
-    
+
     // 生成问题类型
     const questionTypes = ['meaning', 'word'];
     const questionType = questionTypes[Math.floor(Math.random() * questionTypes.length)];
-    
+
     if (questionType === 'meaning') {
         // 给出单词，选择释义
         questionElement.textContent = `"${word.word}" 的意思是？`;
-        
+
         // 生成选项
         const options = [word.meaning];
-        
+
         // 添加干扰选项
         while (options.length < 4) {
             const randomWord = words[Math.floor(Math.random() * words.length)];
@@ -1179,13 +1250,13 @@ export function generatePracticeQuestion(word) {
                 options.push(randomWord.meaning);
             }
         }
-        
+
         // 打乱选项顺序
         for (let i = options.length - 1; i > 0; i--) {
             const j = Math.floor(Math.random() * (i + 1));
             [options[i], options[j]] = [options[j], options[i]];
         }
-        
+
         // 渲染选项
         optionsElement.innerHTML = options.map(option => {
             return `
@@ -1197,10 +1268,10 @@ export function generatePracticeQuestion(word) {
     } else {
         // 给出释义，选择单词
         questionElement.textContent = `哪个单词的意思是 "${word.meaning}"？`;
-        
+
         // 生成选项
         const options = [word.word];
-        
+
         // 添加干扰选项
         while (options.length < 4) {
             const randomWord = words[Math.floor(Math.random() * words.length)];
@@ -1208,13 +1279,13 @@ export function generatePracticeQuestion(word) {
                 options.push(randomWord.word);
             }
         }
-        
+
         // 打乱选项顺序
         for (let i = options.length - 1; i > 0; i--) {
             const j = Math.floor(Math.random() * (i + 1));
             [options[i], options[j]] = [options[j], options[i]];
         }
-        
+
         // 渲染选项
         optionsElement.innerHTML = options.map(option => {
             return `
@@ -1237,20 +1308,20 @@ export function checkPracticeAnswer(selected, correct) {
         }
         option.onclick = null;
     });
-    
+
     // 播放音效
     if (selected === correct) {
         AudioManager.playSuccessSound();
-        
+
         // 使用DataManager获取用户数据
         const userData = DataManager.getUserData(currentUser);
-        
+
         // 更新测试和正确数量
         userData.today.testing = (userData.today.testing || 0) + 1;
         userData.total.testing = (userData.total.testing || 0) + 1;
         userData.today.correct = (userData.today.correct || 0) + 1;
         userData.total.correct = (userData.total.correct || 0) + 1;
-        
+
         // 保存数据
         DataManager.saveUserData(currentUser, userData);
         console.log('[checkPracticeAnswer] 练习正确，更新正确数量');
@@ -1259,18 +1330,18 @@ export function checkPracticeAnswer(selected, correct) {
         // 记录练习步骤错误
         const currentWord = words[currentWordIndex];
         DataManager.recordStepError(currentUser, currentWord.word, 'practice');
-        
+
         // 使用DataManager获取用户数据
         const userData = DataManager.getUserData(currentUser);
-        
+
         // 更新测试数量
         userData.today.testing = (userData.today.testing || 0) + 1;
         userData.total.testing = (userData.total.testing || 0) + 1;
-        
+
         // 保存数据
         DataManager.saveUserData(currentUser, userData);
         console.log('[checkPracticeAnswer] 练习错误，更新测试数量');
-        
+
         // 检查错误状态，禁用"学会了"按钮
         if (typeof window.checkErrorWordStatus === 'function') {
             window.checkErrorWordStatus();
@@ -1278,11 +1349,9 @@ export function checkPracticeAnswer(selected, correct) {
             window.checkErrorStepStatus();
         }
     }
-    
-    // 延迟进入下一步
-    setTimeout(() => {
-        nextStep();
-    }, 1000);
+
+    // 移除自动进入下一步，让用户点击"下一步"按钮来进入下一个步骤
+    console.log('[checkPracticeAnswer] 练习完成，请点击"下一步"按钮进入下一个步骤');
 }
 
 // 添加字母到拼写输入框
@@ -1308,19 +1377,19 @@ export function removeLetter(index) {
 export function checkSpelling() {
     const inputBoxes = document.querySelectorAll('.spell-input-box');
     let userInput = '';
-    
+
     inputBoxes.forEach(box => {
         userInput += box.textContent;
     });
-    
+
     const currentWord = words[currentWordIndex];
     const resultElement = document.getElementById('spellResult');
-    
+
     if (!resultElement) {
         console.warn('spellResult element not found');
         return;
     }
-    
+
     if (userInput === currentWord.word) {
         resultElement.textContent = '正确！';
         resultElement.classList.add('correct');
@@ -1333,7 +1402,7 @@ export function checkSpelling() {
         AudioManager.playErrorSound();
         // 记录拼写步骤错误
         DataManager.recordStepError(currentUser, currentWord.word, 'spell');
-        
+
         // 检查错误状态，禁用"学会了"按钮
         if (typeof window.checkErrorWordStatus === 'function') {
             window.checkErrorWordStatus();
@@ -1348,7 +1417,7 @@ export function checkWriting() {
     const input = document.getElementById('writeInput');
     const resultElement = document.getElementById('writeResult');
     const currentWord = words[currentWordIndex];
-    
+
     if (input.value.trim() === currentWord.word) {
         resultElement.textContent = '正确！';
         resultElement.classList.add('correct');
@@ -1361,7 +1430,7 @@ export function checkWriting() {
         AudioManager.playErrorSound();
         // 记录书写步骤错误
         DataManager.recordStepError(currentUser, currentWord.word, 'write');
-        
+
         // 检查错误状态，禁用"学会了"按钮
         if (typeof window.checkErrorWordStatus === 'function') {
             window.checkErrorWordStatus();
@@ -1377,7 +1446,7 @@ export function clearWriteInput() {
     if (input) {
         input.value = '';
     }
-    
+
     const resultElement = document.getElementById('writeResult');
     if (resultElement) {
         resultElement.textContent = '';
@@ -1412,15 +1481,15 @@ export function generateErrorWordChain() {
     const chainContainer = document.getElementById('wordChain');
     if (!chainContainer) return;
     chainContainer.innerHTML = '';
-    
+
     errorWords.forEach((word, index) => {
         const wordElement = document.createElement('div');
         wordElement.className = 'chain-word-item';
-        
+
         const wordText = document.createElement('div');
         wordText.className = 'chain-word';
         wordText.id = `chain-word-${index}`;
-        
+
         if (index === currentWordIndex) {
             wordText.classList.add('current');
         } else if (index < currentWordIndex) {
@@ -1428,7 +1497,7 @@ export function generateErrorWordChain() {
         } else {
             wordText.classList.add('pending');
         }
-        
+
         // 在拼和写步骤中遮挡当前学习的单词
         if ((currentStep === 'spell' || currentStep === 'write') && index === currentWordIndex) {
             wordText.textContent = '**';
@@ -1436,16 +1505,16 @@ export function generateErrorWordChain() {
             wordText.textContent = word.word;
         }
         wordText.onclick = () => openErrorWordLinkPage(index);
-        
+
         const wordIndex = document.createElement('div');
         wordIndex.className = 'chain-word-index';
         wordIndex.textContent = index + 1;
-        
+
         wordElement.appendChild(wordText);
         wordElement.appendChild(wordIndex);
         chainContainer.appendChild(wordElement);
     });
-    
+
     // 滚动到当前单词位置
     setTimeout(() => {
         const currentElement = document.getElementById(`chain-word-${currentWordIndex}`);
@@ -1459,21 +1528,21 @@ export function generateErrorWordChain() {
 export function updateErrorWordLearningContent() {
     const currentWord = errorWords[currentWordIndex];
     if (!currentWord) return;
-    
+
     // 更新学页面
     const wordLetters = document.getElementById('wordLetters');
     if (wordLetters) {
         wordLetters.innerHTML = '';
         // 将单词按空格分割成词组
         const wordsArray = currentWord.word.split(' ');
-        
+
         wordsArray.forEach((word, wordIndex) => {
             // 创建单词容器，确保单词作为一个整体
             const wordContainer = document.createElement('span');
             wordContainer.className = 'word-container';
             wordContainer.style.display = 'inline-block';
             wordContainer.style.whiteSpace = 'nowrap';
-            
+
             // 为单词中的每个字母创建元素
             for (let i = 0; i < word.length; i++) {
                 const char = word[i];
@@ -1496,9 +1565,9 @@ export function updateErrorWordLearningContent() {
                 }
                 wordContainer.appendChild(letter);
             }
-            
+
             wordLetters.appendChild(wordContainer);
-            
+
             // 在单词之间添加空格（除了最后一个单词）
             if (wordIndex < wordsArray.length - 1) {
                 const space = document.createElement('span');
@@ -1509,44 +1578,44 @@ export function updateErrorWordLearningContent() {
             }
         });
     }
-    
+
     const phoneticWrapper = document.getElementById('phoneticWrapper');
     if (phoneticWrapper) {
         phoneticWrapper.textContent = currentWord.phonetic || '';
     }
-    
+
     const learnMeaning = document.getElementById('learnMeaning');
     if (learnMeaning) {
         learnMeaning.textContent = currentWord.meaning;
     }
-    
+
     const learnExample = document.getElementById('learnExample');
     if (learnExample) {
         learnExample.textContent = currentWord.example || '例句';
     }
-    
+
     const learnExampleTranslation = document.getElementById('learnExampleTranslation');
     if (learnExampleTranslation) {
         learnExampleTranslation.textContent = currentWord.translation || '例句翻译';
     }
-    
+
     // 更新读页面
     const readWord = document.getElementById('readWord');
     if (readWord) {
         readWord.textContent = currentWord.word;
     }
-    
+
     const readPhonetic = document.getElementById('readPhonetic');
     if (readPhonetic) {
         readPhonetic.textContent = currentWord.phonetic || '';
     }
-    
+
     // 更新拼页面
     const spellWord = document.getElementById('spellWord');
     if (spellWord) {
         spellWord.textContent = currentWord.word;
     }
-    
+
     const spellInputs = document.getElementById('spellInputs');
     if (spellInputs) {
         spellInputs.innerHTML = '';
@@ -1558,12 +1627,12 @@ export function updateErrorWordLearningContent() {
             spellInputs.appendChild(inputBox);
         }
     }
-    
+
     const spellPhonetic = document.getElementById('spellPhonetic');
     if (spellPhonetic) {
         spellPhonetic.textContent = currentWord.phonetic || '';
     }
-    
+
     const spellLetters = document.getElementById('spellLetters');
     if (spellLetters) {
         spellLetters.innerHTML = '';
@@ -1580,34 +1649,34 @@ export function updateErrorWordLearningContent() {
             spellLetters.appendChild(letterButton);
         });
     }
-    
+
     // 更新写页面
     const writeWord = document.getElementById('writeWord');
     if (writeWord) {
         writeWord.textContent = currentWord.word;
     }
-    
+
     const writePhonetic = document.getElementById('writePhonetic');
     if (writePhonetic) {
         writePhonetic.textContent = currentWord.phonetic || '';
     }
-    
+
     const writeMeaning = document.getElementById('writeMeaning');
     if (writeMeaning) {
         writeMeaning.textContent = currentWord.meaning;
     }
-    
+
     const writeInput = document.getElementById('writeInput');
     if (writeInput) {
         writeInput.value = '';
     }
-    
+
     const writeResult = document.getElementById('writeResult');
     if (writeResult) {
         writeResult.textContent = '';
         writeResult.classList.remove('correct', 'incorrect');
     }
-    
+
     // 更新练习页面
     generatePracticeQuestion(currentWord);
 }
@@ -1616,11 +1685,11 @@ export function updateErrorWordLearningContent() {
 export function updateErrorWordNavigationButtons() {
     const prevBtn = document.getElementById('prevWordBtn');
     const nextBtn = document.getElementById('nextWordBtn');
-    
+
     if (prevBtn) {
         prevBtn.disabled = currentWordIndex === 0;
     }
-    
+
     if (nextBtn) {
         nextBtn.disabled = currentWordIndex === errorWords.length - 1;
     }
@@ -1630,20 +1699,20 @@ export function updateErrorWordNavigationButtons() {
 export function renderErrorWordList() {
     const listContainer = document.getElementById('errorWordList');
     if (!listContainer) return;
-    
+
     const errorWords = DataManager.getErrorWords(currentUser);
-    
+
     // 更新错词本标题，显示数量
     const errorBookTitle = document.querySelector('#errorBookPage .list-title');
     if (errorBookTitle) {
         errorBookTitle.textContent = `错词本 (${errorWords.length})`;
     }
-    
+
     if (errorWords.length === 0) {
         listContainer.innerHTML = '<div style="text-align: center; padding: 40px; color: #666;">错词本为空</div>';
         return;
     }
-    
+
     listContainer.innerHTML = errorWords.map((word, index) => {
         return `
         <div class="word-item" data-index="${index}" onclick="openErrorWordLinkPage(${index})"><div class="word-info">
@@ -1679,30 +1748,30 @@ export function updateStatsPage() {
         const today = new Date().toISOString().split('T')[0];
         statsDateElement.textContent = today;
     }
-    
+
     // 获取用户数据
     const userData = DataManager.getUserData(currentUser);
-    
+
     // 更新今日统计
     const todayCompletedElement = document.getElementById('todayCompleted');
     const todayErrorElement = document.getElementById('todayError');
-    
+
     if (todayCompletedElement) {
         todayCompletedElement.textContent = userData.today.learning || 0;
     }
-    
+
     if (todayErrorElement) {
         todayErrorElement.textContent = userData.today.error || 0;
     }
-    
+
     // 更新累计统计
     const totalCompletedElement = document.getElementById('totalCompleted');
     const totalErrorElement = document.getElementById('totalError');
-    
+
     if (totalCompletedElement) {
         totalCompletedElement.textContent = userData.total.learning || 0;
     }
-    
+
     if (totalErrorElement) {
         totalErrorElement.textContent = userData.total.error || 0;
     }
@@ -1712,7 +1781,7 @@ export function updateStatsPage() {
 export function getPhoneticColor(char, index, word) {
     // 元音字母
     const vowels = ['a', 'e', 'i', 'o', 'u', 'A', 'E', 'I', 'O', 'U'];
-    
+
     // 检查是否是元音
     if (vowels.includes(char)) {
         return 'r'; // 元音用红色
@@ -1749,13 +1818,13 @@ export function loadUserData() {
 export function renderCalendar() {
     const year = currentDate.getFullYear();
     const month = currentDate.getMonth();
-    
+
     // 更新月份显示
     const currentMonthElement = document.getElementById('currentMonth');
     if (currentMonthElement) {
         currentMonthElement.textContent = `${year}年${month + 1}月`;
     }
-    
+
     // 获取当月第一天
     const firstDay = new Date(year, month, 1);
     // 获取当月最后一天
@@ -1764,16 +1833,16 @@ export function renderCalendar() {
     const firstDayOfWeek = firstDay.getDay();
     // 获取当月的天数
     const daysInMonth = lastDay.getDate();
-    
+
     // 计算需要显示的天数（包括上个月和下个月的部分天数）
     const startDate = new Date(year, month, 1 - firstDayOfWeek);
     const endDate = new Date(year, month, daysInMonth + (6 - lastDay.getDay()));
-    
+
     // 清空日历
     const calendarBody = document.getElementById('calendarBody');
     if (calendarBody) {
         calendarBody.innerHTML = '';
-        
+
         // 生成日历格子
         let tempDate = new Date(startDate);
         console.log('开始渲染日历，当前月份:', month + 1);
@@ -1781,7 +1850,7 @@ export function renderCalendar() {
         while (tempDate <= endDate) {
             const dayElement = document.createElement('div');
             dayElement.className = 'calendar-day';
-            
+
             // 检查是否是当月的日期
             if (tempDate.getMonth() !== month) {
                 dayElement.classList.add('other-month');
@@ -1791,7 +1860,7 @@ export function renderCalendar() {
                 console.log('检查日期:', dateString);
                 const checkinHistory = checkinData.checkinHistory || [];
                 console.log('检查时的打卡历史长度:', checkinHistory.length);
-                const checkinItem = checkinHistory.find(item => 
+                const checkinItem = checkinHistory.find(item =>
                     (typeof item === 'string' ? item : item.date) === dateString
                 );
                 console.log('找到的打卡项:', checkinItem);
@@ -1806,14 +1875,14 @@ export function renderCalendar() {
                     dayElement.classList.add('not-checked-in');
                 }
             }
-            
+
             // 添加日期
             const dayNumber = document.createElement('div');
             dayNumber.textContent = tempDate.getDate();
             dayElement.appendChild(dayNumber);
-            
+
             calendarBody.appendChild(dayElement);
-            
+
             // 移动到下一天
             tempDate.setDate(tempDate.getDate() + 1);
         }
@@ -1839,15 +1908,15 @@ export function changeMonth(direction) {
 export function updateStats() {
     const totalCheckins = DataManager.getTotalCheckins(currentUser);
     const consecutiveDays = DataManager.getConsecutiveDays(currentUser);
-    
+
     // 计算本月打卡次数和积分
     const year = currentDate.getFullYear();
     const month = currentDate.getMonth();
     const checkinHistory = checkinData.checkinHistory || [];
-    
+
     let monthlyCheckins = 0;
     let monthlyPoints = 0;
-    
+
     checkinHistory.forEach(item => {
         const date = typeof item === 'string' ? item : item.date;
         const dateParts = date.split('-');
@@ -1856,22 +1925,22 @@ export function updateStats() {
             monthlyPoints += typeof item === 'string' ? 5 : item.points;
         }
     });
-    
+
     const totalCheckinsElement = document.getElementById('totalCheckins');
     if (totalCheckinsElement) {
         totalCheckinsElement.textContent = totalCheckins;
     }
-    
+
     const consecutiveDaysElement = document.getElementById('consecutiveDays');
     if (consecutiveDaysElement) {
         consecutiveDaysElement.textContent = consecutiveDays;
     }
-    
+
     const monthlyCheckinsElement = document.getElementById('monthlyCheckins');
     if (monthlyCheckinsElement) {
         monthlyCheckinsElement.textContent = monthlyCheckins;
     }
-    
+
     const monthlyPointsElement = document.getElementById('monthlyPoints');
     if (monthlyPointsElement) {
         monthlyPointsElement.textContent = monthlyPoints;
@@ -1892,17 +1961,17 @@ export function initPointsHistoryPage() {
 export function loadPointsSummary() {
     const summary = DataManager.getPointsSummary(currentUser);
     console.log('积分汇总数据:', summary);
-    
+
     const totalIncomeElement = document.getElementById('totalIncome');
     if (totalIncomeElement) {
         totalIncomeElement.textContent = summary.totalIncome;
     }
-    
+
     const totalExpenseElement = document.getElementById('totalExpense');
     if (totalExpenseElement) {
         totalExpenseElement.textContent = summary.totalExpense;
     }
-    
+
     const currentBalanceElement = document.getElementById('currentBalance');
     if (currentBalanceElement) {
         currentBalanceElement.textContent = summary.balance;
@@ -1913,17 +1982,17 @@ export function loadPointsSummary() {
 export function loadPointsHistory() {
     const pointsHistory = DataManager.getPointsHistory(currentUser);
     console.log('积分记录数据:', pointsHistory);
-    
+
     const pointsListElement = document.getElementById('pointsList');
     if (pointsListElement) {
         if (pointsHistory.length === 0) {
             pointsListElement.innerHTML = '<div style="text-align: center; padding: 40px; color: #666;">暂无积分记录</div>';
             return;
         }
-        
+
         // 按日期降序排序
         pointsHistory.sort((a, b) => new Date(b.date) - new Date(a.date));
-        
+
         // 按日期分组
         const groupedByDate = {};
         pointsHistory.forEach(record => {
@@ -1932,7 +2001,7 @@ export function loadPointsHistory() {
             }
             groupedByDate[record.date].push(record);
         });
-        
+
         // 生成HTML
         let html = '';
         Object.keys(groupedByDate).forEach(date => {
@@ -1946,7 +2015,7 @@ export function loadPointsHistory() {
                     dayTotal -= record.amount;
                 }
             });
-            
+
             // 生成日期组
             html += `
                 <div class="points-date-group">
@@ -1972,7 +2041,7 @@ export function loadPointsHistory() {
                 </div>
             `;
         });
-        
+
         pointsListElement.innerHTML = html;
     }
 }
@@ -1981,7 +2050,7 @@ export function loadPointsHistory() {
 export function toggleDateGroup(date) {
     const dateGroup = document.getElementById(`dateGroup_${date}`);
     const toggleIcon = document.querySelector(`[onclick="toggleDateGroup('${date}')"] .date-toggle`);
-    
+
     if (dateGroup) {
         if (dateGroup.style.display === 'none') {
             dateGroup.style.display = 'block';

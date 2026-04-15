@@ -287,7 +287,7 @@
                                     ` : isFullyGrown ? `
                                         <button class="btn btn-disabled" disabled>已成年，无需喂食</button>
                                     ` : `
-                                        <button class="btn btn-primary" onclick="feedPet('${pet.id}')">喂食宠物粮 (${pet.isFreePet ? '6' : '5'}积分)</button>
+                                        <button class="btn btn-primary" onclick="feedPet('${pet.id}')">喂食宠物粮 (${pet.isFreePet ? '6' : (pet.feedCount >= 50 ? '20' : (pet.feedCount >= 10 ? '10' : '5'))}积分)</button>
                                     `}
                                 </div>
                             </div>
