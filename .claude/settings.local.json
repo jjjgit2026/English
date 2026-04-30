@@ -1,0 +1,14 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(cd:*)",
+      "Bash(chmod:*)",
+      "Bash(open:*)",
+      "Bash(pkill:*)",
+      "Read(//Users/wangmingliang/AIProjects/English/src/html/**)",
+      "Bash(done)",
+      "Bash(grep:*)",
+      "Bash(cat:*)"
+    ]
+  }
+}

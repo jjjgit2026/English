@@ -1,0 +1,487 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>宠物窝</title>
+    <link rel="stylesheet" href="../style.css">
+
+</head>
+<body class="pet-home-page">
+    <div class="page-header">
+        <button class="back-btn" onclick="window.location.href='index.html'">‹</button>
+        <div class="page-title">宠物窝</div>
+        <div class="points-display">
+            积分: <span id="userPoints">0</span>
+        </div>
+    </div>
+    
+    <div class="container">
+        <p class="subtitle" id="petCareText">好好照顾你的宠物，让它们健康成长！</p>
+        
+        <div class="nav-buttons" id="petStoreButton">
+            <a href="pet-store.html" class="btn btn-secondary">宠物商店</a>
+        </div>
+        
+        <div id="petList" class="pet-list">
+            <!-- 宠物列表将通过JavaScript动态生成 -->
+        </div>
+        
+        <div id="emptyState" class="empty-state" style="display: none;">
+        <h2>还没有宠物</h2>
+        <p>去宠物商店领养一只吧！</p>
+        <a href="pet-store.html">前往宠物商店</a>
+    </div>
+</div>
+    
+    <!-- 图片放大弹窗 -->
+    <div id="imageModal" class="image-modal">
+        <img id="modalImage" class="modal-image" src="" alt="宠物图片">
+    </div>
+    
+    <!-- 现代浏览器使用ES6模块 -->
+    <script type="module" src="../js/main.js"></script>
+    
+    <!-- 旧浏览器使用转译后的ES5代码 -->
+    <script nomodule src="../dist/js/main.js"></script>
+    <script>
+        // 添加加载锁
+        let isLoadingPets = false;
+        let initialized = false;
+        
+        // 页面加载时初始化
+        document.addEventListener('DOMContentLoaded', function() {
+            if (initialized) return;
+            initialized = true;
+            
+            // 检查宠物状态
+            if (typeof DataManager !== 'undefined') {
+                const user = window.currentUser || 'youyou';
+                DataManager.checkPetStatus(user);
+                // 加载宠物列表
+                loadPets();
+                // 更新积分显示
+                updatePointsDisplay();
+            } else {
+                setTimeout(() => {
+                    if (typeof DataManager !== 'undefined') {
+                        const user = window.currentUser || 'youyou';
+                        DataManager.checkPetStatus(user);
+                        loadPets();
+                        updatePointsDisplay();
+                    } else {
+                        alert('数据管理器未加载，请刷新页面重试');
+                    }
+                }, 1000);
+            }
+        });
+        
+        // 监听用户切换事件
+        window.addEventListener('storage', function(event) {
+            if (event.key === 'currentUser') {
+                // 用户发生变化，重新加载页面
+                window.location.reload();
+            }
+        });
+        
+        // 定期检查用户是否发生变化
+        let lastUser = window.currentUser || 'youyou';
+        setInterval(function() {
+            // 优先检查全局变量
+            const newUser = window.currentUser || localStorage.getItem('currentUser') || 'youyou';
+            if (newUser && newUser !== lastUser) {
+                lastUser = newUser;
+                // 重新加载宠物列表
+                loadPets();
+                // 更新积分显示
+                updatePointsDisplay();
+            }
+        }, 5000); // 改为5秒检查一次
+        
+
+        
+        // 获取当天日期字符串
+        function getTodayString() {
+            const date = new Date();
+            const year = date.getFullYear();
+            const month = String(date.getMonth() + 1).padStart(2, '0');
+            const day = String(date.getDate()).padStart(2, '0');
+            return `${year}-${month}-${day}`;
+        }
+        
+        // 检查图片是否存在
+        function checkImageExists(url) {
+            return new Promise((resolve) => {
+                // 直接加载图片检查是否存在
+                const img = new Image();
+                img.onload = () => resolve(true);
+                img.onerror = () => {
+                    // webp加载失败，尝试jpg格式
+                    let jpgUrl;
+                    if (url.includes('.webp')) {
+                        // 替换为jpg格式
+                        if (url.includes('cat.webp') || url.includes('parrot.webp')) {
+                            jpgUrl = url.replace('.webp', '.jpg');
+                        } else {
+                            jpgUrl = url.replace('.webp', '.JPG');
+                        }
+                        
+                        // 尝试加载jpg格式
+                        const jpgImg = new Image();
+                        jpgImg.onload = () => resolve(true);
+                        jpgImg.onerror = () => resolve(false);
+                        jpgImg.src = jpgUrl;
+                    } else {
+                        resolve(false);
+                    }
+                };
+                img.src = url;
+            });
+        }
+
+        // 加载宠物列表
+        async function loadPets() {
+            // 防止并发调用
+            if (isLoadingPets) return;
+            isLoadingPets = true;
+            
+            try {
+                if (typeof DataManager !== 'undefined') {
+                    // 再次检查宠物状态，确保以最新状态展示
+                    const user = window.currentUser || 'youyou';
+                    DataManager.checkPetStatus(user);
+                    const pets = DataManager.getPets(user);
+                    const petList = document.getElementById('petList');
+                    const emptyState = document.getElementById('emptyState');
+                    const petCareText = document.getElementById('petCareText');
+                    const petStoreButton = document.getElementById('petStoreButton');
+                    
+                    if (pets.length === 0) {
+                        petList.style.display = 'none';
+                        emptyState.style.display = 'block';
+                        // 隐藏上方的文字和宠物商店按钮
+                        petCareText.style.display = 'none';
+                        petStoreButton.style.display = 'none';
+                        return;
+                    }
+                    
+                    petList.style.display = 'grid';
+                    emptyState.style.display = 'none';
+                    // 显示上方的文字和宠物商店按钮
+                    petCareText.style.display = 'block';
+                    petStoreButton.style.display = 'block';
+                    
+                    // 确保清空宠物列表
+                    petList.innerHTML = '';
+                    petList.textContent = '';
+                    
+                    for (const pet of pets) {
+                        // 获取宠物图片（优先webp格式），根据喂食次数阶段展示
+                        let petImage = getPetImage(pet.type, pet.adoptionDate, pet.selectedImage, pet.feedCount);
+                        
+                        // 检查图片是否存在
+                        let imageExists = await checkImageExists(petImage);
+                        
+                        // 如果webp加载失败，尝试jpg格式
+                        if (!imageExists && petImage.includes('.webp')) {
+                            // 替换为jpg格式
+                            if (petImage.includes('cat.webp') || petImage.includes('parrot.webp')) {
+                                petImage = petImage.replace('.webp', '.jpg');
+                            } else {
+                                petImage = petImage.replace('.webp', '.JPG');
+                            }
+                            // 再次检查jpg格式是否存在
+                            imageExists = await checkImageExists(petImage);
+                        }
+                        
+                        if (!imageExists) {
+                            continue; // 跳过没有图片的宠物
+                        }
+                        
+                        const petItem = document.createElement('div');
+                        petItem.className = `pet-item ${pet.isFreePet ? 'free-pet' : ''}`;
+                        
+                        // 计算喂食进度（满3个月，30*3=90次达到100%）
+                        const maxFeedCount = 90;
+                        const progress = Math.min(Math.round((pet.feedCount / maxFeedCount) * 100), 100);
+                        
+                        // 检查是否达到100%进度
+                        const isFullyGrown = progress >= 100;
+                        
+                        // 宠物状态
+                        const today = getTodayString();
+                        const hasFedToday = pet.lastFeedDate === today;
+                        let statusText, statusClass;
+                        
+                        if (pet.isDead) {
+                            statusText = '小可爱饿晕啦';
+                            statusClass = 'dead';
+                        } else if (isFullyGrown) {
+                            statusText = '已成年';
+                            statusClass = 'alive';
+                        } else if (!hasFedToday) {
+                            statusText = '未喂食';
+                            statusClass = 'hungry';
+                        } else {
+                            statusText = '健康';
+                            statusClass = 'alive';
+                        }
+                        
+                        // 最后喂食日期
+                        const lastFeedText = pet.lastFeedDate ? `上次喂食: ${pet.lastFeedDate}` : '还未喂食';
+                        
+                        // 格式化领养时间
+                        const adoptionDateFormatted = pet.adoptionDate ? new Date(pet.adoptionDate).toISOString().split('T')[0] : '未知';
+                        
+                        // 构建宠物卡片内容
+                        let petMedia;
+                        if (pet.type === 'cat' || pet.type === 'parrot') {
+                            // 免费宠物使用图片，添加 free-pet-media 类
+                            petMedia = `<img src="${petImage}" alt="${pet.name}" class="pet-image free-pet-media ${pet.isDead ? 'dead' : ''}">`;
+                        } else {
+                            // 其他宠物使用图片
+                            petMedia = `<img src="${petImage}" alt="${pet.name}" class="pet-image ${pet.isDead ? 'dead' : ''}">`;
+                        }
+                        
+                        // 构建宠物卡片内容
+                        let petContent = `
+                            <div class="pet-image-container">
+                                ${petMedia}
+                                <div class="pet-name">${pet.name}</div>
+                                <div class="pet-status ${statusClass}">${isFullyGrown ? '已成年' : statusText}</div>
+                            </div>
+                            <div class="pet-content">
+                                <div class="pet-info">
+                                    <span class="label">领养时间:</span>
+                                    <span class="value">${adoptionDateFormatted}</span>
+                                </div>
+                                <div class="pet-info">
+                                    <span class="label">类型:</span>
+                                    <span class="value">${getPetTypeName(pet.type)}</span>
+                                </div>
+                                <div class="pet-info">
+                                    <span class="label">喂食次数:</span>
+                                    <span class="value">${pet.feedCount}次</span>
+                                </div>`;
+                        
+                        // 非免费宠物显示成长进度
+                        if (pet.type !== 'cat' && pet.type !== 'parrot') {
+                            petContent += `
+                                <div class="pet-info">
+                                    <span class="label">成长进度:</span>
+                                    <span class="value">${progress}%</span>
+                                </div>
+                                <div class="progress-bar-container">
+                                    <div class="progress-bar" style="width: ${progress}%;"></div>
+                                </div>`;
+                        }
+                        
+                        petContent += `
+                                <div class="pet-info">
+                                    <span class="label">上次喂食:</span>
+                                    <span class="value">${pet.lastFeedDate ? pet.lastFeedDate : '还未喂食'}</span>
+                                </div>
+                                <div class="action-buttons">
+                                    ${pet.isDead ? `
+                                        <button class="btn btn-secondary" onclick="revivePet('${pet.id}')">复活宠物 (40积分)</button>
+                                    ` : isFullyGrown ? `
+                                        <button class="btn btn-disabled" disabled>已成年，无需喂食</button>
+                                    ` : `
+                                        <button class="btn btn-primary" onclick="feedPet('${pet.id}')">喂食宠物粮 (${pet.isFreePet ? '6' : (pet.feedCount >= 50 ? '20' : (pet.feedCount >= 10 ? '10' : '5'))}积分)</button>
+                                    `}
+                                </div>
+                            </div>
+                        `;
+                        
+                        petItem.innerHTML = petContent;
+                        
+                        petList.appendChild(petItem);
+                    }
+                    
+                    // 如果没有宠物可展示，显示空状态
+                    if (petList.children.length === 0) {
+                        petList.style.display = 'none';
+                        emptyState.style.display = 'block';
+                        // 隐藏上方的文字和宠物商店按钮
+                        petCareText.style.display = 'none';
+                        petStoreButton.style.display = 'none';
+                    } else {
+                        // 为生成的宠物图片添加点击事件
+                        addImageClickEvents();
+                        // 显示上方的文字和宠物商店按钮
+                        petCareText.style.display = 'block';
+                        petStoreButton.style.display = 'block';
+                    }
+                } else {
+                    alert('数据管理器未加载，请刷新页面重试');
+                }
+            } finally {
+                // 释放加载锁
+                isLoadingPets = false;
+            }
+        }
+
+        
+        // 获取宠物类型的中文名称
+        function getPetTypeName(type) {
+            const typeNames = {
+                'mouse': '🐭 子鼠',
+                'cow': '🐮 丑牛',
+                'tiger': '🐯 寅虎',
+                'rabbit': '🐰 卯兔',
+                'dragon': '🐲 辰龙',
+                'horse': '🐎 午马',
+                'snake': '🐍 巳蛇',
+                'monkey': '🐵 申猴',
+                'chicken': '🐔 酉鸡',
+                'sheep': '🐑 未羊',
+                'dog': '🐶 戌狗',
+                'pig': '🐷 亥猪',
+                'cat': '🐱 猫咪',
+                'parrot': '🦜 小鹦鹉'
+            };
+            return typeNames[type] || type;
+        }
+        
+        // 获取宠物图片（根据喂食次数阶段展示）
+        function getPetImage(type, adoptionDate, selectedImage = null, feedCount = 0) {
+            // 免费宠物返回图片路径
+            if (type === 'cat' || type === 'parrot') {
+                if (type === 'cat' && selectedImage) {
+                    // 根据选中的图片返回对应的图片
+                    return `../../assets/pets/${selectedImage}`;
+                }
+                // 优先返回webp格式
+                return `../../assets/pets/${type}.webp`;
+            }
+            
+            // 根据喂食次数确定图片阶段（90次成年）
+            // 阶段1: 0-14次喂食 → 1.webp
+            // 阶段2: 15-29次喂食 → 2.webp
+            // 阶段3: 30-44次喂食 → 3.webp
+            // 阶段4: 45-59次喂食 → 4.webp
+            // 阶段5: 60-89次喂食 → 5.webp
+            // 阶段6: 90次及以上 → 6.webp
+            let stage;
+            if (feedCount >= 90) {
+                stage = 6; // 成年期
+            } else if (feedCount >= 60) {
+                stage = 5; // 成熟期
+            } else if (feedCount >= 45) {
+                stage = 4; // 成长期后期
+            } else if (feedCount >= 30) {
+                stage = 3; // 成长期中期
+            } else if (feedCount >= 15) {
+                stage = 2; // 成长期初期
+            } else {
+                stage = 1; // 幼年期
+            }
+            
+            // 优先返回webp格式
+            return `../../assets/pets/${type}/${stage}.webp`;
+        }
+        
+        // 喂食宠物
+        function feedPet(petId) {
+            if (typeof DataManager !== 'undefined') {
+                const user = window.currentUser || 'youyou';
+                // 检查宠物是否已达到最大喂食次数
+                const pets = DataManager.getPets(user);
+                const pet = pets.find(p => p.id === petId);
+                
+                if (pet && pet.feedCount >= 90) {
+                    alert('宠物已成年，无需再喂食');
+                    return;
+                }
+                
+                const result = DataManager.feedPet(user, petId);
+                if (result.success) {
+                    alert(result.message);
+                    loadPets();
+                    updatePointsDisplay();
+                } else {
+                    alert(result.message);
+                }
+            } else {
+                alert('数据管理器未加载，请刷新页面重试');
+            }
+        }
+        
+        // 复活宠物
+        function revivePet(petId) {
+            if (typeof DataManager !== 'undefined') {
+                const user = window.currentUser || 'youyou';
+                const result = DataManager.revivePet(user, petId);
+                if (result.success) {
+                    alert(result.message);
+                    loadPets();
+                    updatePointsDisplay();
+                } else {
+                    alert(result.message);
+                }
+            } else {
+                alert('数据管理器未加载，请刷新页面重试');
+            }
+        }
+        
+        // 更新积分显示
+        function updatePointsDisplay() {
+            if (typeof DataManager !== 'undefined') {
+                const user = window.currentUser || 'youyou';
+                const points = DataManager.getUserPoints(user);
+                document.getElementById('userPoints').textContent = points;
+            }
+        }
+        
+        // 打开图片放大弹窗
+        function openImageModal(mediaSrc) {
+            const modal = document.getElementById('imageModal');
+            
+            // 清空之前的内容
+            modal.innerHTML = '';
+            
+            // 直接使用原始格式，不再转换为gif
+            const img = document.createElement('img');
+            img.src = mediaSrc;
+            img.className = 'modal-image';
+            modal.appendChild(img);
+            
+            modal.classList.add('active');
+        }
+        
+        // 关闭图片放大弹窗
+        function closeImageModal() {
+            const modal = document.getElementById('imageModal');
+            modal.classList.remove('active');
+        }
+        
+        // 点击模态框外部关闭
+        document.getElementById('imageModal').onclick = function(event) {
+            if (event.target === this) {
+                closeImageModal();
+            }
+        }
+        
+        // 为模态框图片添加点击事件
+        document.getElementById('modalImage').onclick = function() {
+            // 添加动画类
+            this.classList.add('click-animation');
+            
+            // 动画结束后移除动画类，以便下次点击时再次触发
+            setTimeout(() => {
+                this.classList.remove('click-animation');
+            }, 600);
+        }
+        
+        // 为所有宠物图片和视频添加点击事件
+        function addImageClickEvents() {
+            const petMedia = document.querySelectorAll('.pet-image');
+            petMedia.forEach(media => {
+                media.onclick = function() {
+                    openImageModal(this.src || this.querySelector('video')?.src);
+                };
+            });
+        }
+    </script>
+</body>
+</html>

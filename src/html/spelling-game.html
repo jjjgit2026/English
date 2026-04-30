@@ -1,0 +1,98 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>拼写挑战 - 单词学习工具</title>
+    <link rel="stylesheet" href="../style.css">
+</head>
+<body>
+    <!-- 拼写挑战页面 -->
+    <div class="game-page active" id="spellingGamePage">
+        <div class="list-header">
+            <div class="list-header-bar">
+                <button class="back-btn" onclick="goBack()">‹</button>
+                <div class="list-title">拼写挑战</div>
+                <div style="width: 36px;"></div>
+            </div>
+        </div>
+        
+        <!-- 游戏说明 -->
+        <div class="game-description">
+            <p>根据释义，输入正确的单词拼写</p>
+        </div>
+        
+        <!-- 进度条 -->
+        <div class="game-progress">
+            <div class="progress-info">
+                <span id="spellingCorrectCount">0</span>/<span id="spellingTotalCount">0</span>
+            </div>
+            <div class="progress-bar">
+                <div class="progress-fill" id="spellingProgressFill"></div>
+            </div>
+        </div>
+        
+        <!-- 游戏区域 -->
+        <div class="spelling-game-area">
+            <!-- 释义显示 -->
+            <div class="meaning-display" id="meaningDisplay">
+                <!-- 释义将动态生成 -->
+            </div>
+            
+            <!-- 输入区域 -->
+            <div class="input-container">
+                <input type="text" id="spellingInput" placeholder="请输入单词" onkeypress="window.gamesHandleSpellingInputKeyPress(event)">
+                <button class="btn btn-primary" onclick="window.gamesCheckSpelling()">提交</button>
+            </div>
+            
+            <!-- 反馈信息 -->
+            <div class="feedback-message" id="feedbackMessage"></div>
+        </div>
+        
+        <!-- 时间显示 -->
+        <div class="game-timer">
+            用时: <span id="spellingTimer">00:00</span>
+        </div>
+        
+        <!-- 游戏结果界面 -->
+        <div class="game-result hidden" id="spellingGameResult">
+            <div class="result-content">
+                <h2>游戏结束</h2>
+                <div class="result-item">
+                    <span class="result-label">用时:</span>
+                    <span id="spellingGameTime">00:00</span>
+                </div>
+                <div class="result-item">
+                    <span class="result-label">得分:</span>
+                    <span id="spellingGameScore">0</span>
+                </div>
+                <div class="result-buttons">
+                    <button class="result-btn" onclick="restartSpellingGame()">再玩一次</button>
+                    <button class="result-btn" onclick="goBack()">返回上一页</button>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Loading 元素 -->
+    <div class="loading-overlay hidden" id="loadingOverlay">
+        <div class="loading-spinner"></div>
+        <div class="loading-text">加载中，请稍候...</div>
+    </div>
+    
+    <!-- 引入PDF.js库 -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.4.120/pdf.min.js"></script>
+    <script>
+        // 备用 CDN 加载
+        if (typeof pdfjsLib === 'undefined') {
+            document.write('<script src="https://cdn.jsdelivr.net/npm/pdfjs-dist@3.4.120/build/pdf.min.js"><\/script>');
+        }
+    </script>
+    
+    <!-- 现代浏览器使用ES6模块 -->
+    <script type="module" src="../js/main.js"></script>
+    
+    <!-- 旧浏览器使用转译后的ES5代码 -->
+    <script nomodule src="../dist/js/main.js"></script>
+</body>
+</html>
